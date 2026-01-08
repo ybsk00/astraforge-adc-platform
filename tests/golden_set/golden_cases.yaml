@@ -1,0 +1,261 @@
+# ADC Platform - Golden Set Test Cases v1.0
+# 산식 회귀 테스트용 검증 케이스
+#
+# 각 케이스는 입력 피처와 예상 출력 점수를 포함
+# CI에서 자동으로 편차를 체크하여 산식 변경 영향을 감지
+
+version: "1.0"
+tolerance: 5.0  # 허용 편차 (±5%)
+
+# ============================================================
+# 테스트 케이스 정의
+# ============================================================
+cases:
+  # --------------------------------------------------------
+  # Eng-Fit 테스트 케이스
+  # --------------------------------------------------------
+  - id: "eng_optimal"
+    name: "Optimal Engineering Profile"
+    category: "eng_fit"
+    inputs:
+      logP: 1.5
+      DAR: 3.5
+      h_patch: 0.1
+      proc_complexity: 0.2
+      anal_difficulty: 0.1
+      missing_features: []
+    expected:
+      eng_fit: 85.0
+      agg_risk: 7.0
+      proc_risk: 20.0
+      anal_risk: 10.0
+
+  - id: "eng_high_logp"
+    name: "High LogP (Aggregation Risk)"
+    category: "eng_fit"
+    inputs:
+      logP: 4.5
+      DAR: 4.0
+      h_patch: 0.3
+      proc_complexity: 0.2
+      anal_difficulty: 0.2
+      missing_features: []
+    expected:
+      eng_fit: 55.0
+      agg_risk: 35.0
+
+  - id: "eng_high_dar"
+    name: "High DAR (Manufacturing Risk)"
+    category: "eng_fit"
+    inputs:
+      logP: 2.0
+      DAR: 7.0
+      h_patch: 0.1
+      proc_complexity: 0.5
+      anal_difficulty: 0.4
+      missing_features: []
+    expected:
+      eng_fit: 45.0
+      agg_risk: 45.0
+
+  - id: "eng_missing_data"
+    name: "Missing Features Penalty"
+    category: "eng_fit"
+    inputs:
+      logP: 2.0
+      DAR: 4.0
+      h_patch: null
+      proc_complexity: null
+      anal_difficulty: 0.2
+      missing_features: ["h_patch", "proc_complexity"]
+    expected:
+      eng_fit: 60.0
+      unc_penalty: 30.0
+
+  # --------------------------------------------------------
+  # Bio-Fit 테스트 케이스
+  # --------------------------------------------------------
+  - id: "bio_optimal"
+    name: "Optimal Biological Profile"
+    category: "bio_fit"
+    inputs:
+      tumor_expression: 100.0
+      normal_expression: 5.0
+      internalization: 0.8
+      heterogeneity: 0.2
+      accessibility: 0.9
+      bystander_need: 0.3
+      bystander_capability: 0.35
+    expected:
+      bio_fit: 90.0
+      dea: 85.0
+
+  - id: "bio_low_dea"
+    name: "Low Differential Expression"
+    category: "bio_fit"
+    inputs:
+      tumor_expression: 20.0
+      normal_expression: 15.0
+      internalization: 0.7
+      heterogeneity: 0.3
+      accessibility: 0.8
+      bystander_need: 0.3
+      bystander_capability: 0.3
+    expected:
+      bio_fit: 50.0
+      dea: 40.0
+
+  - id: "bio_poor_internalization"
+    name: "Poor Internalization"
+    category: "bio_fit"
+    inputs:
+      tumor_expression: 80.0
+      normal_expression: 5.0
+      internalization: 0.3
+      heterogeneity: 0.2
+      accessibility: 0.9
+      bystander_need: 0.0
+      bystander_capability: 0.0
+    expected:
+      bio_fit: 55.0
+      int: 30.0
+
+  - id: "bio_high_heterogeneity"
+    name: "High Tumor Heterogeneity"
+    category: "bio_fit"
+    inputs:
+      tumor_expression: 90.0
+      normal_expression: 5.0
+      internalization: 0.8
+      heterogeneity: 0.8
+      accessibility: 0.9
+      bystander_need: 0.8
+      bystander_capability: 0.5
+    expected:
+      bio_fit: 50.0
+      het_pen: 80.0
+
+  # --------------------------------------------------------
+  # Safety-Fit 테스트 케이스
+  # --------------------------------------------------------
+  - id: "safety_optimal"
+    name: "Optimal Safety Profile"
+    category: "safety_fit"
+    inputs:
+      normal_expression_max: 3.0
+      critical_tissue_flag: false
+      payload_hazard: 0.2
+      cleavage_risk: 0.2
+      systemic_exposure: 0.1
+      negative_signal: 0.0
+    expected:
+      safety_fit: 90.0
+      oot: 10.0
+
+  - id: "safety_high_offtarget"
+    name: "High Off-Target Expression"
+    category: "safety_fit"
+    inputs:
+      normal_expression_max: 50.0
+      critical_tissue_flag: true
+      payload_hazard: 0.3
+      cleavage_risk: 0.3
+      systemic_exposure: 0.3
+      negative_signal: 0.0
+    expected:
+      safety_fit: 35.0
+      oot: 65.0
+
+  - id: "safety_toxic_payload"
+    name: "Toxic Payload Warning"
+    category: "safety_fit"
+    inputs:
+      normal_expression_max: 5.0
+      critical_tissue_flag: false
+      payload_hazard: 0.9
+      cleavage_risk: 0.5
+      systemic_exposure: 0.5
+      negative_signal: 0.3
+    expected:
+      safety_fit: 30.0
+      ph: 90.0
+
+  - id: "safety_negative_signal"
+    name: "Literature Negative Signal"
+    category: "safety_fit"
+    inputs:
+      normal_expression_max: 5.0
+      critical_tissue_flag: false
+      payload_hazard: 0.3
+      cleavage_risk: 0.2
+      systemic_exposure: 0.2
+      negative_signal: 0.8
+    expected:
+      safety_fit: 40.0
+      neg: 80.0
+
+  # --------------------------------------------------------
+  # 종합 테스트 케이스
+  # --------------------------------------------------------
+  - id: "total_balanced"
+    name: "Balanced ADC Candidate"
+    category: "total_fit"
+    inputs:
+      eng_fit: 75.0
+      bio_fit: 80.0
+      safety_fit: 70.0
+      evidence_fit: 60.0
+    expected:
+      total_fit: 73.25  # 0.25*75 + 0.35*80 + 0.30*70 + 0.10*60
+
+  - id: "total_bio_focused"
+    name: "Bio-Optimized Candidate"
+    category: "total_fit"
+    inputs:
+      eng_fit: 60.0
+      bio_fit: 95.0
+      safety_fit: 65.0
+      evidence_fit: 70.0
+    expected:
+      total_fit: 75.0  # 0.25*60 + 0.35*95 + 0.30*65 + 0.10*70
+
+  - id: "total_safety_concern"
+    name: "Safety Concern Candidate"
+    category: "total_fit"
+    inputs:
+      eng_fit: 80.0
+      bio_fit: 85.0
+      safety_fit: 40.0
+      evidence_fit: 65.0
+    expected:
+      total_fit: 68.25  # 0.25*80 + 0.35*85 + 0.30*40 + 0.10*65
+
+# ============================================================
+# 에지 케이스
+# ============================================================
+edge_cases:
+  - id: "edge_all_zeros"
+    name: "All Zero Inputs"
+    inputs:
+      logP: 0.0
+      DAR: 0.0
+    expected:
+      eng_fit: 100.0  # 최대 점수 (리스크 없음)
+
+  - id: "edge_all_max"
+    name: "All Maximum Risk"
+    inputs:
+      logP: 10.0
+      DAR: 10.0
+      h_patch: 1.0
+    expected:
+      eng_fit: 0.0  # 최소 점수 (클리핑)
+
+  - id: "edge_null_inputs"
+    name: "All Null Inputs"
+    inputs:
+      logP: null
+      DAR: null
+    expected:
+      eng_fit: 40.0  # 강한 불확실성 페널티
+      unc_penalty: 60.0

@@ -1,0 +1,8 @@
+arq>=0.25.0
+supabase>=2.3.0
+httpx>=0.26.0
+python-dotenv>=1.0.0
+structlog>=24.1.0
+numpy>=1.26.0
+pandas>=2.1.0
+# RDKit은 conda로 설치: conda install -c conda-forge rdkit

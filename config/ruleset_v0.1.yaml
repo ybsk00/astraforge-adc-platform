@@ -1,0 +1,239 @@
+# ADC Platform - Rule Set v0.1
+# 후보 필터링/페널티/알림 규칙 정의
+# 
+# 체크리스트 §부록B 도메인 전문가 작업
+
+version: "0.1"
+description: "ADC 후보 평가 규칙 초기 버전"
+
+# ============================================================
+# 하드 리젝트 규칙 (Hard Reject)
+# 조합 생성 전 즉시 제외
+# ============================================================
+hard_reject:
+  - id: "HR001"
+    name: "Excluded Target"
+    description: "ADC 개발에서 제외된 타겟"
+    condition:
+      component: target
+      field: adc_excluded
+      op: eq
+      value: true
+    reason: "Target is explicitly excluded from ADC development"
+
+  - id: "HR002"
+    name: "Low Target Expression"
+    description: "종양 발현량이 너무 낮음"
+    condition:
+      component: target
+      field: expression.tumor
+      op: lt
+      value: 1.0
+    reason: "Tumor expression below minimum threshold (< 1.0)"
+
+  - id: "HR003"
+    name: "Critical Tissue Only"
+    description: "중요 장기에만 발현"
+    condition:
+      component: target
+      field: critical_tissue_only
+      op: eq
+      value: true
+    reason: "Target expressed only in critical tissues"
+
+  - id: "HR004"
+    name: "Inactive Component"
+    description: "비활성 컴포넌트 포함"
+    condition:
+      component: any
+      field: status
+      op: not_in
+      value: ["active", null]
+    reason: "Component is not in active status"
+
+  - id: "HR005"
+    name: "Payload Toxicity Level"
+    description: "페이로드 독성 초과"
+    condition:
+      component: payload
+      field: toxicity_level
+      op: gt
+      value: 5
+    reason: "Payload toxicity exceeds maximum allowed level"
+
+# ============================================================
+# 페널티 규칙 (Penalty)
+# 스코어에 감점 적용
+# ============================================================
+penalty:
+  - id: "PN001"
+    name: "High Aggregation Risk"
+    description: "응집 위험 높음"
+    condition:
+      score_component: eng_fit.AggRisk
+      op: gt
+      value: 40
+    action:
+      type: score_penalty
+      value: -10
+      target: eng_fit
+    alert_level: warning
+
+  - id: "PN002"
+    name: "Low Internalization"
+    description: "내재화 속도 낮음"
+    condition:
+      score_component: bio_fit.INT
+      op: lt
+      value: 50
+    action:
+      type: score_penalty
+      value: -15
+      target: bio_fit
+    alert_level: warning
+
+  - id: "PN003"
+    name: "Off-Target Toxicity Risk"
+    description: "오프타겟 독성 위험"
+    condition:
+      score_component: safety_fit.OOT
+      op: gt
+      value: 50
+    action:
+      type: score_penalty
+      value: -20
+      target: safety_fit
+    alert_level: critical
+    
+  - id: "PN004"
+    name: "Missing Features Penalty"
+    description: "필수 피처 누락"
+    condition:
+      score_component: eng_fit.UncPenalty
+      op: gt
+      value: 20
+    action:
+      type: score_penalty
+      value: -5
+      target: eng_fit
+    alert_level: info
+
+# ============================================================
+# 알림 규칙 (Alert)
+# UI에 경고/정보 표시
+# ============================================================
+alert:
+  - id: "AL001"
+    name: "Clinical Data Available"
+    description: "임상 데이터 존재"
+    condition:
+      component: target
+      field: clinical_data.phase
+      op: gte
+      value: 1
+    action:
+      type: badge
+      text: "Clinical Data"
+      color: green
+    alert_level: info
+
+  - id: "AL002"
+    name: "Negative Signal Detected"
+    description: "부정적 문헌 시그널"
+    condition:
+      score_component: safety_fit.NEG
+      op: gt
+      value: 30
+    action:
+      type: banner
+      text: "⚠️ Negative literature signal detected"
+      link_evidence: true
+    alert_level: warning
+
+  - id: "AL003"
+    name: "DAR Out of Range"
+    description: "DAR 범위 이탈"
+    condition:
+      component: conjugation
+      field: DAR
+      op: not_between
+      value: [2, 8]
+    action:
+      type: badge
+      text: "DAR Warning"
+      color: yellow
+    alert_level: warning
+
+  - id: "AL004"
+    name: "Bystander Mismatch"
+    description: "바이스탠더 효과 불일치"
+    condition:
+      score_component: bio_fit.BS_match
+      op: lt
+      value: 50
+    action:
+      type: tooltip
+      text: "Bystander effect mismatch: Target need vs Payload capability"
+    alert_level: info
+
+# ============================================================
+# 프로토콜 트리거 규칙 (Protocol Trigger)
+# 특정 조건 시 프로토콜 자동 추가
+# ============================================================
+protocol_trigger:
+  - id: "PT001"
+    name: "Aggregation Check Required"
+    description: "응집 위험 시 SEC 프로토콜 추가"
+    condition:
+      score_component: eng_fit.AggRisk
+      op: gt
+      value: 30
+    action:
+      type: add_protocol
+      template: sec
+    
+  - id: "PT002"
+    name: "Internalization Study Required"
+    description: "내재화 분석 필요"
+    condition:
+      score_component: bio_fit.INT
+      op: lt
+      value: 60
+    action:
+      type: add_protocol
+      template: internalization
+
+  - id: "PT003"
+    name: "Toxicity Panel Required"
+    description: "독성 패널 필요"
+    condition:
+      score_component: safety_fit.OOT
+      op: gt
+      value: 40
+    action:
+      type: add_protocol
+      template: cytotoxicity
+
+  - id: "PT004"
+    name: "Stability Test Required"
+    description: "혈장 안정성 테스트 필요"
+    condition:
+      score_component: safety_fit.CLV
+      op: gt
+      value: 30
+    action:
+      type: add_protocol
+      template: plasma_stability
+
+# ============================================================
+# 메타데이터
+# ============================================================
+metadata:
+  created_at: "2026-01-07"
+  created_by: "system"
+  last_updated: "2026-01-07"
+  status: active
+  notes: |
+    초기 버전 룰셋입니다. 도메인 전문가 검토 후 수정이 필요합니다.
+    - 임계값은 실제 데이터 기반으로 조정 필요
+    - 새로운 규칙 추가 시 ID 연속성 유지

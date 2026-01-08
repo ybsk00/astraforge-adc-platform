@@ -1,0 +1,144 @@
+# ADC Platform - Scoring Parameters v0.2
+# Eng-Fit / Bio-Fit / Safety-Fit 가중치 및 계수
+#
+# 체크리스트 §0.3 확정안
+
+version: "0.2"
+description: "ADC 스코어링 파라미터 v0.2 (확정)"
+status: active
+
+# ============================================================
+# Eng-Fit (CMC Risk) 파라미터
+# EngFit = 100 - CMC_Risk
+# ============================================================
+eng_fit:
+  # 가중치 (합계 = 1.0)
+  weights:
+    w_agg: 0.35      # 응집 위험
+    w_proc: 0.25     # 공정 복잡도
+    w_anal: 0.20     # 분석 난이도
+    w_unc: 0.20      # 불확실성 페널티
+  
+  # 계수
+  coefficients:
+    omega_logP: 10.0      # LogP 기여 계수
+    omega_DAR: 15.0       # DAR 기여 계수
+    omega_patch: 5.0      # 소수성 패치 계수
+    
+  # 임계값
+  thresholds:
+    logP_optimal: 2.0     # 최적 LogP 상한
+    DAR_optimal: 4.0      # 최적 DAR 상한
+    DAR_max: 8.0          # 최대 허용 DAR
+    
+  # 태그 기반 점수
+  tags:
+    site_specific_penalty: 30.0
+    purification_high: 25.0
+    purification_normal: 10.0
+    aggregation_prone: 30.0
+
+# ============================================================
+# Bio-Fit (Biological Efficacy) 파라미터
+# BioFit = 100 - BioRisk
+# ============================================================
+bio_fit:
+  # 가중치 (합계 = 1.0)
+  weights:
+    w_dea: 0.25      # 차등 발현
+    w_int: 0.25      # 내재화
+    w_het: 0.15      # 이질성
+    w_acc: 0.15      # 접근성
+    w_bs: 0.20       # 바이스탠더 매치
+    
+  # 계수
+  coefficients:
+    k_dea: 10.0           # DEA 스케일링 계수
+    int_threshold: 70.0   # 최소 내재화 점수
+    
+  # 임계값
+  thresholds:
+    tumor_expr_min: 10.0      # 최소 종양 발현량
+    tumor_expr_optimal: 100.0 # 최적 종양 발현량
+    normal_expr_max: 10.0     # 정상 조직 최대 허용 발현량
+    internalization_min: 0.5  # 최소 내재화율
+    heterogeneity_max: 0.5    # 최대 이질성
+
+# ============================================================
+# Safety-Fit (Safety Profile) 파라미터
+# SafetyFit = 100 - SafetyRisk
+# ============================================================
+safety_fit:
+  # 가중치 (합계 = 1.0)
+  weights:
+    w_oot: 0.30      # 오프타겟 독성
+    w_haz: 0.25      # 페이로드 위험
+    w_clv: 0.15      # 절단 위험
+    w_sar: 0.15      # 전신 노출
+    w_neg: 0.15      # 부정적 시그널
+    
+  # 계수
+  coefficients:
+    k_oot: 8.0        # OOT 스케일링 계수
+    k_crit: 20.0      # 중요 조직 가중치
+    
+  # 임계값
+  thresholds:
+    normal_expr_safe: 5.0     # 안전 정상 발현 수준
+    critical_tissue_penalty: 50.0  # 중요 조직 발현 페널티
+    hazard_max: 0.7           # 최대 위험 점수
+    cleavage_risk_max: 0.5    # 최대 절단 위험
+
+# ============================================================
+# 종합 스코어 가중치
+# ============================================================
+total_fit:
+  weights:
+    eng: 0.25
+    bio: 0.35
+    safety: 0.30
+    evidence: 0.10
+
+# ============================================================
+# 품질 등급 매핑
+# ============================================================
+quality_grades:
+  gold:
+    multiplier: 1.0
+    description: "검증된 고품질 데이터"
+  silver:
+    multiplier: 0.9
+    description: "부분 검증된 데이터"
+  bronze:
+    multiplier: 0.8
+    description: "미검증/추정 데이터"
+
+# ============================================================
+# 파레토 프론트 설정
+# ============================================================
+pareto:
+  objectives:
+    - eng_fit
+    - bio_fit
+    - safety_fit
+    - evidence_fit
+  max_fronts: 5
+  top_n_for_rag: 50
+
+# ============================================================
+# 메타데이터
+# ============================================================
+metadata:
+  created_at: "2026-01-07"
+  created_by: "system"
+  last_updated: "2026-01-07"
+  version_history:
+    - version: "0.1"
+      date: "2025-12-15"
+      changes: "초기 버전"
+    - version: "0.2"
+      date: "2026-01-07"
+      changes: "벡터화 산식 도입, 가중치 조정"
+  notes: |
+    이 파라미터는 도메인 전문가와 함께 검토하여
+    Golden Set 기반 검증 후 최종 확정합니다.
