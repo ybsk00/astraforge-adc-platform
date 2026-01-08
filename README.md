@@ -1,12 +1,3 @@
-# ADC Platform
-
-ADC(Antibody-Drug Conjugate) 설계 및 의사결정 엔진 플랫폼
-
-## 🏗️ 프로젝트 구조
-
-```
-├── apps/
-│   └── web/                  # Next.js 프론트엔드
 ├── services/
 │   ├── engine/               # FastAPI 엔진 서비스
 │   └── worker/               # Arq 워커 (RDKit 포함)
