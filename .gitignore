@@ -71,3 +71,5 @@ logs/
 
 # Docker
 *.pid
+.vercel
+.env*.local
