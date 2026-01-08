@@ -1,4 +1,3 @@
-```json
 {
     "private": true,
     "name": "adc-platform-monorepo",
@@ -12,4 +11,3 @@
         "next": "14.2.3"
     }
 }
-```
