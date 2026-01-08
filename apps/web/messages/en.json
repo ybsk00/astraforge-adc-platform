@@ -1,0 +1,102 @@
+{
+  "HomePage": {
+    "title": "Accelerating Next-Gen ADC Discovery",
+    "subtitle": "Experience an integrated AI platform that accelerates the entire R&D process, from candidate scoring to literature mining and protocol generation.",
+    "start": "Get Started",
+    "demo": "Watch Demo",
+    "features": {
+      "scoring": "Smart Candidate Scoring",
+      "scoringDesc": "AI-driven scoring system rapidly identifies high-potential candidates.",
+      "literature": "Global Literature Indexing",
+      "literatureDesc": "Real-time indexing of millions of papers and clinical data.",
+      "protocol": "Automated Protocol Gen",
+      "protocolDesc": "Intelligent assistants generate experimental protocols to reduce errors."
+    },
+    "featuresTitle": "Advanced Tools for Researchers",
+    "featuresSubtitle": "Comprehensive solutions for every stage of the ADC discovery lifecycle.",
+    "interfaceTitle": "System Interface",
+    "interfaceSubtitle": "Visualize complex data and gain insights at a glance with our intuitive dashboard.",
+    "footer": {
+      "product": "Product",
+      "company": "Company",
+      "contact": "Contact",
+      "rights": "© 2024 ADC Platform Inc. All rights reserved."
+    }
+  },
+  "Common": {
+    "login": "Log In",
+    "logout": "Log Out",
+    "dashboard": "Dashboard",
+    "catalog": "Catalog",
+    "designRuns": "Design Runs",
+    "literature": "Literature",
+    "admin": "Admin",
+    "menu": {
+      "overview": "Overview",
+      "designRuns": "Design Runs",
+      "catalog": "Catalog",
+      "connectors": "Connectors",
+      "staging": "Staging",
+      "ingestion": "Ingestion",
+      "observability": "Observability",
+      "alerts": "Alerts",
+      "settings": "Settings"
+    }
+  },
+  "Dashboard": {
+    "stats": {
+      "totalProjects": "Total Projects",
+      "activeRuns": "Active Runs",
+      "completedRuns": "Completed Runs",
+      "resources": "Computing Resources"
+    },
+    "recentActivity": "Recent Activity",
+    "quickActions": "Quick Actions",
+    "newRun": "New Design Run",
+    "viewCatalog": "View Catalog"
+  },
+  "DesignRuns": {
+    "title": "Design Runs",
+    "newRun": "New Run",
+    "filters": {
+      "all": "All Status",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "searchPlaceholder": "Search runs..."
+    },
+    "table": {
+      "id": "Run ID",
+      "name": "Project Name",
+      "status": "Status",
+      "progress": "Progress",
+      "candidates": "Candidates",
+      "created": "Created Date",
+      "actions": "Actions"
+    }
+  },
+  "RunDetail": {
+    "backToRuns": "Back to Runs",
+    "overview": "Run Overview",
+    "scoreDistribution": "Score Distribution",
+    "topCandidates": "Top Candidates",
+    "exportReport": "Export Report",
+    "tabs": {
+      "candidates": "Candidates",
+      "analysis": "Analysis",
+      "settings": "Settings"
+    },
+    "metrics": {
+      "binding": "Binding Affinity",
+      "stability": "Stability",
+      "toxicity": "Toxicity Risk",
+      "developability": "Developability"
+    },
+    "compare": {
+      "title": "Compare Candidates",
+      "selectCandidate": "Select Candidate",
+      "commonProperties": "Common Properties",
+      "differences": "Differences"
+    }
+  }
+}

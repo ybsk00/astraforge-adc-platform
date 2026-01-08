@@ -1,0 +1,102 @@
+{
+    "HomePage": {
+        "title": "차세대 ADC 발굴 가속화",
+        "subtitle": "후보 물질 스코어링부터 문헌 마이닝, 프로토콜 생성까지. 연구 개발의 전 과정을 가속화하는 통합 AI 플랫폼을 경험하세요.",
+        "start": "시작하기",
+        "demo": "데모 영상 보기",
+        "features": {
+            "scoring": "스마트 후보 물질 스코어링",
+            "scoringDesc": "AI 기반의 약물 후보 순위 선정 시스템으로 고잠재 물질을 빠르게 식별합니다.",
+            "literature": "글로벌 문헌 인덱싱",
+            "literatureDesc": "수백만 건의 연구 논문과 임상 데이터를 실시간으로 접근하여 최신 연구 동향을 파악할 수 있습니다.",
+            "protocol": "자동화된 프로토콜 생성",
+            "protocolDesc": "지능형 프로토콜 생성 어시스턴트를 통해 실험실 워크플로우를 간소화하고 인적 오류를 줄입니다."
+        },
+        "featuresTitle": "연구자를 위한 고급 도구",
+        "featuresSubtitle": "ADC 발굴 라이프사이클의 모든 단계를 위한 포괄적인 솔루션입니다.",
+        "interfaceTitle": "시스템 인터페이스",
+        "interfaceSubtitle": "직관적인 대시보드를 통해 복잡한 데이터를 시각화하고 한눈에 통찰력을 얻으세요.",
+        "footer": {
+            "product": "제품",
+            "company": "회사",
+            "contact": "연락처",
+            "rights": "© 2024 ADC Platform Inc. All rights reserved."
+        }
+    },
+    "Common": {
+        "login": "로그인",
+        "logout": "로그아웃",
+        "dashboard": "대시보드",
+        "catalog": "카탈로그",
+        "designRuns": "설계 실행",
+        "literature": "문헌",
+        "admin": "관리자",
+        "menu": {
+            "overview": "개요",
+            "designRuns": "설계 실행",
+            "catalog": "카탈로그",
+            "connectors": "커넥터",
+            "staging": "스테이징",
+            "ingestion": "데이터 수집",
+            "observability": "관측성",
+            "alerts": "알림",
+            "settings": "설정"
+        }
+    },
+    "Dashboard": {
+        "stats": {
+            "totalProjects": "전체 프로젝트",
+            "activeRuns": "진행 중인 실행",
+            "completedRuns": "완료된 실행",
+            "resources": "컴퓨팅 자원"
+        },
+        "recentActivity": "최근 활동",
+        "quickActions": "빠른 작업",
+        "newRun": "새 설계 실행",
+        "viewCatalog": "카탈로그 보기"
+    },
+    "DesignRuns": {
+        "title": "설계 실행 목록",
+        "newRun": "새 실행",
+        "filters": {
+            "all": "모든 상태",
+            "running": "진행 중",
+            "completed": "완료됨",
+            "failed": "실패함",
+            "searchPlaceholder": "실행 검색..."
+        },
+        "table": {
+            "id": "실행 ID",
+            "name": "프로젝트명",
+            "status": "상태",
+            "progress": "진행률",
+            "candidates": "후보 물질",
+            "created": "생성일",
+            "actions": "작업"
+        }
+    },
+    "RunDetail": {
+        "backToRuns": "목록으로 돌아가기",
+        "overview": "실행 개요",
+        "scoreDistribution": "점수 분포",
+        "topCandidates": "상위 후보 물질",
+        "exportReport": "보고서 내보내기",
+        "tabs": {
+            "candidates": "후보 물질",
+            "analysis": "분석",
+            "settings": "설정"
+        },
+        "metrics": {
+            "binding": "결합 친화도",
+            "stability": "안정성",
+            "toxicity": "독성 위험",
+            "developability": "개발 가능성"
+        },
+        "compare": {
+            "title": "후보 물질 비교",
+            "selectCandidate": "후보 물질 선택",
+            "commonProperties": "공통 속성",
+            "differences": "차이점"
+        }
+    }
+}
