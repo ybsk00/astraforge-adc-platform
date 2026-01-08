@@ -1,0 +1,10 @@
+{
+    "private": true,
+    "name": "adc-platform-monorepo",
+    "scripts": {
+        "build": "echo 'Building Web App...' && cd apps/web && npm install && npm run build"
+    },
+    "engines": {
+        "node": "18.x"
+    }
+}
