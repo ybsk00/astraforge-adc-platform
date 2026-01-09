@@ -8,7 +8,7 @@ export default function Home() {
   const t = useTranslations('HomePage');
 
   return (
-    <main className="min-h-screen bg-slate-950">
+    <main className="min-h-screen bg-transparent relative">
       {/* Navigation */}
       <Navigation />
 
