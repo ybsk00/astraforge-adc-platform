@@ -109,7 +109,7 @@ export default function Home() {
       </section>
 
       {/* System Interface Section */}
-      <section id="interface" className="py-24 bg-slate-950">
+      <section id="interface" className="py-24 bg-transparent">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-white mb-4">System Interface</h2>
