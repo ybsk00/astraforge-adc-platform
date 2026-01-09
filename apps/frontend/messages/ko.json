@@ -3,43 +3,6 @@
         "title": "차세대 ADC 발굴 가속화",
         "subtitle": "최첨단 AI 알고리즘으로 항체-약물 접합체(ADC)의 설계를 최적화하고, 연구 데이터를 빠르게 분석하여 신약 개발을 가속화하세요.",
         "start": "시작하기",
-        "demo": "데모 영상 보기",
-        "nav": {
-            "services": "서비스 소개",
-            "features": "기능",
-            "solutions": "솔루션"
-        },
-        "features": {
-            "scoring": "스마트 후보 물질 스코어링",
-            "scoringDesc": "AI 기반의 약물 후보 순위 선정 시스템으로 고잠재 물질을 빠르게 식별합니다.",
-            "literature": "글로벌 문헌 인덱싱",
-            "literatureDesc": "수백만 건의 연구 논문과 임상 데이터를 실시간으로 접근하여 최신 연구 동향을 파악할 수 있습니다.",
-            "protocol": "자동화된 프로토콜 생성",
-            "protocolDesc": "지능형 프로토콜 생성 어시스턴트를 통해 실험실 워크플로우를 간소화하고 인적 오류를 줄입니다."
-        },
-        "featuresTitle": "연구자를 위한 고급 도구",
-        "featuresSubtitle": "ADC 발굴 라이프사이클의 모든 단계를 위한 포괄적인 솔루션입니다.",
-        "interfaceTitle": "시스템 인터페이스",
-        "interfaceSubtitle": "직관적인 인터페이스를 통해 복잡한 데이터를 손쉽게 분석하고, 연구 인사이트를 한눈에 파악하세요.",
-        "footer": {
-            "product": "제품",
-            "company": "회사",
-            "contact": "연락처",
-            "rights": "© 2024 ADC Platform Inc. All rights reserved.",
-            "candidateScore": "AI 후보 물질 스코어",
-            "literatureData": "문헌 데이터",
-            "protocolAutomation": "프로토콜 자동화",
-            "aboutUs": "회사 소개",
-            "careers": "채용",
-            "blog": "블로그"
-        }
-    },
-    "Common": {
-        "login": "로그인",
-        "logout": "로그아웃",
-        "dashboard": "대시보드",
-        "catalog": "카탈로그",
-        "designRuns": "설계 실행",
         "literature": "문헌",
         "admin": "관리자",
         "menu": {

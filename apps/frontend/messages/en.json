@@ -3,43 +3,6 @@
     "title": "Accelerating Next-Gen ADC Discovery",
     "subtitle": "Optimize ADC design with cutting-edge AI algorithms, rapidly analyze research data, and accelerate drug discovery.",
     "start": "Get Started",
-    "demo": "Watch Demo",
-    "nav": {
-      "services": "Services",
-      "features": "Features",
-      "solutions": "Solutions"
-    },
-    "features": {
-      "scoring": "Smart Candidate Scoring",
-      "scoringDesc": "AI-driven scoring system rapidly identifies high-potential candidates.",
-      "literature": "Global Literature Indexing",
-      "literatureDesc": "Real-time indexing of millions of papers and clinical data.",
-      "protocol": "Automated Protocol Gen",
-      "protocolDesc": "Intelligent assistants generate experimental protocols to reduce errors."
-    },
-    "featuresTitle": "Advanced Tools for Researchers",
-    "featuresSubtitle": "Comprehensive solutions for every stage of the ADC discovery lifecycle.",
-    "interfaceTitle": "System Interface",
-    "interfaceSubtitle": "Visualize complex data and gain insights at a glance with our intuitive dashboard.",
-    "footer": {
-      "product": "Product",
-      "company": "Company",
-      "contact": "Contact",
-      "rights": "© 2024 ADC Platform Inc. All rights reserved.",
-      "candidateScore": "AI Candidate Scoring",
-      "literatureData": "Literature Data",
-      "protocolAutomation": "Protocol Automation",
-      "aboutUs": "About Us",
-      "careers": "Careers",
-      "blog": "Blog"
-    }
-  },
-  "Common": {
-    "login": "Log In",
-    "logout": "Log Out",
-    "dashboard": "Dashboard",
-    "catalog": "Catalog",
-    "designRuns": "Design Runs",
     "literature": "Literature",
     "admin": "Admin",
     "menu": {

@@ -61,9 +61,9 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-sm text-blue-400 font-medium uppercase tracking-wider mb-3">FEATURES</h2>
-            <h3 className="text-3xl font-bold text-white mb-4">Advanced Tools for Researchers</h3>
+            <h3 className="text-3xl font-bold text-white mb-4">{t('featuresTitle')}</h3>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              ADC 개발 과정에서 필요로 하는 다양한 분석 솔루션을 제공하며, 이를 쉽고 빠르게 해석하실 수 있도록 지원합니다.
+              {t('featuresSubtitle')}
             </p>
           </div>
 
@@ -73,9 +73,9 @@ export default function Home() {
               <div className="w-14 h-14 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 mb-6 group-hover:bg-blue-500/20 transition-colors">
                 <Beaker className="w-7 h-7" />
               </div>
-              <h4 className="text-xl font-bold text-white mb-3">Smart Candidate Scoring</h4>
+              <h4 className="text-xl font-bold text-white mb-3">{t('features.scoring')}</h4>
               <p className="text-slate-400 leading-relaxed text-sm">
-                AI 기반 약물 후보 물질 분석: 다차원척도로 새로운 활성 물질 및 부작용 예측하여 효율성을 극대화합니다.
+                {t('features.scoringDesc')}
               </p>
             </div>
 
@@ -84,9 +84,9 @@ export default function Home() {
               <div className="w-14 h-14 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400 mb-6 group-hover:bg-purple-500/20 transition-colors">
                 <BookOpen className="w-7 h-7" />
               </div>
-              <h4 className="text-xl font-bold text-white mb-3">Global Literature Indexing</h4>
+              <h4 className="text-xl font-bold text-white mb-3">{t('features.literature')}</h4>
               <p className="text-slate-400 leading-relaxed text-sm">
-                수백만 건 논문 정보 실시간 분석: 본 사이트의 머신러닝 모델은 해당 사이트 이외에서 참고한 논문들까지도 모두 수집합니다.
+                {t('features.literatureDesc')}
               </p>
             </div>
 
@@ -95,9 +95,9 @@ export default function Home() {
               <div className="w-14 h-14 bg-green-500/10 rounded-xl flex items-center justify-center text-green-400 mb-6 group-hover:bg-green-500/20 transition-colors">
                 <Zap className="w-7 h-7" />
               </div>
-              <h4 className="text-xl font-bold text-white mb-3">Automated Protocol Gen</h4>
+              <h4 className="text-xl font-bold text-white mb-3">{t('features.protocol')}</h4>
               <p className="text-slate-400 leading-relaxed text-sm">
-                프로토콜 초안의 표준 자동 생성: 다수의 기존논문에서 검증된 프로토콜 참조, 실험 조건 개인화 기반 프로토콜 구성을 지원합니다.
+                {t('features.protocolDesc')}
               </p>
             </div>
           </div>
@@ -108,9 +108,9 @@ export default function Home() {
       <section id="interface" className="py-24 bg-transparent">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-white mb-4">System Interface</h2>
+            <h2 className="text-3xl font-bold text-white mb-4">{t('interfaceTitle')}</h2>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              직관적인 인터페이스를 통해 복잡한 데이터를 손쉽게 분석하고, 연구 인사이트를 한눈에 파악하세요.
+              {t('interfaceSubtitle')}
             </p>
           </div>
 
