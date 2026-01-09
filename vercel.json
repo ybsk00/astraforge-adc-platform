@@ -1,6 +1,9 @@
 {
     "version": 2,
     "framework": "nextjs",
+    "buildCommand": "cd apps/frontend && npm install && npm run build",
+    "outputDirectory": "apps/frontend/.next",
+    "installCommand": "echo 'Skip root install'",
     "rewrites": [
         {
             "source": "/api/:path*",
