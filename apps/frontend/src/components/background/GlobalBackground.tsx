@@ -66,7 +66,7 @@ export default function GlobalBackground() {
                 style={{
                     x: isMobile ? 0 : blob1X,
                     y: isMobile ? 0 : blob1Y,
-                    background: 'radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, rgba(30, 58, 138, 0.1) 40%, transparent 70%)'
+                    background: 'radial-gradient(circle, rgba(59, 130, 246, 0.5) 0%, rgba(37, 99, 235, 0.3) 40%, transparent 70%)'
                 }}
                 className="absolute -top-1/4 -left-1/4 w-[600px] h-[600px] rounded-full blur-3xl animate-pulse"
             />
@@ -75,7 +75,7 @@ export default function GlobalBackground() {
                 style={{
                     x: isMobile ? 0 : blob2X,
                     y: isMobile ? 0 : blob2Y,
-                    background: 'radial-gradient(circle, rgba(147, 51, 234, 0.2) 0%, rgba(88, 28, 135, 0.1) 40%, transparent 70%)'
+                    background: 'radial-gradient(circle, rgba(168, 85, 247, 0.45) 0%, rgba(126, 34, 206, 0.25) 40%, transparent 70%)'
                 }}
                 className="absolute top-1/3 -right-1/4 w-[500px] h-[500px] rounded-full blur-3xl animate-pulse"
                 // @ts-ignore
@@ -86,7 +86,7 @@ export default function GlobalBackground() {
                 style={{
                     x: isMobile ? 0 : blob3X,
                     y: isMobile ? 0 : blob3Y,
-                    background: 'radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, rgba(14, 116, 144, 0.08) 40%, transparent 70%)'
+                    background: 'radial-gradient(circle, rgba(34, 211, 238, 0.4) 0%, rgba(8, 145, 178, 0.2) 40%, transparent 70%)'
                 }}
                 className="absolute -bottom-1/4 left-1/3 w-[700px] h-[700px] rounded-full blur-3xl animate-pulse"
                 // @ts-ignore
@@ -95,20 +95,20 @@ export default function GlobalBackground() {
 
             {/* Particle Field Layer */}
             <div className="absolute inset-0">
-                {!isMobile && [...Array(15)].map((_, i) => (
+                {!isMobile && [...Array(25)].map((_, i) => (
                     <motion.div
                         key={i}
-                        className="absolute w-1 h-1 bg-blue-400/30 rounded-full"
+                        className="absolute w-1.5 h-1.5 bg-blue-400/60 rounded-full shadow-[0_0_10px_rgba(96,165,250,0.5)]"
                         style={{
                             left: `${10 + (i * 6) % 80}%`,
                             top: `${15 + (i * 7) % 70}%`,
                         }}
                         animate={{
-                            y: [0, -20, 0],
-                            opacity: [0.2, 0.5, 0.2],
+                            y: [0, -30, 0],
+                            opacity: [0.4, 0.8, 0.4],
                         }}
                         transition={{
-                            duration: 6 + (i % 4),
+                            duration: 4 + (i % 4),
                             repeat: Infinity,
                             delay: i * 0.5,
                             ease: 'easeInOut',
@@ -117,8 +117,8 @@ export default function GlobalBackground() {
                 ))}
             </div>
 
-            {/* Fog overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/30 to-slate-950/50" />
+            {/* Fog overlay - Reduced opacity */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/10 to-slate-950/30" />
         </div>
     );
 }
