@@ -18,7 +18,7 @@ export default function Home() {
             <span className="text-white font-bold">ADC Platform</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-slate-400">
-            <a href="#features" className="hover:text-white transition-colors">제6스 소개</a>
+            <a href="#features" className="hover:text-white transition-colors">서비스 소개</a>
             <a href="#interface" className="hover:text-white transition-colors">기능</a>
             <a href="#contact" className="hover:text-white transition-colors">솔루션</a>
           </div>
@@ -245,7 +245,7 @@ export default function Home() {
             <div>
               <h4 className="text-white font-bold mb-6">Product</h4>
               <ul className="space-y-4 text-sm text-slate-400">
-                <li><a href="#" className="hover:text-blue-400 transition-colors">AI 후보 물뮬 스토어</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition-colors">AI 후보 물질 스코어</a></li>
                 <li><a href="#" className="hover:text-blue-400 transition-colors">문헌 데이터</a></li>
                 <li><a href="#" className="hover:text-blue-400 transition-colors">프로토콜 자동화</a></li>
               </ul>
