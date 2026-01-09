@@ -17,7 +17,7 @@ export default function HeroVideo() {
                     className="w-full h-full object-cover"
                     poster="/images/cancer-cell.png"
                 >
-                    <source src="/videos/hero-cell.mp4" type="video/mp4" />
+                    <source src="/videos/2.mp4" type="video/mp4" />
                 </video>
 
                 {/* Status Overlay */}
