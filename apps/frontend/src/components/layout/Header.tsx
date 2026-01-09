@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { Link, usePathname, useRouter } from '@/i18n/routing';
 import { ChangeEvent, useTransition } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Header() {
     const t = useTranslations('Common');
@@ -11,6 +12,7 @@ export default function Header() {
     const router = useRouter();
     const pathname = usePathname();
     const [isPending, startTransition] = useTransition();
+    const { isAdmin } = useAuth();
 
     const onSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
         const nextLocale = e.target.value;
@@ -73,9 +75,11 @@ export default function Header() {
                             <Link href="/catalog" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
                                 {t('catalog')}
                             </Link>
-                            <Link href="/admin/connectors" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
-                                {t('admin')}
-                            </Link>
+                            {isAdmin && (
+                                <Link href="/admin/connectors" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+                                    {t('admin')}
+                                </Link>
+                            )}
                         </>
                     )}
                 </nav>

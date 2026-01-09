@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import Header from '@/components/layout/Header';
 import GlobalBackground from '@/components/background/GlobalBackground';
+import { AuthProvider } from '@/contexts/AuthContext';
 import '../globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -27,11 +28,14 @@ export default async function RootLayout({
     <html lang={locale}>
       <body className={`${inter.variable} font-sans antialiased text-slate-50`}>
         <NextIntlClientProvider messages={messages}>
-          <GlobalBackground />
-          <Header />
-          {children}
+          <AuthProvider>
+            <GlobalBackground />
+            <Header />
+            {children}
+          </AuthProvider>
         </NextIntlClientProvider>
       </body>
     </html>
   );
 }
+
