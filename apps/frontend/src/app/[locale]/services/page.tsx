@@ -60,7 +60,7 @@ export default function ServicesPage() {
                                 <div className="p-2 bg-red-500/10 rounded-lg shrink-0">
                                     <Shield className="w-6 h-6 text-red-400" />
                                 </div>
-                                <p className="text-slate-300">{t(`problems.items.${i}`)}</p>
+                                <p className="text-slate-300 break-keep">{t(`problems.items.${i}`)}</p>
                             </motion.div>
                         ))}
                     </div>
@@ -87,7 +87,7 @@ export default function ServicesPage() {
                                 <div className={`w-12 h-12 ${item.bg} rounded-lg flex items-center justify-center mb-6`}>
                                     <item.icon className={`w-6 h-6 ${item.color}`} />
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-3">{t(`values.items.${i}.title`)}</h3>
+                                <h3 className="text-xl font-bold text-white mb-3 whitespace-nowrap">{t(`values.items.${i}.title`)}</h3>
                                 <p className="text-slate-400 text-sm">{t(`values.items.${i}.desc`)}</p>
                             </motion.div>
                         ))}

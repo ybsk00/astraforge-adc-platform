@@ -67,7 +67,7 @@ export default function SolutionsPage() {
                     <div className="grid md:grid-cols-3 gap-6">
                         {[0, 1, 2].map((i) => (
                             <div key={i} className="bg-slate-950/50 rounded-xl p-6 border border-slate-800">
-                                <p className="text-slate-200 font-medium">{t(`deployment.items.${i}`)}</p>
+                                <p className="text-slate-200 font-medium whitespace-pre-line">{t(`deployment.items.${i}`)}</p>
                             </div>
                         ))}
                     </div>
