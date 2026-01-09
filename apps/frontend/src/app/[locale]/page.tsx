@@ -61,7 +61,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 bg-slate-900/50">
+      <section id="features" className="py-24 bg-transparent">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-sm text-blue-400 font-medium uppercase tracking-wider mb-3">FEATURES</h2>
