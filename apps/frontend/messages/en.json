@@ -109,5 +109,148 @@
       "commonProperties": "Common Properties",
       "differences": "Differences"
     }
+  },
+  "ServicesPage": {
+    "title": "Services",
+    "subtitle": "AI-driven Drug Discovery Platform, ADC Platform",
+    "intro": {
+      "title": "What is ADC Platform?",
+      "desc": "ADC Platform is an AI-based Drug Discovery platform that connects target discovery → candidate design → evidence verification → prioritization into a single workflow during the ADC R&D process. It automatically collects and organizes distributed information such as papers, patents, public DBs, and internal data, provides evidence-based answers to researcher questions, and supports quantitative comparison of candidate combinations."
+    },
+    "problems": {
+      "title": "Problems We Solve",
+      "items": [
+        "Difficult to compare target/antibody/linker/payload candidates due to scattered data.",
+        "Excessive time spent finding and organizing evidence slows down experimental design.",
+        "ADC design involves many variables, making decision-making prone to experience bias.",
+        "Distributed document/result management reduces reproducibility and collaboration efficiency."
+      ]
+    },
+    "values": {
+      "title": "Core Values",
+      "items": [
+        {
+          "title": "Reduce Research Time",
+          "desc": "Automate search, organization, and reporting to shorten research lead time."
+        },
+        {
+          "title": "Evidence-First",
+          "desc": "Answers and recommendations are always provided with sources/evidence for easy verification."
+        },
+        {
+          "title": "Design-to-Decision",
+          "desc": "Connects design generation to comparison, scoring, and prioritization."
+        },
+        {
+          "title": "Organizational Collaboration",
+          "desc": "Standardize research collaboration based on projects, permissions, and audit logs."
+        }
+      ]
+    },
+    "flow": {
+      "title": "Workflow",
+      "items": [
+        "Target/Indication Definition: Input cancer type, biomarker, mechanism hypothesis",
+        "Data Collection & Organization: Auto-collection + knowledge processing of papers/patents/DBs",
+        "Candidate Design: Generate antibody/linker/payload combinations and organize candidates",
+        "Evidence-based Verification: Check evidence sentences/papers/patents via RAG Q&A",
+        "Scoring/Prioritization: Quantitative comparison of success probability, risk, and developability",
+        "Report/Share: Auto-generate results for investment, internal review, and experimental planning"
+      ]
+    },
+    "diff": {
+      "title": "Key Differentiators",
+      "items": [
+        {
+          "title": "Hybrid Search",
+          "desc": "Keyword + Semantic search to capture important keywords and context."
+        },
+        {
+          "title": "Explainable Recommendation",
+          "desc": "Provides reasons why a candidate is favorable along with evidence."
+        },
+        {
+          "title": "Modular Expansion",
+          "desc": "Expand data connectors, models, and scoring rules to fit organizational needs."
+        },
+        {
+          "title": "Enterprise Operations",
+          "desc": "Provides an operational structure considering permissions, security, audit, and deployment options."
+        }
+      ]
+    }
+  },
+  "FeaturesPage": {
+    "title": "Features",
+    "subtitle": "Powerful Tools for ADC Research",
+    "data": {
+      "title": "Data Collection & Knowledge Processing",
+      "items": [
+        "External Data Connectors: PubMed/NCBI papers, patents, public DB integration",
+        "Internal Data Integration: Upload research notes, PDFs, spreadsheets with metadata normalization",
+        "Knowledge Pipeline: Document structure analysis, chunking, embedding, indexing"
+      ]
+    },
+    "search": {
+      "title": "Hybrid Search & RAG Q&A",
+      "items": [
+        "Keyword Search (BM25) + Semantic Search (Vector) Combination",
+        "Evidence-based Answers (RAG): Provide evidence sentences/sources used in answers"
+      ]
+    },
+    "design": {
+      "title": "ADC Design Support",
+      "items": [
+        "Design Element Management: Structure key parameters like Target, Antibody, Linker, Payload, DAR",
+        "Candidate Comparison: List up candidates, tagging, notes, comments, status management"
+      ]
+    },
+    "scoring": {
+      "title": "Scoring & Risk Assessment",
+      "items": [
+        "Quantitative Comparison: Target suitability, linker stability, payload toxicity, etc.",
+        "Explainable Scoring: Provide evidence and contributing factors for scores"
+      ]
+    },
+    "collab": {
+      "title": "Collaboration & Operations",
+      "items": [
+        "Project/Workspace: Team/Task separation",
+        "Permissions/Security: RBAC, Audit Logs",
+        "Report Generation: Auto-generate summary reports, PDF export"
+      ]
+    }
+  },
+  "SolutionsPage": {
+    "title": "Solutions",
+    "subtitle": "Tailored Solutions for Each Research Stage",
+    "target": {
+      "title": "Target Intelligence",
+      "desc": "Derive promising target candidates based on cancer type/indication and structure evidence to judge value.",
+      "example": "New target discovery, competitive pipeline research, indication expansion review"
+    },
+    "optimization": {
+      "title": "ADC Design Optimization",
+      "desc": "Systematically organize antibody/linker/payload combinations and identify risk points early.",
+      "example": "Linker stability comparison, payload selection evidence, candidate down-selection"
+    },
+    "risk": {
+      "title": "Developability & Safety Risk Check",
+      "desc": "Check development risks and present safety concerns with evidence to reduce failure costs.",
+      "example": "Screening dangerous candidates before experimentation"
+    },
+    "knowledge": {
+      "title": "Organizational Knowledge Ops",
+      "desc": "Collect and organize scattered data into organizational knowledge assets.",
+      "example": "New hire onboarding, task handover, internal standard report templates"
+    },
+    "deployment": {
+      "title": "Deployment Options",
+      "items": [
+        "MVP (Fast Adoption): Core Connectors + Search/RAG + Basic Workspace",
+        "Team Expansion: Scoring/Report Automation/Collaboration Features",
+        "Enterprise: SSO, Audit Logs, Dedicated Deployment (VPC/On-prem), SLA"
+      ]
+    }
   }
 }
