@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import HeroVideo from '@/components/ui/HeroVideo';
-import Navigation from '@/components/layout/Navigation';
 import { Beaker, BookOpen, Zap, TrendingUp, Shield, Globe } from 'lucide-react';
 
 export default function Home() {
@@ -9,9 +8,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-transparent relative">
-      {/* Navigation */}
-      <Navigation />
-
       {/* Hero Section */}
       <section className="relative pt-32 pb-24 overflow-hidden">
         <div className="container mx-auto px-4">

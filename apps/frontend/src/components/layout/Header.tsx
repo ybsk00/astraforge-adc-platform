@@ -6,6 +6,7 @@ import { ChangeEvent, useTransition } from 'react';
 
 export default function Header() {
     const t = useTranslations('Common');
+    const tHome = useTranslations('HomePage.nav');
     const locale = useLocale();
     const router = useRouter();
     const pathname = usePathname();
@@ -17,6 +18,15 @@ export default function Header() {
             router.replace(pathname, { locale: nextLocale });
         });
     };
+
+    // Define public pages where the public navigation should be shown
+    const isPublicPage = pathname === '/' ||
+        pathname.startsWith('/services') ||
+        pathname.startsWith('/features') ||
+        pathname.startsWith('/solutions') ||
+        pathname.startsWith('/login');
+
+    const isActive = (path: string) => pathname === path;
 
     return (
         <header className="border-b border-white/10 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
@@ -31,18 +41,43 @@ export default function Header() {
 
                 {/* Navigation */}
                 <nav className="hidden md:flex items-center gap-8">
-                    <Link href="/dashboard" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
-                        {t('dashboard')}
-                    </Link>
-                    <Link href="/design/runs" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
-                        {t('designRuns')}
-                    </Link>
-                    <Link href="/catalog" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
-                        {t('catalog')}
-                    </Link>
-                    <Link href="/admin/connectors" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
-                        {t('admin')}
-                    </Link>
+                    {isPublicPage ? (
+                        <>
+                            <Link
+                                href="/services"
+                                className={`text-sm font-medium transition-colors ${isActive('/services') ? 'text-white' : 'text-slate-300 hover:text-white'}`}
+                            >
+                                {tHome('services')}
+                            </Link>
+                            <Link
+                                href="/features"
+                                className={`text-sm font-medium transition-colors ${isActive('/features') ? 'text-white' : 'text-slate-300 hover:text-white'}`}
+                            >
+                                {tHome('features')}
+                            </Link>
+                            <Link
+                                href="/solutions"
+                                className={`text-sm font-medium transition-colors ${isActive('/solutions') ? 'text-white' : 'text-slate-300 hover:text-white'}`}
+                            >
+                                {tHome('solutions')}
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <Link href="/dashboard" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+                                {t('dashboard')}
+                            </Link>
+                            <Link href="/design/runs" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+                                {t('designRuns')}
+                            </Link>
+                            <Link href="/catalog" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+                                {t('catalog')}
+                            </Link>
+                            <Link href="/admin/connectors" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+                                {t('admin')}
+                            </Link>
+                        </>
+                    )}
                 </nav>
 
                 {/* Right Actions */}
@@ -53,20 +88,29 @@ export default function Header() {
                             defaultValue={locale}
                             onChange={onSelectChange}
                             disabled={isPending}
-                            className="bg-slate-800 text-slate-200 text-sm rounded-md border border-slate-700 px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="bg-slate-800 text-slate-200 text-sm rounded-md border border-slate-700 px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-8 cursor-pointer"
+                            style={{ backgroundImage: 'none' }}
                         >
-                            <option value="en">🇺🇸 EN</option>
-                            <option value="ko">🇰🇷 KR</option>
+                            <option value="en">EN</option>
+                            <option value="ko">KO</option>
                         </select>
+                        {/* Custom Arrow Icon */}
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
                     </div>
 
-                    {/* Login Button */}
-                    <Link
-                        href="/login"
-                        className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
-                    >
-                        {t('login')}
-                    </Link>
+                    {/* Login Button (Only on public pages) */}
+                    {isPublicPage && (
+                        <Link
+                            href="/login"
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
+                        >
+                            {t('login')}
+                        </Link>
+                    )}
                 </div>
             </div>
         </header>
