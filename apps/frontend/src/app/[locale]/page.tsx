@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import Interactive3DCell from '@/components/ui/Interactive3DCell';
+import Navigation from '@/components/layout/Navigation';
 import { Beaker, BookOpen, Zap, TrendingUp, Shield, Globe } from 'lucide-react';
 
 export default function Home() {
@@ -9,27 +10,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-slate-950">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-lg border-b border-slate-800">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm font-bold">◇</span>
-            </div>
-            <span className="text-white font-bold">ADC Platform</span>
-          </div>
-          <div className="hidden md:flex items-center gap-8 text-sm text-slate-400">
-            <a href="#features" className="hover:text-white transition-colors">서비스 소개</a>
-            <a href="#interface" className="hover:text-white transition-colors">기능</a>
-            <a href="#contact" className="hover:text-white transition-colors">솔루션</a>
-          </div>
-          <Link
-            href="/login"
-            className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
-          >
-            로그인
-          </Link>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-24 overflow-hidden">
@@ -46,17 +27,17 @@ export default function Home() {
                 Next-Gen ADC<br />Discovery
               </h1>
               <p className="text-lg text-slate-400 mb-8 max-w-lg leading-relaxed">
-                최첨단 AI 알고리즘으로 항체-약물 접합체(ADC)의 설계를 최적화하고, 연구 데이터를 빠르게 분석하여 신약 개발을 가속화하세요.
+                {t('subtitle')}
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link
                   href="/login"
                   className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-all shadow-lg shadow-blue-600/25"
                 >
-                  시작하기
+                  {t('start')}
                 </Link>
                 <button className="px-8 py-4 bg-slate-800/50 hover:bg-slate-800 text-white font-semibold rounded-lg border border-slate-700 transition-all flex items-center gap-2">
-                  데모 영상 보기
+                  {t('demo')}
                 </button>
               </div>
               <div className="mt-10 flex items-center gap-6 text-xs text-slate-500">

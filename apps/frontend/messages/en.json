@@ -1,9 +1,14 @@
 {
   "HomePage": {
     "title": "Accelerating Next-Gen ADC Discovery",
-    "subtitle": "Experience an integrated AI platform that accelerates the entire R&D process, from candidate scoring to literature mining and protocol generation.",
+    "subtitle": "Optimize ADC design with cutting-edge AI algorithms, rapidly analyze research data, and accelerate drug discovery.",
     "start": "Get Started",
     "demo": "Watch Demo",
+    "nav": {
+      "services": "Services",
+      "features": "Features",
+      "solutions": "Solutions"
+    },
     "features": {
       "scoring": "Smart Candidate Scoring",
       "scoringDesc": "AI-driven scoring system rapidly identifies high-potential candidates.",
@@ -20,7 +25,13 @@
       "product": "Product",
       "company": "Company",
       "contact": "Contact",
-      "rights": "© 2024 ADC Platform Inc. All rights reserved."
+      "rights": "© 2024 ADC Platform Inc. All rights reserved.",
+      "candidateScore": "AI Candidate Scoring",
+      "literatureData": "Literature Data",
+      "protocolAutomation": "Protocol Automation",
+      "aboutUs": "About Us",
+      "careers": "Careers",
+      "blog": "Blog"
     }
   },
   "Common": {
