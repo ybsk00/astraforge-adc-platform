@@ -21,7 +21,7 @@ export default function LanguageSwitcher() {
                         : 'text-slate-400 hover:text-white'
                     }`}
             >
-                한
+                KO
             </button>
             <span className="text-slate-600">|</span>
             <button
