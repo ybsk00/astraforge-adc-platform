@@ -2,7 +2,7 @@
     "private": true,
     "name": "adc-platform-monorepo",
     "scripts": {
-        "build": "echo 'Debugging Vercel Environment...' && ls -R apps && echo 'Building Web App...' && cd apps/frontend && npm install && npm run build"
+        "build": "npm run build --prefix apps/frontend"
     },
     "engines": {
         "node": "20.x"
