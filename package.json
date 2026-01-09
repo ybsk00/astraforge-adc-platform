@@ -7,7 +7,7 @@
     "engines": {
         "node": "20.x"
     },
-    "devDependencies": {
-        "next": "14.2.3"
+    "dependencies": {
+        "next": "16.1.1"
     }
 }
