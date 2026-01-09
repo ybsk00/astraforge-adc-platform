@@ -26,6 +26,42 @@
     "menu": {
       "overview": "Overview",
       "designRuns": "Design Runs",
+      "catalog": "Catalog",
+      "connectors": "Connectors",
+      "staging": "Staging",
+      "ingestion": "Ingestion",
+      "observability": "Observability",
+      "alerts": "Alerts",
+      "settings": "Settings"
+    },
+    "platformName": "AI Drug Discovery Platform",
+    "titlePrefix": "Accelerating",
+    "titleMain": "Next-Gen ADC<br />Discovery",
+    "badges": {
+      "fda": "FDA Data Compliant",
+      "security": "Enterprise Security"
+    },
+    "featuresLabel": "FEATURES",
+    "charts": {
+      "bindingAffinity": "Binding Affinity Distribution",
+      "last30Days": "Last 30 days",
+      "liveProtocols": "Live Protocols",
+      "running": "Running",
+      "pending": "Pending",
+      "scheduled": "Scheduled"
+    },
+    "footer": {
+      "desc": "Empowering scientists with AI-driven insights for antibody-drug conjugate discovery.",
+      "product": "Product",
+      "company": "Company",
+      "contact": "Contact",
+      "rights": "© 2024 ADC Platform Inc. All rights reserved."
+    }
+  },
+  "Dashboard": {
+    "stats": {
+      "totalProjects": "Total Projects",
+      "activeRuns": "Active Runs",
       "completedRuns": "Completed Runs",
       "resources": "Computing Resources"
     },

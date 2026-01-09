@@ -26,6 +26,42 @@
         "menu": {
             "overview": "개요",
             "designRuns": "설계 실행",
+            "catalog": "카탈로그",
+            "connectors": "커넥터",
+            "staging": "스테이징",
+            "ingestion": "데이터 수집",
+            "observability": "관측성",
+            "alerts": "알림",
+            "settings": "설정"
+        },
+        "platformName": "AI 신약 개발 플랫폼",
+        "titlePrefix": "연구 속도를 높이는",
+        "titleMain": "차세대 ADC 발굴",
+        "badges": {
+            "fda": "FDA 데이터 준수",
+            "security": "엔터프라이즈 보안"
+        },
+        "featuresLabel": "주요 기능",
+        "charts": {
+            "bindingAffinity": "결합 친화도 분포",
+            "last30Days": "최근 30일",
+            "liveProtocols": "실시간 프로토콜",
+            "running": "진행 중",
+            "pending": "대기 중",
+            "scheduled": "예정됨"
+        },
+        "footer": {
+            "desc": "AI 기반 통찰력으로 항체-약물 접합체(ADC) 발굴을 지원합니다.",
+            "product": "제품",
+            "company": "회사",
+            "contact": "문의",
+            "rights": "© 2024 ADC Platform Inc. All rights reserved."
+        }
+    },
+    "Dashboard": {
+        "stats": {
+            "totalProjects": "전체 프로젝트",
+            "activeRuns": "진행 중인 실행",
             "completedRuns": "완료된 실행",
             "resources": "컴퓨팅 자원"
         },
