@@ -46,8 +46,7 @@ export default function Home() {
                 Next-Gen ADC<br />Discovery
               </h1>
               <p className="text-lg text-slate-400 mb-8 max-w-lg leading-relaxed">
-                최첨단 AI 알고리즘으로 항체-약물 접합체의 설계를 최적화하고,
-                연구 데이터를 빠르게 가시화하여 통찰 AI 플랫폼을 경험하세요.
+                최첨단 AI 알고리즘으로 항체-약물 접합체(ADC)의 설계를 최적화하고, 연구 데이터를 빠르게 분석하여 신약 개발을 가속화하세요.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link
@@ -134,7 +133,7 @@ export default function Home() {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-white mb-4">System Interface</h2>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              직관적인 인터페이스를 통해 복잡한 데이터를 손쉽게하고, 연구 인사이트를 한눈에 파악하세요.
+              직관적인 인터페이스를 통해 복잡한 데이터를 손쉽게 분석하고, 연구 인사이트를 한눈에 파악하세요.
             </p>
           </div>
 
