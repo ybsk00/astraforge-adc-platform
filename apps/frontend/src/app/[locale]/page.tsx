@@ -14,13 +14,13 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative z-10">
               <div className="inline-block px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-6">
-                AI Drug Discovery Platform
+                {t('platformName')}
               </div>
               <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight mb-2">
-                Accelerating
+                {t('titlePrefix')}
               </h1>
               <h1 className="text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 leading-tight mb-6">
-                Next-Gen ADC<br />Discovery
+                {t.rich('titleMain', { br: () => <br /> })}
               </h1>
               <p className="text-lg text-slate-400 mb-8 max-w-lg leading-relaxed">
                 {t('subtitle')}
@@ -39,11 +39,11 @@ export default function Home() {
               <div className="mt-10 flex items-center gap-6 text-xs text-slate-500">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  FDA Data Compliant
+                  {t('badges.fda')}
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  Enterprise Security
+                  {t('badges.security')}
                 </div>
               </div>
             </div>
@@ -60,7 +60,7 @@ export default function Home() {
       <section id="features" className="py-24 bg-transparent">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-sm text-blue-400 font-medium uppercase tracking-wider mb-3">FEATURES</h2>
+            <h2 className="text-sm text-blue-400 font-medium uppercase tracking-wider mb-3">{t('featuresLabel')}</h2>
             <h3 className="text-3xl font-bold text-white mb-4">{t('featuresTitle')}</h3>
             <p className="text-slate-400 max-w-2xl mx-auto">
               {t('featuresSubtitle')}
@@ -125,8 +125,8 @@ export default function Home() {
                   {/* Left Panel - Chart */}
                   <div className="md:col-span-2 bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
                     <div className="flex items-center justify-between mb-6">
-                      <h4 className="text-white font-medium">Binding Affinity Distribution</h4>
-                      <span className="text-xs text-slate-400">Last 30 days</span>
+                      <h4 className="text-white font-medium">{t('charts.bindingAffinity')}</h4>
+                      <span className="text-xs text-slate-400">{t('charts.last30Days')}</span>
                     </div>
                     {/* Mock Bar Chart */}
                     <div className="flex items-end gap-3 h-40">
@@ -171,28 +171,28 @@ export default function Home() {
 
                   {/* Right Panel - Live Protocols */}
                   <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
-                    <h4 className="text-white font-medium mb-4">Live Protocols</h4>
+                    <h4 className="text-white font-medium mb-4">{t('charts.liveProtocols')}</h4>
                     <div className="space-y-4">
                       <div className="p-3 bg-gradient-to-r from-green-500/10 to-transparent border-l-2 border-green-500 rounded-r">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="w-2 h-2 rounded-full bg-green-500"></span>
                           <span className="text-sm text-white">Synthesis A</span>
                         </div>
-                        <span className="text-xs text-slate-400">Running • 45% complete</span>
+                        <span className="text-xs text-slate-400">{t('charts.running')} • 45% complete</span>
                       </div>
                       <div className="p-3 bg-gradient-to-r from-blue-500/10 to-transparent border-l-2 border-blue-500 rounded-r">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="w-2 h-2 rounded-full bg-blue-500"></span>
                           <span className="text-sm text-white">Toxicity Test</span>
                         </div>
-                        <span className="text-xs text-slate-400">Pending • Queue #2</span>
+                        <span className="text-xs text-slate-400">{t('charts.pending')} • Queue #2</span>
                       </div>
                       <div className="p-3 bg-gradient-to-r from-purple-500/10 to-transparent border-l-2 border-purple-500 rounded-r">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="w-2 h-2 rounded-full bg-purple-500"></span>
                           <span className="text-sm text-white">Stability Assay</span>
                         </div>
-                        <span className="text-xs text-slate-400">Scheduled • Tomorrow</span>
+                        <span className="text-xs text-slate-400">{t('charts.scheduled')} • Tomorrow</span>
                       </div>
                     </div>
                   </div>
@@ -215,27 +215,27 @@ export default function Home() {
                 <span className="text-lg font-bold text-white">ADC Platform</span>
               </div>
               <p className="text-slate-500 text-sm leading-relaxed">
-                Empowering scientists with AI-driven insights for antibody-drug conjugate discovery.
+                {t('footer.desc')}
               </p>
             </div>
             <div>
-              <h4 className="text-white font-bold mb-6">Product</h4>
+              <h4 className="text-white font-bold mb-6">{t('footer.product')}</h4>
               <ul className="space-y-4 text-sm text-slate-400">
-                <li><a href="#" className="hover:text-blue-400 transition-colors">AI 후보 물질 스코어</a></li>
-                <li><a href="#" className="hover:text-blue-400 transition-colors">문헌 데이터</a></li>
-                <li><a href="#" className="hover:text-blue-400 transition-colors">프로토콜 자동화</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition-colors">{t('features.scoring')}</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition-colors">{t('features.literature')}</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition-colors">{t('features.protocol')}</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-bold mb-6">Company</h4>
+              <h4 className="text-white font-bold mb-6">{t('footer.company')}</h4>
               <ul className="space-y-4 text-sm text-slate-400">
-                <li><a href="#" className="hover:text-blue-400 transition-colors">회사 소개</a></li>
-                <li><a href="#" className="hover:text-blue-400 transition-colors">채용</a></li>
-                <li><a href="#" className="hover:text-blue-400 transition-colors">블로그</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition-colors">Careers</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition-colors">Blog</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-bold mb-6">Contact</h4>
+              <h4 className="text-white font-bold mb-6">{t('footer.contact')}</h4>
               <ul className="space-y-4 text-sm text-slate-400">
                 <li>support@adc-platform.com</li>
                 <li>+82 2-1234-5678</li>
@@ -243,7 +243,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-slate-900 pt-8 text-center text-slate-600 text-sm">
-            © 2024 ADC Platform Inc. All rights reserved.
+            {t('footer.rights')}
           </div>
         </div>
       </footer>

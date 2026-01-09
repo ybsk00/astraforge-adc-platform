@@ -3,219 +3,29 @@
         "title": "차세대 ADC 발굴 가속화",
         "subtitle": "최첨단 AI 알고리즘으로 항체-약물 접합체(ADC)의 설계를 최적화하고, 연구 데이터를 빠르게 분석하여 신약 개발을 가속화하세요.",
         "start": "시작하기",
+        "demo": "데모 요청",
+        "nav": {
+            "services": "서비스",
+            "features": "기능",
+            "solutions": "솔루션"
+        },
+        "featuresTitle": "주요 기능",
+        "featuresSubtitle": "ADC 연구를 위한 강력한 도구들을 만나보세요.",
+        "features": {
+            "scoring": "AI 스코어링",
+            "scoringDesc": "다양한 변수를 고려하여 후보 물질의 성공 가능성을 예측합니다.",
+            "literature": "문헌 분석",
+            "literatureDesc": "방대한 논문과 특허 데이터를 AI로 분석하여 핵심 정보를 추출합니다.",
+            "protocol": "프로토콜 자동화",
+            "protocolDesc": "실험 프로토콜을 자동으로 생성하고 최적화하여 연구 효율을 높입니다."
+        },
+        "interfaceTitle": "시스템 인터페이스",
+        "interfaceSubtitle": "직관적인 대시보드로 연구 데이터를 한눈에 파악하세요.",
         "literature": "문헌",
         "admin": "관리자",
         "menu": {
             "overview": "개요",
             "designRuns": "설계 실행",
-            "catalog": "카탈로그",
-            "connectors": "커넥터",
-            "staging": "스테이징",
-            "ingestion": "데이터 수집",
-            "observability": "관측성",
-            "alerts": "알림",
-            "settings": "설정"
-        }
-    },
-    "Dashboard": {
-        "stats": {
-            "totalProjects": "전체 프로젝트",
-            "activeRuns": "진행 중인 실행",
-            "completedRuns": "완료된 실행",
-            "resources": "컴퓨팅 자원"
-        },
-        "recentActivity": "최근 활동",
-        "quickActions": "빠른 작업",
-        "newRun": "새 설계 실행",
-        "viewCatalog": "카탈로그 보기"
-    },
-    "DesignRuns": {
-        "title": "설계 실행 목록",
-        "newRun": "새 실행",
-        "filters": {
-            "all": "모든 상태",
-            "running": "진행 중",
-            "completed": "완료됨",
-            "failed": "실패함",
-            "searchPlaceholder": "실행 검색..."
-        },
-        "table": {
-            "id": "실행 ID",
-            "name": "프로젝트명",
-            "status": "상태",
-            "progress": "진행률",
-            "candidates": "후보 물질",
-            "created": "생성일",
-            "actions": "작업"
-        }
-    },
-    "RunDetail": {
-        "backToRuns": "목록으로 돌아가기",
-        "overview": "실행 개요",
-        "scoreDistribution": "점수 분포",
-        "topCandidates": "상위 후보 물질",
-        "exportReport": "보고서 내보내기",
-        "tabs": {
-            "candidates": "후보 물질",
-            "analysis": "분석",
-            "settings": "설정"
-        },
-        "metrics": {
-            "binding": "결합 친화도",
-            "stability": "안정성",
-            "toxicity": "독성 위험",
-            "developability": "개발 가능성"
-        },
-        "compare": {
-            "title": "후보 물질 비교",
-            "selectCandidate": "후보 물질 선택",
-            "commonProperties": "공통 속성",
-            "differences": "차이점"
-        }
-    },
-    "ServicesPage": {
-        "title": "서비스 소개",
-        "subtitle": "AI 기반 Drug Discovery 플랫폼, ADC Platform",
-        "intro": {
-            "title": "ADC Platform이란?",
-            "desc": "ADC Platform은 항체-약물 접합체(ADC) 연구개발 과정에서 발생하는 표적 탐색 → 후보 설계 → 근거 검증 → 우선순위 결정을 하나의 워크플로우로 연결하는 AI 기반 Drug Discovery 플랫폼입니다. 논문·특허·공개 DB·사내 데이터 등 분산된 정보를 자동으로 수집·정리하고, 연구자가 원하는 질문에 대해 근거 기반으로 빠르게 답변하며, 후보 조합의 성공 가능성을 정량적으로 비교할 수 있도록 지원합니다."
-        },
-        "problems": {
-            "title": "해결하는 문제",
-            "items": [
-                "데이터가 흩어져 있어 표적/항체/링커/페이로드 후보를 비교하기 어렵습니다.",
-                "근거를 찾고 정리하는 데 시간이 과도하게 소요되어 실험 설계가 느려집니다.",
-                "ADC 설계는 변수가 많아 의사결정이 경험 의존이 되기 쉽습니다.",
-                "팀 간 문서/결과물 관리가 분산되어 재현성과 협업 효율이 저하됩니다."
-            ]
-        },
-        "values": {
-            "title": "플랫폼이 제공하는 핵심 가치",
-            "items": [
-                {
-                    "title": "Research Time 단축",
-                    "desc": "검색·정리·리포트 자동화로 연구 리드타임을 줄입니다."
-                },
-                {
-                    "title": "Evidence-First(근거 우선)",
-                    "desc": "답변과 추천이 항상 출처/근거와 함께 제공되어 검증이 쉽습니다."
-                },
-                {
-                    "title": "Design-to-Decision",
-                    "desc": "설계안 생성부터 비교/스코어링/우선순위까지 연결합니다."
-                },
-                {
-                    "title": "조직형 협업",
-                    "desc": "프로젝트/권한/감사로그 기반으로 연구 조직의 협업을 표준화합니다."
-                }
-            ]
-        },
-        "flow": {
-            "title": "사용 흐름",
-            "items": [
-                "표적/적응증 정의: 암종·바이오마커·기전 가설 입력",
-                "데이터 수집 및 정리: 논문/특허/DB 자동 수집 + 지식화",
-                "후보 설계: 항체·링커·페이로드 조합 후보 생성 및 후보군 정리",
-                "근거 기반 검증: RAG 기반 질의응답으로 근거 문장/논문/특허 확인",
-                "스코어링/우선순위: 성공 가능성·리스크·개발성 관점의 정량 비교",
-                "리포트/공유: 투자·내부 심의·실험 계획을 위한 결과물 자동 생성"
-            ]
-        },
-        "diff": {
-            "title": "차별점",
-            "items": [
-                {
-                    "title": "Hybrid Search",
-                    "desc": "키워드+의미 검색으로 중요한 키워드를 놓치지 않으면서도 문맥 기반 탐색이 가능합니다."
-                },
-                {
-                    "title": "Explainable Recommendation",
-                    "desc": "“왜 이 후보가 유리한지”를 근거와 함께 제시합니다."
-                },
-                {
-                    "title": "모듈형 확장",
-                    "desc": "데이터 커넥터/모델/스코어링 규칙을 조직 목적에 맞게 확장합니다."
-                },
-                {
-                    "title": "엔터프라이즈 운영",
-                    "desc": "권한·보안·감사·배포 옵션을 고려한 운영형 구조를 제공합니다."
-                }
-            ]
-        }
-    },
-    "FeaturesPage": {
-        "title": "기능",
-        "subtitle": "ADC 연구를 위한 강력한 도구 모음",
-        "data": {
-            "title": "데이터 수집 & 지식화",
-            "items": [
-                "외부 데이터 커넥터: PubMed/NCBI 논문, 특허, 공개 DB 연동",
-                "사내 데이터 연동: 연구노트, PDF, 스프레드시트 업로드 및 메타데이터 정규화",
-                "지식화 파이프라인: 문서 구조 분석, 청킹, 임베딩, 인덱싱"
-            ]
-        },
-        "search": {
-            "title": "Hybrid Search & RAG 질의응답",
-            "items": [
-                "키워드 검색(BM25) + 의미 검색(Vector) 결합",
-                "근거 기반 답변(RAG): 답변에 사용된 근거 문장/출처 제공, 주장-근거 매핑"
-            ]
-        },
-        "design": {
-            "title": "ADC 설계 지원",
-            "items": [
-                "설계 요소 관리: 표적, 항체, 링커, 페이로드, DAR 등 핵심 파라미터 구조화",
-                "후보 비교/정리: 후보군 리스트업, 태깅, 노트, 코멘트, 상태 관리"
-            ]
-        },
-        "scoring": {
-            "title": "스코어링 & 리스크 평가",
-            "items": [
-                "성공 가능성 관점의 정량 비교: 표적 적합성, 링커 안정성, 페이로드 독성 등",
-                "설명 가능한 스코어링: 점수의 근거와 기여 항목 제공"
-            ]
-        },
-        "collab": {
-            "title": "협업 & 운영",
-            "items": [
-                "프로젝트/워크스페이스: 팀/과제 단위 분리",
-                "권한/보안: 사용자·역할 기반 접근 제어(RBAC), 감사 로그",
-                "리포트 생성: 요약 리포트 자동 생성, PDF 내보내기"
-            ]
-        }
-    },
-    "SolutionsPage": {
-        "title": "솔루션",
-        "subtitle": "연구 단계별 맞춤형 솔루션",
-        "target": {
-            "title": "타겟 인텔리전스",
-            "desc": "암종/적응증 기반으로 유망 표적 후보군을 도출하고, 표적별 근거를 구조화하여 가치를 판단합니다.",
-            "example": "신규 표적 탐색, 경쟁 파이프라인 조사, 적응증 확장 가능성 검토"
-        },
-        "optimization": {
-            "title": "ADC 설계 최적화",
-            "desc": "항체·링커·페이로드 조합을 체계적으로 정리하고, 리스크 포인트를 조기에 확인하여 실험 우선순위를 결정합니다.",
-            "example": "링커 안정성 가정 비교, 페이로드 선택 근거 정리, 후보군 압축"
-        },
-        "risk": {
-            "title": "개발성/안전성 리스크 점검",
-            "desc": "후보 물질의 개발 관점 리스크를 점검하고, 안전성 우려 신호를 근거와 함께 제시하여 실패 비용을 줄입니다.",
-            "example": "실험 전 위험 후보 스크리닝 단계 구축"
-        },
-        "knowledge": {
-            "title": "연구 조직형 지식관리",
-            "desc": "흩어진 자료를 프로젝트 단위로 수집·정리하여 조직 지식 자산으로 전환합니다.",
-            "staging": "스테이징",
-            "ingestion": "데이터 수집",
-            "observability": "관측성",
-            "alerts": "알림",
-            "settings": "설정"
-        }
-    },
-    "Dashboard": {
-        "stats": {
-            "totalProjects": "전체 프로젝트",
-            "activeRuns": "진행 중인 실행",
             "completedRuns": "완료된 실행",
             "resources": "컴퓨팅 자원"
         },
@@ -405,10 +215,17 @@
         "deployment": {
             "title": "도입 형태",
             "items": [
-                "MVP(빠른 도입): 핵심 커넥터 + \\n검색/RAG + 기본 워크스페이스",
-                "팀 확장: 스코어링/리포트 자동화/협업 \\n기능 강화",
+                "MVP(빠른 도입): 핵심 커넥터 + \n검색/RAG + 기본 워크스페이스",
+                "팀 확장: 스코어링/리포트 자동화/협업 \n기능 강화",
                 "엔터프라이즈: SSO, 감사로그, 전용 배포(VPC/On-prem), SLA"
             ]
         }
+    },
+    "Common": {
+        "login": "로그인",
+        "dashboard": "대시보드",
+        "designRuns": "설계 실행",
+        "catalog": "카탈로그",
+        "admin": "관리자"
     }
 }

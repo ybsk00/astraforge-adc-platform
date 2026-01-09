@@ -3,24 +3,29 @@
     "title": "Accelerating Next-Gen ADC Discovery",
     "subtitle": "Optimize ADC design with cutting-edge AI algorithms, rapidly analyze research data, and accelerate drug discovery.",
     "start": "Get Started",
+    "demo": "Request Demo",
+    "nav": {
+      "services": "Services",
+      "features": "Features",
+      "solutions": "Solutions"
+    },
+    "featuresTitle": "Key Features",
+    "featuresSubtitle": "Discover powerful tools for ADC research.",
+    "features": {
+      "scoring": "AI Scoring",
+      "scoringDesc": "Predict success probability of candidates considering various variables.",
+      "literature": "Literature Analysis",
+      "literatureDesc": "Analyze vast papers and patents with AI to extract key information.",
+      "protocol": "Protocol Automation",
+      "protocolDesc": "Automatically generate and optimize experimental protocols to increase efficiency."
+    },
+    "interfaceTitle": "System Interface",
+    "interfaceSubtitle": "Visualize research data at a glance with an intuitive dashboard.",
     "literature": "Literature",
     "admin": "Admin",
     "menu": {
       "overview": "Overview",
       "designRuns": "Design Runs",
-      "catalog": "Catalog",
-      "connectors": "Connectors",
-      "staging": "Staging",
-      "ingestion": "Ingestion",
-      "observability": "Observability",
-      "alerts": "Alerts",
-      "settings": "Settings"
-    }
-  },
-  "Dashboard": {
-    "stats": {
-      "totalProjects": "Total Projects",
-      "activeRuns": "Active Runs",
       "completedRuns": "Completed Runs",
       "resources": "Computing Resources"
     },
@@ -215,5 +220,12 @@
         "Enterprise: SSO, Audit Logs, Dedicated Deployment (VPC/On-prem), SLA"
       ]
     }
+  },
+  "Common": {
+    "login": "Login",
+    "dashboard": "Dashboard",
+    "designRuns": "Design Runs",
+    "catalog": "Catalog",
+    "admin": "Admin"
   }
 }
