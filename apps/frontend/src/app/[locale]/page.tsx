@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import Interactive3DCell from '@/components/ui/Interactive3DCell';
+import HeroVideo from '@/components/ui/HeroVideo';
 import Navigation from '@/components/layout/Navigation';
 import { Beaker, BookOpen, Zap, TrendingUp, Shield, Globe } from 'lucide-react';
 
@@ -54,7 +54,7 @@ export default function Home() {
 
             {/* Hero Visual */}
             <div className="relative z-10 lg:h-[550px] flex items-center justify-center">
-              <Interactive3DCell />
+              <HeroVideo />
             </div>
           </div>
         </div>
