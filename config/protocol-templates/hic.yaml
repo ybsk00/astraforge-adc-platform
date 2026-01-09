@@ -1,0 +1,62 @@
+# HIC (Hydrophobic Interaction Chromatography) Protocol Template
+# 목적: 소수성 프로파일 분석
+
+id: hic_v1
+name: Hydrophobic Interaction Chromatography
+version: "1.0"
+category: hydrophobicity
+description: |
+  ADC 소수성 프로파일 분석을 위한 HIC 프로토콜.
+  DAR 분포 및 소수성 변이체를 분석합니다.
+
+requirements:
+  sample_amount: "50 μg"
+  sample_concentration: "0.5-1 mg/mL"
+  lead_time_hours: 2
+  equipment:
+    - HIC column (Butyl-NPR or equivalent)
+    - HPLC system with UV detector (280nm)
+    - Buffer A (1.5M Ammonium sulfate in PBS)
+    - Buffer B (PBS)
+
+procedure:
+  - step: 1
+    title: 샘플 준비
+    description: 샘플을 Buffer A로 희석 (ammonium sulfate 최종 1.5M)
+    duration_minutes: 10
+    
+  - step: 2
+    title: 컬럼 평형화
+    description: HIC 컬럼을 100% Buffer A로 평형화
+    duration_minutes: 20
+    
+  - step: 3
+    title: 그래디언트 분석
+    description: 샘플 주입 후 Buffer A → B 선형 그래디언트로 용출
+    duration_minutes: 45
+    
+  - step: 4
+    title: 데이터 분석
+    description: 피크 분석 및 DAR 분포 계산
+    duration_minutes: 30
+
+outputs:
+  - name: peak_profile
+    description: 피크 형태 (단일/다중 피크)
+    unit: null
+    acceptance_criteria: "single symmetric peak preferred"
+    
+  - name: retention_time
+    description: 주 피크 체류 시간
+    unit: min
+    acceptance_criteria: "< 15"
+    
+  - name: dar_distribution
+    description: DAR 분포 패턴
+    unit: null
+    acceptance_criteria: null  # Native ADC와 비교
+
+references:
+  - type: internal
+    id: SOP-HIC-001
+    title: ADC HIC 분석 SOP

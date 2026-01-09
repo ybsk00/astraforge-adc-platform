@@ -1,0 +1,73 @@
+# Internalization Kinetics Protocol Template
+# 목적: 세포 내재화 속도 측정
+
+id: internalization_v1
+name: Internalization Kinetics Assay
+version: "1.0"
+category: internalization
+description: |
+  ADC의 표적 세포 내 내재화 속도 및 효율 측정.
+  형광 표지 ADC 또는 pH-sensitive dye를 사용한 실시간 모니터링.
+
+requirements:
+  sample_amount: "500 μg"
+  sample_concentration: "1-10 μg/mL"
+  lead_time_hours: 24
+  equipment:
+    - Target-positive cell line
+    - Target-negative cell line (control)
+    - Flow cytometer or confocal microscope
+    - pH-sensitive dye (pHrodo) or fluorescent label
+    - 37°C CO2 incubator
+
+procedure:
+  - step: 1
+    title: ADC 표지
+    description: ADC에 pHrodo 또는 형광 염료 결합 (이미 표지된 경우 생략)
+    duration_hours: 4
+    
+  - step: 2
+    title: 세포 시딩
+    description: 표적 양성/음성 세포주를 플레이트에 시딩
+    duration_hours: 24  # overnight adhesion
+    
+  - step: 3
+    title: ADC 처리
+    description: 표지된 ADC를 세포에 처리 (1, 10 μg/mL)
+    duration_minutes: 10
+    
+  - step: 4
+    title: 시간별 측정
+    description: 0, 0.5, 1, 2, 4, 8, 24시간 시점에서 형광 측정
+    duration_hours: 24
+    
+  - step: 5
+    title: 데이터 분석
+    description: 내재화 곡선 fitting 및 t½ 계산
+    duration_minutes: 60
+
+outputs:
+  - name: internalization_t_half
+    description: 내재화 반감기
+    unit: hours
+    acceptance_criteria: "< 2"
+    
+  - name: max_internalization
+    description: 최대 내재화율 (plateau)
+    unit: "%"
+    acceptance_criteria: ">= 70"
+    
+  - name: target_specific
+    description: 표적 특이성 (양성/음성 세포 비율)
+    unit: fold
+    acceptance_criteria: ">= 5"
+    
+  - name: internalization_rate
+    description: 초기 내재화 속도
+    unit: "%/hour"
+    acceptance_criteria: null  # 참조용
+
+references:
+  - type: pubmed
+    id: "PMID:30552235"
+    title: Methods for measuring ADC internalization

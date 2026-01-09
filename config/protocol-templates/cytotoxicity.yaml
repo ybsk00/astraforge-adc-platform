@@ -1,0 +1,89 @@
+# Cytotoxicity Panel Protocol Template
+# 목적: 표적 발현 세포주 활성 테스트 (필수)
+
+id: cytotoxicity_v1
+name: Cytotoxicity Panel Assay
+version: "1.0"
+category: efficacy
+description: |
+  ADC의 세포 독성 효력 평가 (필수 프로토콜).
+  표적 양성/음성 세포주 패널에서 IC50 및 선택성 지수 측정.
+
+requirements:
+  sample_amount: "1 mg"
+  sample_concentration: "serial dilution"
+  lead_time_hours: 96
+  equipment:
+    - Target-positive cell lines (minimum 2)
+    - Target-negative cell lines (minimum 2)
+    - 96-well plates
+    - Cell viability reagent (CellTiter-Glo or MTT)
+    - Plate reader
+    - 37°C CO2 incubator
+
+procedure:
+  - step: 1
+    title: 세포 시딩
+    description: |
+      표적 양성/음성 세포주를 96-well 플레이트에 시딩.
+      세포 밀도: 5,000-10,000 cells/well
+    duration_hours: 24
+    
+  - step: 2
+    title: ADC 처리
+    description: |
+      ADC 연속 희석 처리 (0.001-100 nM, 10-point).
+      Naked antibody 및 free payload를 대조군으로 포함.
+    duration_minutes: 30
+    
+  - step: 3
+    title: 인큐베이션
+    description: 37°C, 5% CO2에서 72-96시간 인큐베이션
+    duration_hours: 96
+    
+  - step: 4
+    title: 세포 생존율 측정
+    description: CellTiter-Glo 또는 MTT로 생존 세포 정량
+    duration_minutes: 60
+    
+  - step: 5
+    title: 데이터 분석
+    description: 4-parameter logistic fitting으로 IC50 계산
+    duration_minutes: 60
+
+outputs:
+  - name: ic50_target_positive
+    description: 표적 양성 세포주에서의 IC50
+    unit: nM
+    acceptance_criteria: "< 1"
+    
+  - name: ic50_target_negative
+    description: 표적 음성 세포주에서의 IC50
+    unit: nM
+    acceptance_criteria: "> 100"
+    
+  - name: selectivity_index
+    description: 선택성 지수 (음성 IC50 / 양성 IC50)
+    unit: fold
+    acceptance_criteria: "> 100"
+    
+  - name: max_killing
+    description: 최대 세포 사멸율
+    unit: "%"
+    acceptance_criteria: ">= 80"
+    
+  - name: naked_antibody_effect
+    description: Naked antibody의 IC50 (ADC와 비교용)
+    unit: nM
+    acceptance_criteria: null  # 참조용
+
+# 필수 프로토콜 플래그
+mandatory: true
+
+references:
+  - type: internal
+    id: SOP-CYT-001
+    title: ADC 세포독성 분석 SOP
+  - type: pubmed
+    id: "PMID:28371844"
+    title: ADC potency assessment best practices

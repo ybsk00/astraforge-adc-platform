@@ -1,0 +1,73 @@
+# Plasma Stability + Free Drug LC-MS Protocol Template
+# 목적: 혈장 안정성 및 유리 약물 분석
+
+id: plasma_stability_v1
+name: Plasma Stability and Free Drug Analysis
+version: "1.0"
+category: stability
+description: |
+  ADC의 인간 혈장 내 안정성 및 조기 페이로드 방출 확인.
+  시간 경과에 따른 ADC 잔존율 및 유리 약물 농도 측정.
+
+requirements:
+  sample_amount: "200 μg"
+  sample_concentration: "10 μg/mL in plasma"
+  lead_time_hours: 72  # 인큐베이션 포함
+  equipment:
+    - Human plasma (pooled, heparinized)
+    - 37°C incubator
+    - LC-MS/MS system
+    - Protein crash plates
+    - ADC and payload standards
+
+procedure:
+  - step: 1
+    title: 샘플 준비
+    description: ADC를 인간 혈장에 10 μg/mL로 희석
+    duration_minutes: 30
+    
+  - step: 2
+    title: 인큐베이션
+    description: 37°C에서 24, 48, 72시간 인큐베이션, 0시간 샘플 즉시 처리
+    duration_hours: 72
+    
+  - step: 3
+    title: 샘플 처리
+    description: 각 시점에서 샘플 채취, 단백질 침전 후 LC-MS용 상층액 분리
+    duration_minutes: 60
+    
+  - step: 4
+    title: LC-MS 분석
+    description: 유리 페이로드 및 대사물 정량
+    duration_minutes: 120
+    
+  - step: 5
+    title: 데이터 분석
+    description: 잔존율 계산 및 유리 약물 농도 정량
+    duration_minutes: 60
+
+outputs:
+  - name: stability_24h
+    description: 24시간 후 ADC 잔존율
+    unit: "%"
+    acceptance_criteria: ">= 80"
+    
+  - name: stability_72h
+    description: 72시간 후 ADC 잔존율
+    unit: "%"
+    acceptance_criteria: ">= 50"
+    
+  - name: free_drug_24h
+    description: 24시간 시점 유리 페이로드 비율
+    unit: "%"
+    acceptance_criteria: "< 5"
+    
+  - name: free_drug_72h
+    description: 72시간 시점 유리 페이로드 비율
+    unit: "%"
+    acceptance_criteria: "< 10"
+
+references:
+  - type: pubmed
+    id: "PMID:29089156"
+    title: ADC plasma stability assessment methods

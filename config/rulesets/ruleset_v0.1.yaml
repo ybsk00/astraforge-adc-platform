@@ -1,0 +1,296 @@
+# ADC Platform Ruleset v0.1
+# 도메인 전문가 정의 규칙
+
+version: "0.1"
+created_at: "2026-01-09"
+author: "ADC Platform Team"
+description: |
+  ADC 플랫폼 초기 룰셋.
+  후보 물질의 필터링, 페널티, 경고, 프로토콜 요구사항을 정의합니다.
+
+# 사용 필드 목록 (스키마 검증용)
+inputs_contract:
+  - DAR
+  - LogP
+  - H_patch
+  - AggRisk
+  - ProcRisk
+  - AnalRisk
+  - OOT
+  - CLV
+  - INT
+  - payload_class
+  - critical_tissue_expression
+  - clinical_failure_count
+
+# Penalty 정책: sum (누적) 또는 max (최대값 선택)
+penalty_policy: sum
+
+rules:
+  # ============================================
+  # Hard Reject Rules (priority 1-9)
+  # 즉시 탈락 - 조합 생성 제외
+  # ============================================
+  
+  - id: hr_001
+    name: DAR 과도 하드리젝트
+    enabled: true
+    priority: 1
+    tags:
+      - developability
+      - pharmacokinetics
+    rationale: "체크리스트 §4.1 - DAR 8 초과 시 약동학적 불안정성 위험"
+    condition:
+      expression: "DAR > 8"
+    action:
+      type: hard_reject
+      severity: critical
+      message: "DAR > 8: 약동학적 불안정성 위험으로 제외됨"
+    references:
+      - type: internal
+        id: policy_dar_limit
+      - type: pubmed
+        id: "PMID:28186437"
+
+  - id: hr_002
+    name: 치명적 독성 페이로드
+    enabled: true
+    priority: 1
+    tags:
+      - safety
+      - regulatory
+    rationale: "임상 철회된 페이로드는 사용 불가"
+    condition:
+      expression: "payload_class == 'withdrawn'"
+    action:
+      type: hard_reject
+      severity: critical
+      message: "임상 철회된 페이로드 사용 불가"
+
+  - id: hr_003
+    name: 극도 고소수성
+    enabled: true
+    priority: 2
+    tags:
+      - developability
+      - aggregation
+    rationale: "LogP 6 초과 시 심각한 응집 및 생산성 문제"
+    condition:
+      expression: "LogP > 6.0"
+    action:
+      type: hard_reject
+      severity: critical
+      message: "LogP > 6.0: 극도 고소수성으로 생산 불가"
+
+  # ============================================
+  # Penalty Rules (priority 10-19)
+  # 점수 감점 - 기록 유지
+  # ============================================
+  
+  - id: pn_001
+    name: 고소수성 페널티
+    enabled: true
+    priority: 10
+    tags:
+      - developability
+      - aggregation
+    rationale: "체크리스트 §3.2 - LogP 4 초과 시 응집 위험 증가"
+    condition:
+      expression: "LogP > 4.0"
+    action:
+      type: penalty
+      value: 10
+      target: EngFit
+      severity: warning
+      message: "LogP > 4.0: 응집 위험 증가 (-10점)"
+
+  - id: pn_002
+    name: DAR 4 초과 페널티
+    enabled: true
+    priority: 10
+    tags:
+      - developability
+      - manufacturing
+    rationale: "DAR 4 초과 시 생산성 저하 가능"
+    condition:
+      expression: "DAR > 4"
+    action:
+      type: penalty
+      value: 5
+      target: EngFit
+      severity: info
+      message: "DAR > 4: 생산성 저하 가능 (-5점)"
+
+  - id: pn_003
+    name: 고응집 리스크 페널티
+    enabled: true
+    priority: 11
+    tags:
+      - developability
+      - aggregation
+    rationale: "AggRisk 50 초과 시 추가 감점"
+    condition:
+      expression: "AggRisk > 50"
+    action:
+      type: penalty
+      value: 15
+      target: EngFit
+      severity: warning
+      message: "AggRisk > 50: 심각한 응집 위험 (-15점)"
+
+  - id: pn_004
+    name: 조기 절단 위험 페널티
+    enabled: true
+    priority: 11
+    tags:
+      - stability
+      - safety
+    rationale: "CLV 50 초과 시 혈장 내 조기 페이로드 방출 위험"
+    condition:
+      expression: "CLV > 50"
+    action:
+      type: penalty
+      value: 10
+      target: SafetyFit
+      severity: warning
+      message: "CLV > 50: 조기 절단 위험 (-10점)"
+
+  # ============================================
+  # Alert Rules (priority 20-29)
+  # 경고 표시 - 점수 무영향
+  # ============================================
+  
+  - id: al_001
+    name: 주요 장기 발현 경고
+    enabled: true
+    priority: 20
+    tags:
+      - safety
+      - off-target
+    rationale: "심장/간/신장 발현 시 safety 주의"
+    condition:
+      expression: "critical_tissue_expression == true"
+    action:
+      type: alert
+      severity: warning
+      message: "심장/간/신장에서 표적 발현 감지 - safety 추가 검토 권장"
+
+  - id: al_002
+    name: 임상 실패 이력 경고
+    enabled: true
+    priority: 20
+    tags:
+      - efficacy
+      - risk
+    rationale: "동일 조합의 과거 임상 실패 이력 확인"
+    condition:
+      expression: "clinical_failure_count > 0"
+    action:
+      type: alert
+      severity: warning
+      message: "동일 표적/페이로드 조합의 임상 실패 이력 존재"
+
+  - id: al_003
+    name: Off-Target 위험 경고
+    enabled: true
+    priority: 21
+    tags:
+      - safety
+      - off-target
+    rationale: "OOT 점수 높을 시 경고"
+    condition:
+      expression: "OOT > 40"
+    action:
+      type: alert
+      severity: warning
+      message: "Off-Target 발현 위험 높음 - 추가 분석 권장"
+
+  - id: al_004
+    name: 낮은 내재화 경고
+    enabled: true
+    priority: 21
+    tags:
+      - efficacy
+      - internalization
+    rationale: "INT 30 미만은 효력 저하 우려"
+    condition:
+      expression: "INT < 30"
+    action:
+      type: alert
+      severity: info
+      message: "내재화 점수 낮음 - 효력 확인 필요"
+
+  # ============================================
+  # Protocol Requirement Rules (priority 30+)
+  # 특정 프로토콜 필수 지정
+  # ============================================
+  
+  - id: pr_001
+    name: 고응집 리스크 → SEC 필수
+    enabled: true
+    priority: 30
+    tags:
+      - aggregation
+      - protocol
+    rationale: "체크리스트 §5.9 - AggRisk 높으면 SEC 필수"
+    condition:
+      expression: "AggRisk > 30"
+    action:
+      type: require_protocol
+      template_id: sec_v1
+      severity: info
+      message: "응집 위험 높음: SEC 분석 필수"
+
+  - id: pr_002
+    name: 고소수성 → HIC 필수
+    enabled: true
+    priority: 30
+    tags:
+      - hydrophobicity
+      - protocol
+    rationale: "LogP 높거나 H_patch 높으면 HIC 필수"
+    condition:
+      any:
+        - field: LogP
+          operator: ">"
+          value: 4.0
+        - field: H_patch
+          operator: ">"
+          value: 50
+    action:
+      type: require_protocol
+      template_id: hic_v1
+      severity: info
+      message: "소수성 높음: HIC 분석 필수"
+
+  - id: pr_003
+    name: 조기 절단 리스크 → Plasma Stability 필수
+    enabled: true
+    priority: 30
+    tags:
+      - stability
+      - protocol
+    rationale: "CLV 높으면 혈장 안정성 필수"
+    condition:
+      expression: "CLV > 40"
+    action:
+      type: require_protocol
+      template_id: plasma_stability_v1
+      severity: info
+      message: "조기 절단 위험 높음: Plasma Stability 분석 필수"
+
+  - id: pr_004
+    name: 낮은 내재화 → Internalization 필수
+    enabled: true
+    priority: 30
+    tags:
+      - internalization
+      - protocol
+    rationale: "INT 낮으면 내재화 속도 확인 필수"
+    condition:
+      expression: "INT < 50"
+    action:
+      type: require_protocol
+      template_id: internalization_v1
+      severity: info
+      message: "내재화 점수 낮음: Internalization Kinetics 분석 필수"

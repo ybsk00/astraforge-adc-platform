@@ -1,0 +1,78 @@
+# SEC (Size Exclusion Chromatography) Protocol Template
+# 목적: 응집(Aggregation) 확인
+
+id: sec_v1
+name: Size Exclusion Chromatography
+version: "1.0"
+category: aggregation
+description: |
+  ADC 응집(Aggregation) 확인을 위한 SEC 분석 프로토콜.
+  단량체 비율 및 고분자량(HMW) species를 측정합니다.
+
+# 실험 요구사항
+requirements:
+  sample_amount: "100 μg"
+  sample_concentration: "1 mg/mL"
+  lead_time_hours: 4
+  equipment:
+    - SEC column (TSKgel G3000SWXL or equivalent)
+    - HPLC system with UV detector (280nm)
+    - Mobile phase buffer (PBS pH 7.4)
+
+# 실험 절차
+procedure:
+  - step: 1
+    title: 샘플 준비
+    description: ADC 샘플을 PBS로 1 mg/mL로 희석하고 0.22 μm 필터로 여과
+    duration_minutes: 15
+    
+  - step: 2
+    title: 시스템 평형화
+    description: SEC 컬럼을 mobile phase로 평형화 (최소 2 컬럼 볼륨)
+    duration_minutes: 30
+    
+  - step: 3
+    title: 표준물질 주입
+    description: 분자량 마커 주입하여 retention time 확인
+    duration_minutes: 30
+    
+  - step: 4
+    title: 샘플 분석
+    description: 샘플 50 μL 주입, 유속 0.5 mL/min, 280nm 검출
+    duration_minutes: 45
+    
+  - step: 5
+    title: 데이터 분석
+    description: 피크 적분 및 단량체/HMW 비율 계산
+    duration_minutes: 30
+
+# 결과 지표
+outputs:
+  - name: monomer_ratio
+    description: 단량체 비율 (주 피크 면적 / 전체 피크 면적)
+    unit: "%"
+    acceptance_criteria: ">= 95"
+    
+  - name: hmw_species
+    description: 고분자량 species 비율 (응집체)
+    unit: "%"
+    acceptance_criteria: "<= 2"
+    
+  - name: lmw_species
+    description: 저분자량 species 비율 (분해물)
+    unit: "%"
+    acceptance_criteria: "<= 3"
+    
+  - name: retention_time
+    description: 주 피크 retention time
+    unit: min
+    acceptance_criteria: null  # 참조용
+
+# 참고문헌
+references:
+  - type: internal
+    id: SOP-SEC-001
+    title: ADC SEC 분석 표준 작업 절차서
+  - type: pubmed
+    id: "PMID:28186437"
+    title: Size exclusion chromatography for ADC characterization
