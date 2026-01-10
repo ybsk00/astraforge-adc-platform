@@ -11,7 +11,8 @@ import {
     Loader2,
     Calendar,
     BarChart3,
-    ExternalLink
+    ExternalLink,
+    Activity
 } from 'lucide-react';
 
 interface Report {
