@@ -32,7 +32,11 @@ export default function LoginPage() {
             }
 
             if (data.user) {
-                router.push('/dashboard');
+                if (data.user.email === 'admin@admin.com') {
+                    router.push('/admin');
+                } else {
+                    router.push('/dashboard');
+                }
             }
         } catch (err) {
             setError('An unexpected error occurred');

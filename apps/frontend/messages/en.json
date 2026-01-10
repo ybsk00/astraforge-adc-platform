@@ -186,5 +186,81 @@
       "logs": "Logs"
     },
     "logout": "Logout"
+  },
+  "SolutionsPage": {
+    "title": "Customized ADC Development Solutions",
+    "subtitle": "From research to clinical trials, we provide optimal solutions for successful ADC development.",
+    "target": {
+      "title": "Target Discovery & Validation",
+      "desc": "Identify and verify optimal target antigens with AI-based analysis.",
+      "example": "Analysis of major cancer antigens like HER2, Trop2"
+    },
+    "optimization": {
+      "title": "Linker-Payload Optimization",
+      "desc": "Propose optimal combinations to maximize drug efficacy and minimize toxicity.",
+      "example": "Comparison of Cleavable vs Non-cleavable linkers"
+    },
+    "risk": {
+      "title": "Development Risk Management",
+      "desc": "Predict potential toxicity and physical property issues in early stages to minimize risk.",
+      "example": "Immunogenicity and aggregation prediction"
+    },
+    "knowledge": {
+      "title": "Knowledge-Based Decision Making",
+      "desc": "Support data-driven decision making based on vast literature and patent data.",
+      "example": "Competitor drug patent analysis reports"
+    },
+    "deployment": {
+      "title": "Flexible Deployment Options",
+      "items": {
+        "0": "SaaS Cloud\nReady-to-use managed service",
+        "1": "On-Premise\nIn-house deployment for data security",
+        "2": "Hybrid\nFlexible resource management"
+      }
+    }
+  },
+  "FeaturesPage": {
+    "title": "Powerful Research Features",
+    "subtitle": "Discover innovative features that accelerate the entire ADC development process.",
+    "data": {
+      "title": "Integrated Data Management",
+      "items": {
+        "0": "Automated collection and classification of experimental data",
+        "1": "Support for standardized data formats",
+        "2": "Secure data storage"
+      }
+    },
+    "search": {
+      "title": "Intelligent Search Engine",
+      "items": {
+        "0": "Natural language-based literature search",
+        "1": "Chemical structure search support",
+        "2": "Real-time monitoring of similar patents"
+      }
+    },
+    "design": {
+      "title": "AI Design Tools",
+      "items": {
+        "0": "Antibody structure prediction and optimization",
+        "1": "Linker conjugation site recommendation",
+        "2": "Drug-Antibody Ratio (DAR) simulation"
+      }
+    },
+    "scoring": {
+      "title": "Multi-dimensional Scoring",
+      "items": {
+        "0": "Development success probability prediction",
+        "1": "Scoring of physical properties and toxicity",
+        "2": "Comprehensive ranking system"
+      }
+    },
+    "collab": {
+      "title": "Collaboration Platform",
+      "items": {
+        "0": "Real-time project sharing",
+        "1": "Comments and feedback among team members",
+        "2": "Integrated research note management"
+      }
+    }
   }
 }

@@ -66,89 +66,95 @@ export default function Sidebar() {
 
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-8">
-                {/* Main Menu */}
-                <div>
-                    <div className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        Main
+                {/* Main Menu - Only shown to non-admins */}
+                {!isAdmin && (
+                    <div>
+                        <div className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            Main
+                        </div>
+                        <ul className="space-y-1">
+                            {menuItems.map((item) => {
+                                const active = isActive(item.href);
+                                return (
+                                    <li key={item.href}>
+                                        <Link
+                                            href={item.href}
+                                            className={clsx(
+                                                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                                                active
+                                                    ? 'bg-blue-600/10 text-blue-400'
+                                                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                            )}
+                                        >
+                                            <item.icon className="w-5 h-5" />
+                                            {item.label}
+                                        </Link>
+                                    </li>
+                                );
+                            })}
+                        </ul>
                     </div>
-                    <ul className="space-y-1">
-                        {menuItems.map((item) => {
-                            const active = isActive(item.href);
-                            return (
-                                <li key={item.href}>
-                                    <Link
-                                        href={item.href}
-                                        className={clsx(
-                                            'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                                            active
-                                                ? 'bg-blue-600/10 text-blue-400'
-                                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-                                        )}
-                                    >
-                                        <item.icon className="w-5 h-5" />
-                                        {item.label}
-                                    </Link>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </div>
+                )}
 
-                {/* Data & Evidence Menu */}
-                <div>
-                    <div className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        {t('dataEvidence')}
+                {/* Data & Evidence Menu - Only shown to non-admins */}
+                {!isAdmin && (
+                    <div>
+                        <div className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            {t('dataEvidence')}
+                        </div>
+                        <ul className="space-y-1">
+                            {dataMenuItems.map((item) => {
+                                const active = isActive(item.href);
+                                return (
+                                    <li key={item.href}>
+                                        <Link
+                                            href={item.href}
+                                            className={clsx(
+                                                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                                                active
+                                                    ? 'bg-blue-600/10 text-blue-400'
+                                                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                            )}
+                                        >
+                                            <item.icon className="w-5 h-5" />
+                                            {item.label}
+                                        </Link>
+                                    </li>
+                                );
+                            })}
+                        </ul>
                     </div>
-                    <ul className="space-y-1">
-                        {dataMenuItems.map((item) => {
-                            const active = isActive(item.href);
-                            return (
-                                <li key={item.href}>
-                                    <Link
-                                        href={item.href}
-                                        className={clsx(
-                                            'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                                            active
-                                                ? 'bg-blue-600/10 text-blue-400'
-                                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-                                        )}
-                                    >
-                                        <item.icon className="w-5 h-5" />
-                                        {item.label}
-                                    </Link>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </div>
+                )}
 
-                {/* Ops Menu */}
-                <div>
-                    <div className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        {t('ops')}
+                {/* Ops Menu - Only shown to non-admins */}
+                {!isAdmin && (
+                    <div>
+                        <div className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            {t('ops')}
+                        </div>
+                        <ul className="space-y-1">
+                            {opsMenuItems.map((item) => {
+                                const active = isActive(item.href);
+                                return (
+                                    <li key={item.href}>
+                                        <Link
+                                            href={item.href}
+                                            className={clsx(
+                                                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                                                active
+                                                    ? 'bg-blue-600/10 text-blue-400'
+                                                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                            )}
+                                        >
+                                            <item.icon className="w-5 h-5" />
+                                            {item.label}
+                                        </Link>
+                                    </li>
+                                );
+                            })}
+                        </ul>
                     </div>
-                    <ul className="space-y-1">
-                        {opsMenuItems.map((item) => {
-                            const active = isActive(item.href);
-                            return (
-                                <li key={item.href}>
-                                    <Link
-                                        href={item.href}
-                                        className={clsx(
-                                            'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                                            active
-                                                ? 'bg-blue-600/10 text-blue-400'
-                                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-                                        )}
-                                    >
-                                        <item.icon className="w-5 h-5" />
-                                        {item.label}
-                                    </Link>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </div>
+                )}
 
                 {/* Admin Menu - Only shown to admins */}
                 {isAdmin && (
