@@ -119,7 +119,7 @@
     "subtitle": "AI-driven Drug Discovery Platform, ADC Platform",
     "intro": {
       "title": "What is ADC Platform?",
-      "desc": "ADC Platform is an AI-based Drug Discovery platform that connects target discovery → candidate design → evidence verification → prioritization into a single workflow during the ADC R&D process. It automatically collects and organizes distributed information such as papers, patents, public DBs, and internal data, provides evidence-based answers to researcher questions, and supports quantitative comparison of candidate combinations."
+      "desc": "ADC Platform is an AI-based Drug Discovery platform that connects target discovery → candidate design → evidence verification → prioritization into a single workflow during the ADC R&D process."
     },
     "problems": {
       "title": "Problems We Solve",
@@ -262,6 +262,17 @@
     "dashboard": "Dashboard",
     "designRuns": "Design Runs",
     "catalog": "Catalog",
-    "admin": "Admin"
+    "admin": "Admin",
+    "menu": {
+      "overview": "Overview",
+      "designRuns": "Design Runs",
+      "catalog": "Catalog",
+      "connectors": "Connectors",
+      "staging": "Staging",
+      "ingestion": "Ingestion",
+      "observability": "Observability",
+      "alerts": "Alerts",
+      "settings": "Settings"
+    }
   }
 }

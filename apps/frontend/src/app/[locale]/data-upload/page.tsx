@@ -270,7 +270,17 @@ export default function DataUploadPage() {
 
                 {/* CSV Format Guide */}
                 <div className="bg-slate-800/30 border border-slate-700 rounded-xl p-6 mb-8">
-                    <h3 className="text-lg font-medium text-white mb-4">CSV 형식 안내</h3>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-medium text-white">CSV 형식 안내</h3>
+                        <a
+                            href="/samples/sample_candidates.csv"
+                            download="sample_candidates.csv"
+                            className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-sm transition-colors"
+                        >
+                            <Download className="w-4 h-4" />
+                            샘플 CSV 다운로드
+                        </a>
+                    </div>
                     <div className="bg-slate-900 rounded-lg p-4 font-mono text-sm text-slate-300 overflow-x-auto">
                         <div>name,DAR,LogP,AggRisk</div>
                         <div>Candidate A,4.0,2.5,0.3</div>

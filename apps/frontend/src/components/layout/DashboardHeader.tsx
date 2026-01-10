@@ -1,23 +1,8 @@
 'use client';
 
-import { useLocale } from 'next-intl';
-import { usePathname, useRouter } from '@/i18n/routing';
-import { ChangeEvent, useTransition } from 'react';
 import { Search, Bell, User } from 'lucide-react';
 
 export default function DashboardHeader() {
-    const locale = useLocale();
-    const router = useRouter();
-    const pathname = usePathname();
-    const [isPending, startTransition] = useTransition();
-
-    const onSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        const nextLocale = e.target.value;
-        startTransition(() => {
-            router.replace(pathname, { locale: nextLocale });
-        });
-    };
-
     return (
         <header className="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6 sticky top-0 z-30 ml-64">
             {/* Search */}
@@ -34,17 +19,6 @@ export default function DashboardHeader() {
 
             {/* Right Actions */}
             <div className="flex items-center gap-4">
-                {/* Language Switcher */}
-                <select
-                    defaultValue={locale}
-                    onChange={onSelectChange}
-                    disabled={isPending}
-                    className="bg-slate-800 text-slate-200 text-sm rounded-md border border-slate-700 px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="en">🇺🇸 EN</option>
-                    <option value="ko">🇰🇷 KR</option>
-                </select>
-
                 {/* Notifications */}
                 <button className="relative p-2 text-slate-400 hover:text-white transition-colors">
                     <Bell className="w-5 h-5" />

@@ -119,7 +119,7 @@
         "subtitle": "AI 기반 Drug Discovery 플랫폼, ADC Platform",
         "intro": {
             "title": "ADC Platform이란?",
-            "desc": "ADC Platform은 항체-약물 접합체(ADC) 연구개발 과정에서 발생하는 표적 탐색 → 후보 설계 → 근거 검증 → 우선순위 결정을 하나의 워크플로우로 연결하는 AI 기반 Drug Discovery 플랫폼입니다. 논문·특허·공개 DB·사내 데이터 등 분산된 정보를 자동으로 수집·정리하고, 연구자가 원하는 질문에 대해 근거 기반으로 빠르게 답변하며, 후보 조합의 성공 가능성을 정량적으로 비교할 수 있도록 지원합니다."
+            "desc": "ADC Platform은 항체-약물 접합체(ADC) 연구개발 과정에서 발생하는 표적 탐색 → 후보 설계 → 근거 검증 → 우선순위 결정을 하나의 워크플로우로 연결하는 AI 기반 Drug Discovery 플랫폼입니다."
         },
         "problems": {
             "title": "해결하는 문제",
@@ -171,7 +171,7 @@
                 },
                 {
                     "title": "Explainable Recommendation",
-                    "desc": "“왜 이 후보가 유리한지”를 근거와 함께 제시합니다."
+                    "desc": "'왜 이 후보가 유리한지'를 근거와 함께 제시합니다."
                 },
                 {
                     "title": "모듈형 확장",
@@ -251,8 +251,8 @@
         "deployment": {
             "title": "도입 형태",
             "items": [
-                "MVP(빠른 도입): 핵심 커넥터 + \n검색/RAG + 기본 워크스페이스",
-                "팀 확장: 스코어링/리포트 자동화/협업 \n기능 강화",
+                "MVP(빠른 도입): 핵심 커넥터 + 검색/RAG + 기본 워크스페이스",
+                "팀 확장: 스코어링/리포트 자동화/협업 기능 강화",
                 "엔터프라이즈: SSO, 감사로그, 전용 배포(VPC/On-prem), SLA"
             ]
         }
@@ -262,6 +262,17 @@
         "dashboard": "대시보드",
         "designRuns": "설계 실행",
         "catalog": "카탈로그",
-        "admin": "관리자"
+        "admin": "관리자",
+        "menu": {
+            "overview": "개요",
+            "designRuns": "설계 실행",
+            "catalog": "카탈로그",
+            "connectors": "커넥터",
+            "staging": "스테이징",
+            "ingestion": "데이터 수집",
+            "observability": "관측성",
+            "alerts": "알림",
+            "settings": "설정"
+        }
     }
 }
