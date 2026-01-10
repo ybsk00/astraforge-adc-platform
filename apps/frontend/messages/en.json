@@ -172,7 +172,19 @@
       "ingestion": "Ingestion",
       "observability": "Observability",
       "alerts": "Alerts",
-      "settings": "Settings"
-    }
+      "settings": "Settings",
+      "dataEvidence": "Data & Evidence",
+      "dataUpload": "Data Upload",
+      "uploadHistory": "Upload History",
+      "literatureSearch": "Deep Literature Search",
+      "ingestionStatus": "Ingestion Status",
+      "evidenceQuality": "Evidence Quality",
+      "ops": "Operations",
+      "systemStatus": "System Status",
+      "queues": "Queues",
+      "audit": "Audit Logs",
+      "logs": "Logs"
+    },
+    "logout": "Logout"
   }
 }

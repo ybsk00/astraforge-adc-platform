@@ -69,8 +69,8 @@ export default function DashboardPage() {
 
     const quickActions = [
         { label: t('actions.newDesign'), description: t('actions.newDesignDesc'), icon: Plus, href: '/design/runs', primary: true },
-        { label: t('actions.dataUpload'), description: t('actions.dataUploadDesc'), icon: Upload, href: '/data-upload', primary: false },
-        { label: t('actions.literatureSearch'), description: t('actions.literatureSearchDesc'), icon: Search, href: '/literature-search', primary: false },
+        { label: t('actions.dataUpload'), description: t('actions.dataUploadDesc'), icon: Upload, href: '/data/upload', primary: false },
+        { label: t('actions.literatureSearch'), description: t('actions.literatureSearchDesc'), icon: Search, href: '/evidence/search', primary: false },
     ];
 
     const recentRuns = [

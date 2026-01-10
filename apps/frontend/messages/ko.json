@@ -159,6 +159,7 @@
     },
     "Common": {
         "login": "로그인",
+        "logout": "로그아웃",
         "dashboard": "대시보드",
         "designRuns": "설계 실행",
         "catalog": "카탈로그",
