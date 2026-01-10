@@ -18,9 +18,10 @@ export default function AdminSidebar() {
     const pathname = usePathname();
 
     const adminMenuItems = [
+        { href: '/admin', icon: LayoutDashboard, label: t('dashboard') },
         { href: '/admin/connectors', icon: Cable, label: t('connectors') },
-        { href: '/admin/staging', icon: Layers, label: t('staging') },
-        { href: '/admin/ingestion/logs', icon: Download, label: t('ingestion') },
+        { href: '/admin/runs', icon: Layers, label: t('designRuns') },
+        { href: '/admin/reports', icon: Download, label: t('reports') },
         { href: '/admin/observability', icon: Activity, label: t('observability') },
         { href: '/admin/alerts', icon: Bell, label: t('alerts') },
     ];

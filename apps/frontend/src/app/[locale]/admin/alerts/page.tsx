@@ -1,75 +1,44 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getAlerts } from '@/lib/actions/admin';
 import {
     Bell,
-    RefreshCw,
-    Check,
-    X,
-    AlertCircle,
     AlertTriangle,
     Info,
-    CheckCircle
+    XCircle,
+    CheckCircle2,
+    Search,
+    MoreVertical,
+    Trash2,
+    CheckCircle,
+    RefreshCw
 } from 'lucide-react';
 
 interface Alert {
     id: string;
-    type: 'error' | 'warning' | 'info';
+    type: 'error' | 'warning' | 'info' | 'success';
     source: string;
     message: string;
-    meta: Record<string, unknown>;
-    is_read: boolean;
     created_at: string;
+    is_read: boolean;
 }
-
-interface AlertStats {
-    total: number;
-    unread: number;
-    by_type: Record<string, number>;
-}
-
-const TYPE_CONFIG = {
-    error: { icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/20', border: 'border-l-red-500' },
-    warning: { icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/20', border: 'border-l-yellow-500' },
-    info: { icon: Info, color: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-l-blue-500' },
-};
 
 export default function AlertsPage() {
     const [alerts, setAlerts] = useState<Alert[]>([]);
-    const [stats, setStats] = useState<AlertStats | null>(null);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState<string>('all');
-
-    const ENGINE_URL = process.env.NEXT_PUBLIC_ENGINE_URL || 'http://localhost:8000';
+    const [filter, setFilter] = useState<'all' | 'error' | 'warning' | 'info'>('all');
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
-        fetchAlerts();
-    }, [filter]);
+        fetchData();
+    }, []);
 
-    const fetchAlerts = async () => {
+    const fetchData = async () => {
         try {
             setLoading(true);
-            let url = `${ENGINE_URL}/api/v1/alerts?limit=100`;
-            if (filter === 'unread') {
-                url += '&is_read=false';
-            } else if (filter !== 'all') {
-                url += `&type=${filter}`;
-            }
-
-            const [alertsRes, statsRes] = await Promise.all([
-                fetch(url),
-                fetch(`${ENGINE_URL}/api/v1/alerts/stats`),
-            ]);
-
-            if (alertsRes.ok) {
-                const data = await alertsRes.json();
-                setAlerts(data.alerts || []);
-            }
-
-            if (statsRes.ok) {
-                const data = await statsRes.json();
-                setStats(data);
-            }
+            const data = await getAlerts();
+            setAlerts(data as any);
         } catch (err) {
             console.error('Failed to fetch alerts:', err);
         } finally {
@@ -77,181 +46,157 @@ export default function AlertsPage() {
         }
     };
 
-    const markAsRead = async (id: string) => {
-        try {
-            await fetch(`${ENGINE_URL}/api/v1/alerts/${id}/read`, { method: 'POST' });
-            setAlerts(prev => prev.map(a => a.id === id ? { ...a, is_read: true } : a));
-            if (stats) {
-                setStats({ ...stats, unread: Math.max(0, stats.unread - 1) });
-            }
-        } catch (err) {
-            console.error('Failed to mark alert as read:', err);
-        }
+    const filteredAlerts = alerts.filter(alert => {
+        const matchesFilter = filter === 'all' || alert.type === filter;
+        const matchesSearch = alert.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            alert.source.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesFilter && matchesSearch;
+    });
+
+    const stats = {
+        total: alerts.length,
+        unread: alerts.filter(a => !a.is_read).length,
+        error: alerts.filter(a => a.type === 'error').length,
+        warning: alerts.filter(a => a.type === 'warning').length
     };
 
-    const markAllAsRead = async () => {
-        try {
-            await fetch(`${ENGINE_URL}/api/v1/alerts/read-all`, { method: 'POST' });
-            setAlerts(prev => prev.map(a => ({ ...a, is_read: true })));
-            if (stats) {
-                setStats({ ...stats, unread: 0 });
-            }
-        } catch (err) {
-            console.error('Failed to mark all as read:', err);
-        }
-    };
-
-    const deleteAlert = async (id: string) => {
-        try {
-            await fetch(`${ENGINE_URL}/api/v1/alerts/${id}`, { method: 'DELETE' });
-            setAlerts(prev => prev.filter(a => a.id !== id));
-        } catch (err) {
-            console.error('Failed to delete alert:', err);
-        }
-    };
-
-    const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('ko-KR', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    };
+    if (loading && alerts.length === 0) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+                <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-8">
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                            <Bell className="w-6 h-6 text-blue-400" />
-                            알림
+                        <h1 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
+                            <Bell className="w-6 h-6 text-yellow-400" />
+                            System Alerts
                         </h1>
-                        {stats && (
-                            <p className="text-slate-400 text-sm mt-1">
-                                {stats.unread > 0 ? `${stats.unread}개의 읽지 않은 알림` : '모든 알림을 읽었습니다'}
-                            </p>
-                        )}
+                        <p className="text-slate-400 text-sm">Manage and monitor system notifications.</p>
                     </div>
                     <div className="flex gap-3">
-                        <select
-                            value={filter}
-                            onChange={(e) => setFilter(e.target.value)}
-                            className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="all">전체</option>
-                            <option value="unread">읽지 않음</option>
-                            <option value="error">오류</option>
-                            <option value="warning">경고</option>
-                            <option value="info">정보</option>
-                        </select>
                         <button
-                            onClick={markAllAsRead}
-                            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg border border-slate-700 flex items-center gap-2 transition-colors"
+                            onClick={fetchData}
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors text-sm"
                         >
-                            <CheckCircle className="w-4 h-4" />
-                            모두 읽음
+                            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                            Refresh
                         </button>
-                        <button
-                            onClick={fetchAlerts}
-                            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg border border-slate-700 flex items-center gap-2 transition-colors"
-                        >
-                            <RefreshCw className="w-4 h-4" />
+                        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm">
+                            <CheckCircle className="w-4 h-4" />
+                            Mark All Read
                         </button>
                     </div>
                 </div>
 
-                {/* Stats Cards */}
-                {stats && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                            <div className="text-sm text-slate-400 mb-1">전체</div>
-                            <div className="text-3xl font-bold text-white">{stats.total}</div>
-                        </div>
-                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                            <div className="flex items-center gap-2 mb-1">
-                                <AlertCircle className="w-4 h-4 text-red-400" />
-                                <span className="text-sm text-red-400">오류</span>
-                            </div>
-                            <div className="text-3xl font-bold text-white">{stats.by_type.error || 0}</div>
-                        </div>
-                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                            <div className="flex items-center gap-2 mb-1">
-                                <AlertTriangle className="w-4 h-4 text-yellow-400" />
-                                <span className="text-sm text-yellow-400">경고</span>
-                            </div>
-                            <div className="text-3xl font-bold text-white">{stats.by_type.warning || 0}</div>
-                        </div>
-                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                            <div className="flex items-center gap-2 mb-1">
-                                <Info className="w-4 h-4 text-blue-400" />
-                                <span className="text-sm text-blue-400">정보</span>
-                            </div>
-                            <div className="text-3xl font-bold text-white">{stats.by_type.info || 0}</div>
-                        </div>
+                {/* Stats Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                        <div className="text-slate-400 text-xs font-medium mb-1">Total Alerts</div>
+                        <div className="text-xl font-bold text-white">{stats.total}</div>
                     </div>
-                )}
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                        <div className="text-red-400 text-xs font-medium mb-1">Critical Errors</div>
+                        <div className="text-xl font-bold text-white">{stats.error}</div>
+                    </div>
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                        <div className="text-yellow-400 text-xs font-medium mb-1">Warnings</div>
+                        <div className="text-xl font-bold text-white">{stats.warning}</div>
+                    </div>
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                        <div className="text-blue-400 text-xs font-medium mb-1">Unread</div>
+                        <div className="text-xl font-bold text-white">{stats.unread}</div>
+                    </div>
+                </div>
+
+                {/* Filters & Search */}
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                        <input
+                            type="text"
+                            placeholder="Search alerts by message or source..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    <div className="flex gap-2">
+                        {(['all', 'error', 'warning', 'info'] as const).map((t) => (
+                            <button
+                                key={t}
+                                onClick={() => setFilter(t)}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === t
+                                        ? 'bg-slate-800 text-white border border-slate-700'
+                                        : 'text-slate-400 hover:text-white'
+                                    }`}
+                            >
+                                {t.charAt(0).toUpperCase() + t.slice(1)}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
                 {/* Alerts List */}
-                <div className="space-y-3">
-                    {loading ? (
-                        <div className="text-center py-8 text-slate-400">로딩 중...</div>
-                    ) : alerts.length === 0 ? (
-                        <div className="text-center py-12 bg-slate-900 border border-slate-800 rounded-xl">
-                            <div className="text-4xl mb-2">🎉</div>
-                            <div className="text-slate-400">알림이 없습니다</div>
-                        </div>
-                    ) : (
-                        alerts.map((alert) => {
-                            const config = TYPE_CONFIG[alert.type];
-                            const IconComponent = config.icon;
-
-                            return (
+                <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                    <div className="divide-y divide-slate-800">
+                        {filteredAlerts.length === 0 ? (
+                            <div className="p-12 text-center">
+                                <div className="w-12 h-12 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <CheckCircle2 className="w-6 h-6 text-slate-600" />
+                                </div>
+                                <h3 className="text-white font-medium mb-1">No alerts found</h3>
+                                <p className="text-slate-500 text-sm">Everything looks good! No notifications to show.</p>
+                            </div>
+                        ) : (
+                            filteredAlerts.map((alert) => (
                                 <div
                                     key={alert.id}
-                                    className={`p-4 rounded-xl border-l-4 ${config.border} ${config.bg} ${alert.is_read ? 'opacity-60' : ''
-                                        }`}
+                                    className={`p-4 flex gap-4 hover:bg-slate-800/30 transition-colors ${!alert.is_read ? 'bg-blue-500/5' : ''}`}
                                 >
-                                    <div className="flex justify-between items-start">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <IconComponent className={`w-4 h-4 ${config.color}`} />
-                                                <span className="font-medium text-white">{alert.source}</span>
-                                                <span className="text-xs text-slate-400">
-                                                    {formatDate(alert.created_at)}
-                                                </span>
-                                                {!alert.is_read && (
-                                                    <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
-                                                        NEW
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <p className="text-sm text-slate-300">{alert.message}</p>
+                                    <div className={`mt-1 p-2 rounded-lg shrink-0 ${alert.type === 'error' ? 'bg-red-500/10 text-red-500' :
+                                            alert.type === 'warning' ? 'bg-yellow-500/10 text-yellow-500' :
+                                                'bg-blue-500/10 text-blue-500'
+                                        }`}>
+                                        {alert.type === 'error' ? <XCircle className="w-5 h-5" /> :
+                                            alert.type === 'warning' ? <AlertTriangle className="w-5 h-5" /> :
+                                                <Info className="w-5 h-5" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between gap-2 mb-1">
+                                            <span className="text-sm font-semibold text-white truncate">{alert.source}</span>
+                                            <span className="text-xs text-slate-500 whitespace-nowrap">
+                                                {new Date(alert.created_at).toLocaleString()}
+                                            </span>
                                         </div>
-                                        <div className="flex gap-2 ml-4">
+                                        <p className="text-sm text-slate-300 mb-2 leading-relaxed">
+                                            {alert.message}
+                                        </p>
+                                        <div className="flex items-center gap-4">
                                             {!alert.is_read && (
-                                                <button
-                                                    onClick={() => markAsRead(alert.id)}
-                                                    className="p-1.5 text-slate-400 hover:text-green-400 transition-colors"
-                                                >
-                                                    <Check className="w-4 h-4" />
+                                                <button className="text-xs font-medium text-blue-400 hover:text-blue-300">
+                                                    Mark as read
                                                 </button>
                                             )}
-                                            <button
-                                                onClick={() => deleteAlert(alert.id)}
-                                                className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
-                                            >
-                                                <X className="w-4 h-4" />
+                                            <button className="text-xs font-medium text-slate-500 hover:text-red-400 flex items-center gap-1">
+                                                <Trash2 className="w-3 h-3" />
+                                                Delete
                                             </button>
                                         </div>
                                     </div>
+                                    <button className="p-1 text-slate-600 hover:text-white shrink-0">
+                                        <MoreVertical className="w-4 h-4" />
+                                    </button>
                                 </div>
-                            );
-                        })
-                    )}
+                            ))
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

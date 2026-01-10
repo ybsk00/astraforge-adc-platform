@@ -105,6 +105,13 @@ def get_cron_schedules():
             minute=0,
             run_at_startup=False,
         ),
+        
+        # DB 작업 폴링 - 매 1분마다
+        cron(
+            db_job_polling,
+            minute={i for i in range(60)},
+            run_at_startup=True,
+        ),
     ]
 
 
@@ -281,3 +288,11 @@ async def fingerprint_daily_compute(ctx: Dict[str, Any]):
         "processed": processed,
         "errors": errors
     }
+
+
+async def db_job_polling(ctx: Dict[str, Any]):
+    """
+    DB 대기 중인 작업을 폴링하여 실행합니다.
+    """
+    from jobs.worker import poll_db_jobs
+    return await poll_db_jobs(ctx)

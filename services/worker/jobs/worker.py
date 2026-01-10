@@ -157,6 +157,73 @@ async def embed_chunks_job(ctx, chunk_ids: list):
     return {"status": "completed", "embedded": len(chunk_ids)}
 
 
+async def poll_db_jobs(ctx):
+    """
+    Supabase DB를 폴링하여 대기 중인 작업을 찾아 실행합니다.
+    Locking 및 Retry 로직을 포함합니다.
+    """
+    db: Client = ctx["db"]
+    worker_id = os.getenv("HOSTNAME", "worker-default")
+    now = datetime.utcnow().isoformat()
+    stale_timeout = 600 # 10분
+    
+    logger.info("polling_db_jobs_started")
+
+    # 1. Connector Runs 폴링 및 잠금
+    # 대상: queued 상태 OR (failed 상태 AND 재시도 가능) OR (running 상태 AND stale lock)
+    connector_query = db.table("connector_runs").select("id, status, attempt").or_(
+        "status.eq.queued,"
+        f"and(status.eq.failed,next_retry_at.lte.{now},attempt.lt.3),"
+        f"and(status.eq.running,locked_at.lte.{(datetime.utcnow().timestamp() - stale_timeout)})"
+    ).limit(5).execute()
+
+    if connector_result := connector_query.data:
+        from jobs.connector_executor import execute_connector_run
+        for run in connector_result:
+            # 원자적 잠금 시도
+            lock_res = db.table("connector_runs").update({
+                "status": "running",
+                "locked_by": worker_id,
+                "locked_at": now,
+                "started_at": now
+            }).eq("id", run["id"]).or_(
+                "status.eq.queued,"
+                "status.eq.failed,"
+                f"and(status.eq.running,locked_at.lte.{(datetime.utcnow().timestamp() - stale_timeout)})"
+            ).execute()
+            
+            if lock_res.data:
+                logger.info("connector_run_locked", run_id=run["id"])
+                await execute_connector_run(ctx, run["id"])
+
+    # 2. Design Runs 폴링 및 잠금
+    design_query = db.table("design_runs").select("id, status, attempt").or_(
+        "status.eq.queued,"
+        f"and(status.eq.failed,next_retry_at.lte.{now},attempt.lt.3),"
+        f"and(status.eq.running,locked_at.lte.{(datetime.utcnow().timestamp() - stale_timeout)})"
+    ).limit(5).execute()
+
+    if design_result := design_query.data:
+        from jobs.run_execute_job import design_run_execute
+        for run in design_result:
+            lock_res = db.table("design_runs").update({
+                "status": "running",
+                "locked_by": worker_id,
+                "locked_at": now
+            }).eq("id", run["id"]).or_(
+                "status.eq.queued,"
+                "status.eq.failed,"
+                f"and(status.eq.running,locked_at.lte.{(datetime.utcnow().timestamp() - stale_timeout)})"
+            ).execute()
+
+            if lock_res.data:
+                logger.info("design_run_locked", run_id=run["id"])
+                await design_run_execute(ctx, run["id"])
+
+    logger.info("polling_db_jobs_completed")
+    return {"status": "polled"}
+
+
 # === Startup/Shutdown ===
 
 async def startup(ctx):
@@ -198,6 +265,7 @@ class WorkerSettings:
         design_run_execute,
         pubmed_ingest_job,
         embed_chunks_job,
+        poll_db_jobs,
         # Real Data Jobs
         parse_candidate_csv_job,
         index_literature_job,

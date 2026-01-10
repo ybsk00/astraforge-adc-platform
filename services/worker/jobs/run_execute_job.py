@@ -65,8 +65,7 @@ async def design_run_execute(ctx: Dict[str, Any], run_id: str) -> Dict[str, Any]
     
     try:
         # ================================================
-        # 1. Run 정보 로드 + 상태 업데이트
-        # ================================================
+        # 1. Run 정보 로드 (이미 poll_db_jobs에서 running으로 변경됨)
         log.info("run_starting")
         
         run_result = db.table("design_runs").select("*").eq("id", run_id).execute()
@@ -75,9 +74,9 @@ async def design_run_execute(ctx: Dict[str, Any], run_id: str) -> Dict[str, Any]
         
         run = run_result.data[0]
         
-        # 상태 변경: running
+        # attempt 증가 및 시작 시간 기록
         db.table("design_runs").update({
-            "status": "running",
+            "attempt": run.get("attempt", 0) + 1,
             "started_at": datetime.utcnow().isoformat()
         }).eq("id", run_id).execute()
         
@@ -275,10 +274,14 @@ async def design_run_execute(ctx: Dict[str, Any], run_id: str) -> Dict[str, Any]
         )
         
         # ================================================
-        # 7-8. Evidence/Protocol (TODO - 별도 job)
+        # 7. 보고서 오케스트레이션 (Orchestrator)
         # ================================================
-        # TODO: evidence_run_job(run_id, top_candidates)
-        # TODO: protocol_run_job(run_id, top_candidates)
+        log.info("starting_orchestrator")
+        from jobs.orchestrator import ReportOrchestrator
+        orchestrator = ReportOrchestrator(db, run_id)
+        report_data = await orchestrator.execute()
+        
+        # TODO: PDF 렌더링 및 Artifact 저장 로직 추가
         
         # ================================================
         # 9. 완료 상태 업데이트
@@ -295,7 +298,9 @@ async def design_run_execute(ctx: Dict[str, Any], run_id: str) -> Dict[str, Any]
                 "pareto_fronts": stats["pareto_fronts"],
                 "top_candidates": stats["top_candidates"],
                 "duration_ms": duration_ms
-            }
+            },
+            "locked_by": None,
+            "locked_at": None
         }).eq("id", run_id).execute()
         
         db.table("run_progress").update({
@@ -321,16 +326,37 @@ async def design_run_execute(ctx: Dict[str, Any], run_id: str) -> Dict[str, Any]
     except Exception as e:
         log.error("run_failed", error=str(e))
         
-        # 실패 상태 업데이트
+        # 재시도 시간 계산
+        attempt = run.get("attempt", 0) + 1 if 'run' in locals() else 1
+        delays = [60, 300, 900]
+        delay = delays[min(attempt - 1, len(delays) - 1)]
+        from datetime import timedelta
+        next_retry = (datetime.utcnow() + timedelta(seconds=delay)).isoformat()
+
+        # 실패 상태 업데이트 및 Lock 해제
         db.table("design_runs").update({
             "status": "failed",
-            "result_summary": {"error": str(e)}
+            "result_summary": {"error": str(e)},
+            "next_retry_at": next_retry,
+            "locked_by": None,
+            "locked_at": None
         }).eq("id", run_id).execute()
         
         db.table("run_progress").update({
             "phase": "failed",
             "updated_at": datetime.utcnow().isoformat()
         }).eq("run_id", run_id).execute()
+
+        # 알림 생성
+        try:
+            db.table("alerts").insert({
+                "type": "error",
+                "source": "worker:design_run",
+                "message": f"Design run failed: {str(e)}",
+                "details": {"run_id": run_id, "attempt": attempt}
+            }).execute()
+        except Exception as alert_err:
+            log.error("failed_to_create_alert", error=str(alert_err))
         
         return {
             "status": "error",

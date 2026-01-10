@@ -19,21 +19,6 @@
       "protocol": "Protocol Automation",
       "protocolDesc": "Automatically generate and optimize experimental protocols to increase efficiency."
     },
-    "interfaceTitle": "System Interface",
-    "interfaceSubtitle": "Visualize research data at a glance with an intuitive dashboard.",
-    "literature": "Literature",
-    "admin": "Admin",
-    "menu": {
-      "overview": "Overview",
-      "designRuns": "Design Runs",
-      "catalog": "Catalog",
-      "connectors": "Connectors",
-      "staging": "Staging",
-      "ingestion": "Ingestion",
-      "observability": "Observability",
-      "alerts": "Alerts",
-      "settings": "Settings"
-    },
     "platformName": "AI Drug Discovery Platform",
     "titlePrefix": "Accelerating",
     "titleMain": "Next-Gen ADC<br></br>Discovery",
@@ -165,7 +150,9 @@
     "admin": "Admin",
     "menu": {
       "overview": "Overview",
+      "dashboard": "Dashboard",
       "designRuns": "Design Runs",
+      "reports": "Reports & Artifacts",
       "catalog": "Catalog",
       "connectors": "Connectors",
       "staging": "Staging",
