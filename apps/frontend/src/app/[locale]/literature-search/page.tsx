@@ -44,7 +44,7 @@ const STATUS_BADGE: Record<string, { label: string; class: string }> = {
 };
 
 export default function LiteratureSearchPage() {
-    const t = useTranslations('Common');
+    const t = useTranslations('LiteratureSearch');
     const [searchQuery, setSearchQuery] = useState('');
     const [submittedQuery, setSubmittedQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState<string>('');
@@ -76,13 +76,13 @@ export default function LiteratureSearchPage() {
             const response = await fetch(`${apiUrl}/api/v1/catalog/components?${params}`);
 
             if (!response.ok) {
-                throw new Error('검색 중 오류가 발생했습니다');
+                throw new Error('Search error');
             }
 
             const data = await response.json();
             setResults(data);
         } catch (err) {
-            setError(err instanceof Error ? err.message : '검색 오류');
+            setError(err instanceof Error ? err.message : 'Search error');
         } finally {
             setLoading(false);
         }
@@ -106,10 +106,10 @@ export default function LiteratureSearchPage() {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-white mb-2">
-                        심층 문헌 검색
+                        {t('title')}
                     </h1>
                     <p className="text-slate-400">
-                        PubMed 및 수집된 데이터에서 ADC 컴포넌트를 검색합니다
+                        {t('subtitle')}
                     </p>
                 </div>
 
@@ -122,7 +122,7 @@ export default function LiteratureSearchPage() {
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="검색어를 입력하세요..."
+                                placeholder={t('searchPlaceholder')}
                                 className="w-full bg-slate-800/50 border border-slate-700 rounded-lg pl-12 pr-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
@@ -130,7 +130,7 @@ export default function LiteratureSearchPage() {
                             type="submit"
                             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                         >
-                            검색
+                            {t('search')}
                         </button>
                     </div>
                 </form>
@@ -139,14 +139,14 @@ export default function LiteratureSearchPage() {
                 <div className="flex gap-4 mb-6">
                     <div className="flex items-center gap-2">
                         <Filter className="w-4 h-4 text-slate-400" />
-                        <span className="text-slate-400 text-sm">필터:</span>
+                        <span className="text-slate-400 text-sm">Filter:</span>
                     </div>
                     <select
                         value={typeFilter}
                         onChange={(e) => { setTypeFilter(e.target.value); setPage(0); }}
                         className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                        <option value="">모든 타입</option>
+                        <option value="">{t('allTypes')}</option>
                         <option value="target">Target</option>
                         <option value="antibody">Antibody</option>
                         <option value="linker">Linker</option>
@@ -158,7 +158,7 @@ export default function LiteratureSearchPage() {
                         onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
                         className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                        <option value="">모든 상태</option>
+                        <option value="">{t('allStatus')}</option>
                         <option value="active">Active</option>
                         <option value="pending_compute">Pending</option>
                         <option value="failed">Failed</option>
@@ -170,6 +170,7 @@ export default function LiteratureSearchPage() {
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
                             <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                            <span className="ml-2 text-slate-400">{t('searching')}</span>
                         </div>
                     ) : error ? (
                         <div className="text-center py-20">
@@ -178,18 +179,18 @@ export default function LiteratureSearchPage() {
                     ) : !results ? (
                         <div className="text-center py-20">
                             <Search className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                            <p className="text-slate-400">검색어를 입력하거나 필터를 선택하세요</p>
+                            <p className="text-slate-400">{t('searchPlaceholder')}</p>
                         </div>
                     ) : results.items.length === 0 ? (
                         <div className="text-center py-20">
-                            <p className="text-slate-400">검색 결과가 없습니다</p>
+                            <p className="text-slate-400">{t('noResults')}</p>
                         </div>
                     ) : (
                         <>
                             {/* Results Header */}
                             <div className="px-6 py-4 border-b border-slate-700">
                                 <p className="text-slate-300">
-                                    총 <span className="text-white font-semibold">{results.total}</span>건의 결과
+                                    {t('results', { count: results.total })}
                                 </p>
                             </div>
 
@@ -198,11 +199,11 @@ export default function LiteratureSearchPage() {
                                 <table className="w-full">
                                     <thead>
                                         <tr className="border-b border-slate-700">
-                                            <th className="text-left px-6 py-3 text-slate-400 text-sm font-medium">타입</th>
-                                            <th className="text-left px-6 py-3 text-slate-400 text-sm font-medium">이름</th>
-                                            <th className="text-left px-6 py-3 text-slate-400 text-sm font-medium">품질등급</th>
-                                            <th className="text-left px-6 py-3 text-slate-400 text-sm font-medium">상태</th>
-                                            <th className="text-left px-6 py-3 text-slate-400 text-sm font-medium">등록일</th>
+                                            <th className="text-left px-6 py-3 text-slate-400 text-sm font-medium">Type</th>
+                                            <th className="text-left px-6 py-3 text-slate-400 text-sm font-medium">Name</th>
+                                            <th className="text-left px-6 py-3 text-slate-400 text-sm font-medium">Grade</th>
+                                            <th className="text-left px-6 py-3 text-slate-400 text-sm font-medium">Status</th>
+                                            <th className="text-left px-6 py-3 text-slate-400 text-sm font-medium">Date</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -251,7 +252,7 @@ export default function LiteratureSearchPage() {
                                         className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <ChevronLeft className="w-4 h-4" />
-                                        이전
+                                        {t('previous')}
                                     </button>
                                     <span className="text-slate-400 text-sm">
                                         {page + 1} / {totalPages}
@@ -261,7 +262,7 @@ export default function LiteratureSearchPage() {
                                         disabled={page >= totalPages - 1}
                                         className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        다음
+                                        {t('next')}
                                         <ChevronRight className="w-4 h-4" />
                                     </button>
                                 </div>

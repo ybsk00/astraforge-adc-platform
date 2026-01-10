@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2, X, Download } from 'lucide-react';
-import { Link } from '@/i18n/routing';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface UploadItem {
@@ -15,15 +14,8 @@ interface UploadItem {
     error_message?: string;
 }
 
-const STATUS_CONFIG = {
-    uploaded: { label: '업로드됨', class: 'bg-blue-500/20 text-blue-400', icon: FileText },
-    parsing: { label: '파싱 중', class: 'bg-yellow-500/20 text-yellow-400', icon: Loader2 },
-    parsed: { label: '완료', class: 'bg-green-500/20 text-green-400', icon: CheckCircle },
-    failed: { label: '실패', class: 'bg-red-500/20 text-red-400', icon: AlertCircle },
-};
-
 export default function DataUploadPage() {
-    const t = useTranslations('Common');
+    const t = useTranslations('DataUpload');
     const { user } = useAuth();
     const [file, setFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
@@ -35,7 +27,22 @@ export default function DataUploadPage() {
 
     const apiUrl = process.env.NEXT_PUBLIC_ENGINE_URL || 'http://localhost:8000';
 
-    // 업로드 목록 조회
+    const getStatusConfig = (status: string) => {
+        switch (status) {
+            case 'uploaded':
+                return { label: t('status.uploaded'), class: 'bg-blue-500/20 text-blue-400', icon: FileText };
+            case 'parsing':
+                return { label: t('status.parsing'), class: 'bg-yellow-500/20 text-yellow-400', icon: Loader2 };
+            case 'parsed':
+                return { label: t('status.parsed'), class: 'bg-green-500/20 text-green-400', icon: CheckCircle };
+            case 'failed':
+                return { label: t('status.failed'), class: 'bg-red-500/20 text-red-400', icon: AlertCircle };
+            default:
+                return { label: status, class: 'bg-slate-500/20 text-slate-400', icon: FileText };
+        }
+    };
+
+    // Upload list fetch
     const fetchUploads = useCallback(async () => {
         if (!user?.id) return;
 
@@ -56,7 +63,7 @@ export default function DataUploadPage() {
         fetchUploads();
     }, [fetchUploads]);
 
-    // 폴링으로 상태 업데이트
+    // Polling for status updates
     useEffect(() => {
         const hasProcessing = uploads.some(u => u.status === 'parsing');
         if (!hasProcessing) return;
@@ -69,7 +76,7 @@ export default function DataUploadPage() {
         const selectedFile = e.target.files?.[0];
         if (selectedFile) {
             if (!selectedFile.name.endsWith('.csv')) {
-                setError('CSV 파일만 업로드 가능합니다');
+                setError('CSV files only');
                 return;
             }
             setFile(selectedFile);
@@ -86,7 +93,7 @@ export default function DataUploadPage() {
         setUploadProgress(0);
 
         try {
-            // 1. Presign 요청
+            // 1. Presign request
             setUploadProgress(10);
             const presignResponse = await fetch(`${apiUrl}/api/v1/uploads/presign`, {
                 method: 'POST',
@@ -101,13 +108,13 @@ export default function DataUploadPage() {
             });
 
             if (!presignResponse.ok) {
-                throw new Error('업로드 준비 실패');
+                throw new Error('Upload preparation failed');
             }
 
             const presignData = await presignResponse.json();
             setUploadProgress(30);
 
-            // 2. 파일 업로드 (Supabase Storage)
+            // 2. File upload (Supabase Storage)
             const uploadResponse = await fetch(presignData.presigned_url, {
                 method: 'PUT',
                 headers: {
@@ -117,12 +124,12 @@ export default function DataUploadPage() {
             });
 
             if (!uploadResponse.ok) {
-                throw new Error('파일 업로드 실패');
+                throw new Error('File upload failed');
             }
 
             setUploadProgress(70);
 
-            // 3. Commit 요청
+            // 3. Commit request
             const commitResponse = await fetch(`${apiUrl}/api/v1/uploads/commit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -133,25 +140,25 @@ export default function DataUploadPage() {
             });
 
             if (!commitResponse.ok) {
-                throw new Error('업로드 완료 처리 실패');
+                throw new Error('Upload commit failed');
             }
 
             setUploadProgress(100);
-            setSuccess('업로드 완료! 데이터를 처리 중입니다...');
+            setSuccess(t('uploadComplete'));
             setFile(null);
 
-            // 업로드 목록 새로고침
+            // Refresh upload list
             setTimeout(fetchUploads, 1000);
 
         } catch (err) {
-            setError(err instanceof Error ? err.message : '업로드 중 오류가 발생했습니다');
+            setError(err instanceof Error ? err.message : 'Upload error occurred');
         } finally {
             setUploading(false);
         }
     };
 
     const handleDelete = async (uploadId: string) => {
-        if (!user?.id || !confirm('이 업로드를 삭제하시겠습니까?')) return;
+        if (!user?.id || !confirm('Delete this upload?')) return;
 
         try {
             const response = await fetch(`${apiUrl}/api/v1/uploads/${uploadId}?user_id=${user.id}`, {
@@ -172,10 +179,10 @@ export default function DataUploadPage() {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-white mb-2">
-                        데이터 업로드
+                        {t('title')}
                     </h1>
                     <p className="text-slate-400">
-                        CSV 파일을 업로드하여 후보 데이터를 등록합니다
+                        {t('subtitle')}
                     </p>
                 </div>
 
@@ -187,17 +194,17 @@ export default function DataUploadPage() {
                         </div>
 
                         <h3 className="text-lg font-medium text-white mb-2">
-                            CSV 파일 업로드
+                            {t('csvUpload')}
                         </h3>
                         <p className="text-slate-400 text-sm mb-4 text-center">
-                            후보 데이터가 포함된 CSV 파일을 선택하세요<br />
-                            <span className="text-slate-500">(필수 컬럼: name)</span>
+                            {t('subtitle')}<br />
+                            <span className="text-slate-500">({t('requiredColumns')}: name)</span>
                         </p>
 
                         {/* File Input */}
                         <div className="flex items-center gap-4 mb-4">
                             <label className="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition-colors">
-                                파일 선택
+                                {t('selectFile')}
                                 <input
                                     type="file"
                                     accept=".csv"
@@ -229,12 +236,12 @@ export default function DataUploadPage() {
                             {uploading ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    업로드 중...
+                                    {t('uploading')}
                                 </>
                             ) : (
                                 <>
                                     <Upload className="w-4 h-4" />
-                                    업로드
+                                    {t('upload')}
                                 </>
                             )}
                         </button>
@@ -271,14 +278,14 @@ export default function DataUploadPage() {
                 {/* CSV Format Guide */}
                 <div className="bg-slate-800/30 border border-slate-700 rounded-xl p-6 mb-8">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-medium text-white">CSV 형식 안내</h3>
+                        <h3 className="text-lg font-medium text-white">{t('csvFormatGuide')}</h3>
                         <a
                             href="/samples/sample_candidates.csv"
                             download="sample_candidates.csv"
                             className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-sm transition-colors"
                         >
                             <Download className="w-4 h-4" />
-                            샘플 CSV 다운로드
+                            {t('sampleDownload')}
                         </a>
                     </div>
                     <div className="bg-slate-900 rounded-lg p-4 font-mono text-sm text-slate-300 overflow-x-auto">
@@ -287,15 +294,15 @@ export default function DataUploadPage() {
                         <div>Candidate B,6.0,3.2,0.5</div>
                     </div>
                     <p className="text-slate-400 text-sm mt-3">
-                        <strong className="text-slate-300">필수 컬럼:</strong> name<br />
-                        <strong className="text-slate-300">선택 컬럼:</strong> DAR, LogP, AggRisk, H_patch, CLV, INT
+                        <strong className="text-slate-300">{t('requiredColumns')}:</strong> name<br />
+                        <strong className="text-slate-300">{t('optionalColumns')}:</strong> DAR, LogP, AggRisk, H_patch, CLV, INT
                     </p>
                 </div>
 
                 {/* Upload History */}
                 <div className="bg-slate-800/30 border border-slate-700 rounded-xl">
                     <div className="px-6 py-4 border-b border-slate-700">
-                        <h3 className="text-lg font-medium text-white">업로드 내역</h3>
+                        <h3 className="text-lg font-medium text-white">{t('uploadHistory')}</h3>
                     </div>
 
                     {loadingUploads ? (
@@ -304,12 +311,12 @@ export default function DataUploadPage() {
                         </div>
                     ) : uploads.length === 0 ? (
                         <div className="text-center py-12 text-slate-400">
-                            업로드 내역이 없습니다
+                            {t('noHistory')}
                         </div>
                     ) : (
                         <div className="divide-y divide-slate-700">
                             {uploads.map((upload) => {
-                                const config = STATUS_CONFIG[upload.status];
+                                const config = getStatusConfig(upload.status);
                                 const StatusIcon = config.icon;
 
                                 return (

@@ -36,7 +36,7 @@
     },
     "platformName": "AI Drug Discovery Platform",
     "titlePrefix": "Accelerating",
-    "titleMain": "Next-Gen ADC<br />Discovery",
+    "titleMain": "Next-Gen ADC<br></br>Discovery",
     "badges": {
       "fda": "FDA Data Compliant",
       "security": "Enterprise Security"
@@ -59,16 +59,83 @@
     }
   },
   "Dashboard": {
+    "welcome": "Welcome, {name}.",
+    "welcomeSubtitle": "Check today's research progress and updates.",
+    "lastUpdate": "Last update: {date}",
     "stats": {
-      "totalProjects": "Total Projects",
-      "activeRuns": "Active Runs",
-      "completedRuns": "Completed Runs",
-      "resources": "Computing Resources"
+      "activeCandidates": "Active Candidates",
+      "completedDesigns": "Completed Designs",
+      "indexedLiterature": "Indexed Literature",
+      "weeklyProtocols": "Weekly Protocols"
     },
-    "recentActivity": "Recent Activity",
     "quickActions": "Quick Actions",
-    "newRun": "New Design Run",
-    "viewCatalog": "View Catalog"
+    "actions": {
+      "newDesign": "Start New Design",
+      "newDesignDesc": "Design new ADC candidate",
+      "dataUpload": "Data Upload",
+      "dataUploadDesc": "Add experiment result data",
+      "literatureSearch": "Deep Literature Search",
+      "literatureSearchDesc": "Search ~68M PubMed records"
+    },
+    "recentRuns": "Recent Design Runs",
+    "viewAll": "View All",
+    "weeklyAnalysis": "Weekly Analysis Volume",
+    "totalScans": "Total Scans",
+    "table": {
+      "runId": "RUN ID",
+      "targetLinker": "TARGET / LINKER",
+      "date": "DATE",
+      "status": "STATUS",
+      "score": "SCORE",
+      "actions": "ACTIONS"
+    },
+    "status": {
+      "completed": "Completed",
+      "processing": "Processing",
+      "failed": "Failed",
+      "calculating": "Calculating..."
+    },
+    "systemStatus": "System Status",
+    "system": {
+      "computationNode": "Computation Node",
+      "databaseIndex": "Database Index",
+      "operational": "Operational",
+      "syncing": "Syncing..."
+    }
+  },
+  "DataUpload": {
+    "title": "Data Upload",
+    "subtitle": "Upload CSV files to register candidate data",
+    "csvUpload": "CSV File Upload",
+    "selectFile": "Select File",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "uploadComplete": "Upload complete! Processing data...",
+    "csvFormatGuide": "CSV Format Guide",
+    "sampleDownload": "Download Sample CSV",
+    "requiredColumns": "Required columns",
+    "optionalColumns": "Optional columns",
+    "uploadHistory": "Upload History",
+    "noHistory": "No upload history",
+    "status": {
+      "uploaded": "Uploaded",
+      "parsing": "Parsing",
+      "parsed": "Complete",
+      "failed": "Failed"
+    }
+  },
+  "LiteratureSearch": {
+    "title": "Deep Literature Search",
+    "subtitle": "Search the component catalog",
+    "searchPlaceholder": "Search by component name...",
+    "allTypes": "All Types",
+    "allStatus": "All Status",
+    "search": "Search",
+    "noResults": "No results found",
+    "searching": "Searching...",
+    "results": "{count} results found",
+    "previous": "Previous",
+    "next": "Next"
   },
   "DesignRuns": {
     "title": "Design Runs",
@@ -88,173 +155,6 @@
       "candidates": "Candidates",
       "created": "Created Date",
       "actions": "Actions"
-    }
-  },
-  "RunDetail": {
-    "backToRuns": "Back to Runs",
-    "overview": "Run Overview",
-    "scoreDistribution": "Score Distribution",
-    "topCandidates": "Top Candidates",
-    "exportReport": "Export Report",
-    "tabs": {
-      "candidates": "Candidates",
-      "analysis": "Analysis",
-      "settings": "Settings"
-    },
-    "metrics": {
-      "binding": "Binding Affinity",
-      "stability": "Stability",
-      "toxicity": "Toxicity Risk",
-      "developability": "Developability"
-    },
-    "compare": {
-      "title": "Compare Candidates",
-      "selectCandidate": "Select Candidate",
-      "commonProperties": "Common Properties",
-      "differences": "Differences"
-    }
-  },
-  "ServicesPage": {
-    "title": "Services",
-    "subtitle": "AI-driven Drug Discovery Platform, ADC Platform",
-    "intro": {
-      "title": "What is ADC Platform?",
-      "desc": "ADC Platform is an AI-based Drug Discovery platform that connects target discovery → candidate design → evidence verification → prioritization into a single workflow during the ADC R&D process."
-    },
-    "problems": {
-      "title": "Problems We Solve",
-      "items": [
-        "Difficult to compare target/antibody/linker/payload candidates due to scattered data.",
-        "Excessive time spent finding and organizing evidence slows down experimental design.",
-        "ADC design involves many variables, making decision-making prone to experience bias.",
-        "Distributed document/result management reduces reproducibility and collaboration efficiency."
-      ]
-    },
-    "values": {
-      "title": "Core Values",
-      "items": [
-        {
-          "title": "Reduce Research Time",
-          "desc": "Automate search, organization, and reporting to shorten research lead time."
-        },
-        {
-          "title": "Evidence-First",
-          "desc": "Answers and recommendations are always provided with sources/evidence for easy verification."
-        },
-        {
-          "title": "Design-to-Decision",
-          "desc": "Connects design generation to comparison, scoring, and prioritization."
-        },
-        {
-          "title": "Organizational Collaboration",
-          "desc": "Standardize research collaboration based on projects, permissions, and audit logs."
-        }
-      ]
-    },
-    "flow": {
-      "title": "Workflow",
-      "items": [
-        "Target/Indication Definition: Input cancer type, biomarker, mechanism hypothesis",
-        "Data Collection & Organization: Auto-collection + knowledge processing of papers/patents/DBs",
-        "Candidate Design: Generate antibody/linker/payload combinations and organize candidates",
-        "Evidence-based Verification: Check evidence sentences/papers/patents via RAG Q&A",
-        "Scoring/Prioritization: Quantitative comparison of success probability, risk, and developability",
-        "Report/Share: Auto-generate results for investment, internal review, and experimental planning"
-      ]
-    },
-    "diff": {
-      "title": "Key Differentiators",
-      "items": [
-        {
-          "title": "Hybrid Search",
-          "desc": "Keyword + Semantic search to capture important keywords and context."
-        },
-        {
-          "title": "Explainable Recommendation",
-          "desc": "Provides reasons why a candidate is favorable along with evidence."
-        },
-        {
-          "title": "Modular Expansion",
-          "desc": "Expand data connectors, models, and scoring rules to fit organizational needs."
-        },
-        {
-          "title": "Enterprise Operations",
-          "desc": "Provides an operational structure considering permissions, security, audit, and deployment options."
-        }
-      ]
-    }
-  },
-  "FeaturesPage": {
-    "title": "Features",
-    "subtitle": "Powerful Tools for ADC Research",
-    "data": {
-      "title": "Data Collection & Knowledge Processing",
-      "items": [
-        "External Data Connectors: PubMed/NCBI papers, patents, public DB integration",
-        "Internal Data Integration: Upload research notes, PDFs, spreadsheets with metadata normalization",
-        "Knowledge Pipeline: Document structure analysis, chunking, embedding, indexing"
-      ]
-    },
-    "search": {
-      "title": "Hybrid Search & RAG Q&A",
-      "items": [
-        "Keyword Search (BM25) + Semantic Search (Vector) Combination",
-        "Evidence-based Answers (RAG): Provide evidence sentences/sources used in answers"
-      ]
-    },
-    "design": {
-      "title": "ADC Design Support",
-      "items": [
-        "Design Element Management: Structure key parameters like Target, Antibody, Linker, Payload, DAR",
-        "Candidate Comparison: List up candidates, tagging, notes, comments, status management"
-      ]
-    },
-    "scoring": {
-      "title": "Scoring & Risk Assessment",
-      "items": [
-        "Quantitative Comparison: Target suitability, linker stability, payload toxicity, etc.",
-        "Explainable Scoring: Provide evidence and contributing factors for scores"
-      ]
-    },
-    "collab": {
-      "title": "Collaboration & Operations",
-      "items": [
-        "Project/Workspace: Team/Task separation",
-        "Permissions/Security: RBAC, Audit Logs",
-        "Report Generation: Auto-generate summary reports, PDF export"
-      ]
-    }
-  },
-  "SolutionsPage": {
-    "title": "Solutions",
-    "subtitle": "Tailored Solutions for Each Research Stage",
-    "target": {
-      "title": "Target Intelligence",
-      "desc": "Derive promising target candidates based on cancer type/indication and structure evidence to judge value.",
-      "example": "New target discovery, competitive pipeline research, indication expansion review"
-    },
-    "optimization": {
-      "title": "ADC Design Optimization",
-      "desc": "Systematically organize antibody/linker/payload combinations and identify risk points early.",
-      "example": "Linker stability comparison, payload selection evidence, candidate down-selection"
-    },
-    "risk": {
-      "title": "Developability & Safety Risk Check",
-      "desc": "Check development risks and present safety concerns with evidence to reduce failure costs.",
-      "example": "Screening dangerous candidates before experimentation"
-    },
-    "knowledge": {
-      "title": "Organizational Knowledge Ops",
-      "desc": "Collect and organize scattered data into organizational knowledge assets.",
-      "example": "New hire onboarding, task handover, internal standard report templates"
-    },
-    "deployment": {
-      "title": "Deployment Options",
-      "items": [
-        "MVP (Fast Adoption): Core Connectors + Search/RAG + Basic Workspace",
-        "Team Expansion: Scoring/Report Automation/Collaboration Features",
-        "Enterprise: SSO, Audit Logs, Dedicated Deployment (VPC/On-prem), SLA"
-      ]
     }
   },
   "Common": {

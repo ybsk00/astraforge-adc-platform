@@ -1,6 +1,7 @@
 'use client';
 
 import { Link } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 import {
     Beaker,
     CheckCircle,
@@ -9,9 +10,7 @@ import {
     Plus,
     Upload,
     Search,
-    ArrowRight,
     MoreVertical,
-    TrendingUp,
     Server,
     Database
 } from 'lucide-react';
@@ -20,19 +19,20 @@ import {
     Area,
     XAxis,
     YAxis,
-    CartesianGrid,
     Tooltip,
     ResponsiveContainer
 } from 'recharts';
 
 export default function DashboardPage() {
+    const t = useTranslations('Dashboard');
+
     // Mock Data
-    const userName = '김연구원';
-    const lastUpdate = '2023년 10월 04일 09:30 AM';
+    const userName = 'Dr. Kim';
+    const lastUpdate = '2023-10-04 09:30 AM';
 
     const stats = [
         {
-            label: '활성 후보 물질',
+            label: t('stats.activeCandidates'),
             value: '24',
             change: '+69%',
             trend: 'up',
@@ -41,7 +41,7 @@ export default function DashboardPage() {
             bg: 'bg-gradient-to-br from-blue-500/20 to-blue-600/10',
         },
         {
-            label: '완료된 설계',
+            label: t('stats.completedDesigns'),
             value: '142',
             change: '',
             icon: CheckCircle,
@@ -49,7 +49,7 @@ export default function DashboardPage() {
             bg: 'bg-gradient-to-br from-green-500/20 to-green-600/10',
         },
         {
-            label: '색인된 문헌',
+            label: t('stats.indexedLiterature'),
             value: '8,902',
             change: '+103',
             trend: 'up',
@@ -58,7 +58,7 @@ export default function DashboardPage() {
             bg: 'bg-gradient-to-br from-purple-500/20 to-purple-600/10',
         },
         {
-            label: '이번 주 생성 프로토콜',
+            label: t('stats.weeklyProtocols'),
             value: '15',
             change: '',
             icon: Zap,
@@ -68,16 +68,16 @@ export default function DashboardPage() {
     ];
 
     const quickActions = [
-        { label: '새로운 설계 시작', description: '신규 ADC 후보 물질 디자인', icon: Plus, href: '/design/runs', primary: true },
-        { label: '데이터 업로드', description: '실험 결과 데이터 연동 추가', icon: Upload, href: '/data-upload', primary: false },
-        { label: '심층 문헌 검색', description: 'PubMed 약 약 6천 8백만 건 검색', icon: Search, href: '/literature-search', primary: false },
+        { label: t('actions.newDesign'), description: t('actions.newDesignDesc'), icon: Plus, href: '/design/runs', primary: true },
+        { label: t('actions.dataUpload'), description: t('actions.dataUploadDesc'), icon: Upload, href: '/data-upload', primary: false },
+        { label: t('actions.literatureSearch'), description: t('actions.literatureSearchDesc'), icon: Search, href: '/literature-search', primary: false },
     ];
 
     const recentRuns = [
-        { id: '#ADC-2401', target: 'HER2', linker: 'Val-Cit-PAB', date: 'Oct 24, 2023', status: 'Completed', score: 94.2 },
-        { id: '#ADC-2402', target: 'Trop2', linker: 'GGFG', date: 'Oct 23, 2023', status: 'Processing', score: null },
-        { id: '#ADC-2398', target: 'Hyd-aazone', linker: '', date: 'Oct 22, 2023', status: 'Completed', score: 88.5 },
-        { id: '#ADC-2395', target: 'EGFR', linker: 'SMCC', date: 'Oct 20, 2023', status: 'Failed', score: null },
+        { id: '#ADC-2401', target: 'HER2', linker: 'Val-Cit-PAB', date: 'Oct 24, 2023', status: 'completed', score: 94.2 },
+        { id: '#ADC-2402', target: 'Trop2', linker: 'GGFG', date: 'Oct 23, 2023', status: 'processing', score: null },
+        { id: '#ADC-2398', target: 'Hyd-aazone', linker: '', date: 'Oct 22, 2023', status: 'completed', score: 88.5 },
+        { id: '#ADC-2395', target: 'EGFR', linker: 'SMCC', date: 'Oct 20, 2023', status: 'failed', score: null },
     ];
 
     const weeklyData = [
@@ -90,10 +90,19 @@ export default function DashboardPage() {
 
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'Completed': return 'bg-green-500/20 text-green-400';
-            case 'Processing': return 'bg-blue-500/20 text-blue-400';
-            case 'Failed': return 'bg-red-500/20 text-red-400';
+            case 'completed': return 'bg-green-500/20 text-green-400';
+            case 'processing': return 'bg-blue-500/20 text-blue-400';
+            case 'failed': return 'bg-red-500/20 text-red-400';
             default: return 'bg-slate-500/20 text-slate-400';
+        }
+    };
+
+    const getStatusLabel = (status: string) => {
+        switch (status) {
+            case 'completed': return t('status.completed');
+            case 'processing': return t('status.processing');
+            case 'failed': return t('status.failed');
+            default: return status;
         }
     };
 
@@ -102,9 +111,9 @@ export default function DashboardPage() {
             <div className="max-w-7xl mx-auto">
                 {/* Welcome Header */}
                 <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-blue-400 mb-1">환영합니다, {userName}님.</h1>
-                    <p className="text-sm text-slate-400">오늘의 연구 현황과 업데이트를 확인하세요.</p>
-                    <p className="text-xs text-slate-500 mt-1">최근 업데이트: {lastUpdate}</p>
+                    <h1 className="text-2xl font-bold text-blue-400 mb-1">{t('welcome', { name: userName })}</h1>
+                    <p className="text-sm text-slate-400">{t('welcomeSubtitle')}</p>
+                    <p className="text-xs text-slate-500 mt-1">{t('lastUpdate', { date: lastUpdate })}</p>
                 </div>
 
                 {/* Stats Grid */}
@@ -130,7 +139,7 @@ export default function DashboardPage() {
 
                 {/* Quick Actions */}
                 <div className="mb-8">
-                    <h2 className="text-lg font-semibold text-white mb-4">빠른 액션</h2>
+                    <h2 className="text-lg font-semibold text-white mb-4">{t('quickActions')}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {quickActions.map((action, index) => (
                             <Link
@@ -162,21 +171,21 @@ export default function DashboardPage() {
                     {/* Recent Runs Table */}
                     <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
                         <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-white">최근 설계 실행</h3>
+                            <h3 className="text-lg font-semibold text-white">{t('recentRuns')}</h3>
                             <Link href="/design/runs" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-                                모두 보기
+                                {t('viewAll')}
                             </Link>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead>
                                     <tr className="border-b border-slate-800">
-                                        <th className="px-5 py-3 text-xs font-medium text-slate-500 uppercase">RUN ID</th>
-                                        <th className="px-5 py-3 text-xs font-medium text-slate-500 uppercase">TARGET / LINKER</th>
-                                        <th className="px-5 py-3 text-xs font-medium text-slate-500 uppercase">DATE</th>
-                                        <th className="px-5 py-3 text-xs font-medium text-slate-500 uppercase">STATUS</th>
-                                        <th className="px-5 py-3 text-xs font-medium text-slate-500 uppercase">스코어</th>
-                                        <th className="px-5 py-3 text-xs font-medium text-slate-500 uppercase">작업</th>
+                                        <th className="px-5 py-3 text-xs font-medium text-slate-500 uppercase">{t('table.runId')}</th>
+                                        <th className="px-5 py-3 text-xs font-medium text-slate-500 uppercase">{t('table.targetLinker')}</th>
+                                        <th className="px-5 py-3 text-xs font-medium text-slate-500 uppercase">{t('table.date')}</th>
+                                        <th className="px-5 py-3 text-xs font-medium text-slate-500 uppercase">{t('table.status')}</th>
+                                        <th className="px-5 py-3 text-xs font-medium text-slate-500 uppercase">{t('table.score')}</th>
+                                        <th className="px-5 py-3 text-xs font-medium text-slate-500 uppercase">{t('table.actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-800">
@@ -190,7 +199,7 @@ export default function DashboardPage() {
                                             <td className="px-5 py-4 text-sm text-slate-400">{run.date}</td>
                                             <td className="px-5 py-4">
                                                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(run.status)}`}>
-                                                    {run.status === 'Processing' ? '● ' : ''}{run.status}
+                                                    {run.status === 'processing' ? '● ' : ''}{getStatusLabel(run.status)}
                                                 </span>
                                             </td>
                                             <td className="px-5 py-4">
@@ -206,7 +215,7 @@ export default function DashboardPage() {
                                                     </div>
                                                 ) : (
                                                     <span className="text-sm text-slate-500">
-                                                        {run.status === 'Processing' ? '계산 중...' : 'N/A'}
+                                                        {run.status === 'processing' ? t('status.calculating') : 'N/A'}
                                                     </span>
                                                 )}
                                             </td>
@@ -226,10 +235,10 @@ export default function DashboardPage() {
                     <div className="space-y-6">
                         {/* Weekly Analytics */}
                         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                            <h3 className="text-lg font-semibold text-white mb-2">주간 분석 처리량</h3>
+                            <h3 className="text-lg font-semibold text-white mb-2">{t('weeklyAnalysis')}</h3>
                             <div className="flex items-baseline gap-2 mb-4">
                                 <span className="text-3xl font-bold text-white">1,240</span>
-                                <span className="text-sm text-slate-400">Total Scans</span>
+                                <span className="text-sm text-slate-400">{t('totalScans')}</span>
                             </div>
                             <div className="h-[120px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
@@ -260,25 +269,25 @@ export default function DashboardPage() {
 
                         {/* System Status */}
                         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                            <h3 className="text-lg font-semibold text-white mb-4">시스템 상태</h3>
+                            <h3 className="text-lg font-semibold text-white mb-4">{t('systemStatus')}</h3>
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 bg-green-500/20 rounded-lg">
                                             <Server className="w-4 h-4 text-green-400" />
                                         </div>
-                                        <span className="text-sm text-slate-300">Calculation Node</span>
+                                        <span className="text-sm text-slate-300">{t('system.computationNode')}</span>
                                     </div>
-                                    <span className="text-sm text-green-400 font-medium">Operational</span>
+                                    <span className="text-sm text-green-400 font-medium">{t('system.operational')}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 bg-blue-500/20 rounded-lg">
                                             <Database className="w-4 h-4 text-blue-400" />
                                         </div>
-                                        <span className="text-sm text-slate-300">Database Index</span>
+                                        <span className="text-sm text-slate-300">{t('system.databaseIndex')}</span>
                                     </div>
-                                    <span className="text-sm text-blue-400 font-medium">Syncing...</span>
+                                    <span className="text-sm text-blue-400 font-medium">{t('system.syncing')}</span>
                                 </div>
                             </div>
                         </div>
