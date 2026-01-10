@@ -61,7 +61,7 @@ htmlcov/
 
 # Logs
 *.log
-logs/
+
 
 # Local env files
 .env.local

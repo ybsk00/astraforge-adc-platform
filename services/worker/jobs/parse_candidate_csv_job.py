@@ -125,6 +125,23 @@ async def parse_candidate_csv_job(ctx: Dict[str, Any], upload_id: str, user_id: 
                         "row_index": idx
                     }).execute()
                     
+                    # Assay Results 저장 (Features)
+                    assay_inserts = []
+                    for key, value in features.items():
+                        if value is not None:
+                            assay_inserts.append({
+                                "workspace_id": upload.get("workspace_id") or "00000000-0000-0000-0000-000000000000", # Fallback if not provided
+                                "candidate_id": candidate_id,
+                                "assay_type": key,
+                                "measured_value": value,
+                                "unit": "n/a",
+                                "source": "upload",
+                                "conditions": {"upload_id": upload_id}
+                            })
+                    
+                    if assay_inserts:
+                        db.table("assay_results").insert(assay_inserts).execute()
+                    
                     created_count += 1
                     
             except Exception as e:

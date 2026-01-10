@@ -179,6 +179,10 @@ class WorkerSettings:
     from jobs.pubmed_job import pubmed_fetch_job, pubmed_chunk_job, pubmed_embed_job
     from jobs.uniprot_job import uniprot_fetch_job, uniprot_enrich_from_catalog_job, uniprot_batch_sync_job
     
+    # Real Data Integration Jobs
+    from jobs.parse_candidate_csv_job import parse_candidate_csv_job
+    from jobs.index_literature_job import index_literature_job
+    
     # Phase B Jobs
     from jobs.meta_sync_job import opentargets_fetch_job, hpa_fetch_job, chembl_fetch_job, pubchem_fetch_job, enrich_targets_batch_job
     
@@ -194,6 +198,9 @@ class WorkerSettings:
         design_run_execute,
         pubmed_ingest_job,
         embed_chunks_job,
+        # Real Data Jobs
+        parse_candidate_csv_job,
+        index_literature_job,
         # Phase A connector jobs
         pubmed_fetch_job,
         pubmed_chunk_job,

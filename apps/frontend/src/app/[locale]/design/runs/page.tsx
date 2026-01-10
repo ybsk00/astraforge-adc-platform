@@ -12,10 +12,12 @@ import {
     ChevronRight,
     Beaker
 } from 'lucide-react';
+import NewRunModal from '@/components/design/NewRunModal';
 
 export default function DesignRunsPage() {
     const [filter, setFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
+    const [isNewRunModalOpen, setIsNewRunModalOpen] = useState(false);
 
     // Mock Data
     const runs = [
@@ -108,17 +110,20 @@ export default function DesignRunsPage() {
                         <p className="text-slate-400 text-sm">모든 약물 설계 및 후보 물질 스코어링 작업을 관리합니다.</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg border border-slate-700 flex items-center gap-2 transition-colors">
+                        <button
+                            onClick={() => alert('기능 준비 중입니다.')}
+                            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg border border-slate-700 flex items-center gap-2 transition-colors"
+                        >
                             <Download className="w-4 h-4" />
                             가져오기
                         </button>
-                        <Link
-                            href="/design/new"
+                        <button
+                            onClick={() => setIsNewRunModalOpen(true)}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors"
                         >
                             <Plus className="w-4 h-4" />
                             + 새런생성
-                        </Link>
+                        </button>
                     </div>
                 </div>
 
@@ -144,8 +149,8 @@ export default function DesignRunsPage() {
                                     key={sf.key}
                                     onClick={() => setFilter(sf.key)}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === sf.key
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
                                         }`}
                                 >
                                     {sf.label} {sf.count}
@@ -246,6 +251,16 @@ export default function DesignRunsPage() {
                     </div>
                 </div>
             </div>
+            {isNewRunModalOpen && (
+                <NewRunModal
+                    onClose={() => setIsNewRunModalOpen(false)}
+                    onCreated={() => {
+                        setIsNewRunModalOpen(false);
+                        // TODO: Refresh list
+                        window.location.reload();
+                    }}
+                />
+            )}
         </div>
     );
 }

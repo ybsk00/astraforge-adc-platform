@@ -446,3 +446,60 @@ async def get_pareto_fronts(run_id: str, db=Depends(get_db)):
     except Exception as e:
         logger.error("get_pareto_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
+
+
+    except Exception as e:
+        logger.error("compare_failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/runs/{run_id}/compare")
+async def compare_candidates(
+    run_id: str,
+    candidate_ids: List[str] = Query(..., description="List of candidate IDs to compare"),
+    db=Depends(get_db)
+):
+    """
+    여러 후보 물질 비교 데이터 조회 (Scores + Assay Results)
+    """
+    try:
+        if not candidate_ids:
+            return {"items": []}
+            
+        # 1. Fetch Candidates with Scores
+        result = db.table("candidates").select(
+            """
+            *,
+            candidate_scores(*),
+            candidate_evidence(count)
+            """
+        ).in_("id", candidate_ids).eq("run_id", run_id).execute()
+        
+        candidates = result.data or []
+        
+        # 2. Fetch Assay Results
+        assay_result = db.table("assay_results").select("*").in_("candidate_id", candidate_ids).execute()
+        assays = assay_result.data or []
+        
+        # Group assays by candidate_id
+        assays_by_id = {}
+        for a in assays:
+            cid = a["candidate_id"]
+            if cid not in assays_by_id:
+                assays_by_id[cid] = []
+            assays_by_id[cid].append(a)
+            
+        # 3. Merge
+        items = []
+        for c in candidates:
+            c["assay_results"] = assays_by_id.get(c["id"], [])
+            items.append(c)
+        
+        return {
+            "run_id": run_id,
+            "items": items
+        }
+        
+    except Exception as e:
+        logger.error("compare_failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))

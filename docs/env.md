@@ -1,55 +1,37 @@
-# ADC Platform 환경 변수
+# Environment Variables
 
-## 개요
+ADC Platform의 각 서비스 실행을 위해 필요한 환경 변수 설정입니다.
 
-이 문서는 ADC 플랫폼에서 사용하는 환경 변수를 설명합니다.
+## Common Variables
 
-## 설정 방법
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `SUPABASE_URL` | Supabase 프로젝트 URL | Yes | - |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Service Role Key (Admin 권한) | Yes | - |
+| `REDIS_URL` | Redis 연결 URL (Worker Queue용) | Yes | `redis://localhost:6379` |
+| `OPENAI_API_KEY` | OpenAI API Key (Vector Search/Embedding용) | Yes | - |
+| `LOG_LEVEL` | 로깅 레벨 (DEBUG, INFO, WARNING, ERROR) | No | `INFO` |
+| `ENVIRONMENT` | 실행 환경 (development, production) | No | `development` |
 
+## Service Specifics
+
+### Engine (`services/engine`)
+- API 서버 실행 시 필요합니다.
+- `.env.example`을 복사하여 `.env` 파일을 생성하세요.
+
+### Worker (`services/worker`)
+- 백그라운드 작업(CSV 파싱, 임베딩 등) 실행 시 필요합니다.
+- `.env.example`을 복사하여 `.env` 파일을 생성하세요.
+
+## Setup
 ```bash
-# 템플릿 복사
+# Engine
+cd services/engine
 cp .env.example .env
+# .env 파일 편집
 
-# 실제 값 입력
-nano .env  # 또는 원하는 에디터 사용
+# Worker
+cd services/worker
+cp .env.example .env
+# .env 파일 편집
 ```
-
-## 환경 변수 목록
-
-### Supabase
-
-| 변수 | 설명 | 필수 |
-|------|------|------|
-| `SUPABASE_URL` | Supabase 프로젝트 URL | ✅ |
-| `SUPABASE_ANON_KEY` | Public anon key (브라우저용) | ✅ |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (서버 전용) | ✅ |
-
-> ⚠️ **보안**: Service Role Key는 **절대로** 클라이언트에 노출하지 마세요.
-
-### Redis
-
-| 변수 | 설명 | 기본값 |
-|------|------|--------|
-| `REDIS_URL` | Redis 연결 URL | `redis://localhost:6379` |
-
-### LLM / Embedding
-
-| 변수 | 설명 | 필수 |
-|------|------|------|
-| `GEMINI_API_KEY` | Gemini API Key (RAG/Protocol) | ✅ |
-| `OPENAI_API_KEY` | OpenAI API Key (Embedding) | ✅ |
-
-### PubMed
-
-| 변수 | 설명 | 권장 |
-|------|------|------|
-| `NCBI_API_KEY` | NCBI API Key (10 rps) | ✅ |
-| `NCBI_EMAIL` | 연락처 이메일 | ✅ |
-| `NCBI_TOOL` | 앱 식별자 | ✅ |
-
-## 보안 원칙
-
-| 컴포넌트 | 허용 키 |
-|----------|---------|
-| Next.js (브라우저) | `SUPABASE_ANON_KEY` only |
-| FastAPI/Worker | 모든 키 사용 가능 |

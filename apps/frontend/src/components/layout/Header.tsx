@@ -12,7 +12,7 @@ export default function Header() {
     const router = useRouter();
     const pathname = usePathname();
     const [isPending, startTransition] = useTransition();
-    const { isAdmin } = useAuth();
+    const { isAdmin, user } = useAuth();
 
     const onSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
         const nextLocale = e.target.value;
@@ -106,8 +106,28 @@ export default function Header() {
                         </div>
                     </div>
 
-                    {/* Login Button (Only on public pages) */}
-                    {isPublicPage && (
+                    {/* Auth Buttons */}
+                    {user ? (
+                        <div className="flex items-center gap-3">
+                            <Link
+                                href="/dashboard"
+                                className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
+                            >
+                                {t('dashboard')}
+                            </Link>
+                            <button
+                                onClick={async () => {
+                                    const { createClient } = await import('@/lib/supabase/client');
+                                    const supabase = createClient();
+                                    await supabase.auth.signOut();
+                                    router.refresh();
+                                }}
+                                className="bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium px-4 py-2 rounded-md border border-slate-700 transition-colors"
+                            >
+                                {t('logout')}
+                            </button>
+                        </div>
+                    ) : (
                         <Link
                             href="/login"
                             className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"

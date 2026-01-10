@@ -172,7 +172,18 @@
             "ingestion": "데이터 수집",
             "observability": "관측성",
             "alerts": "알림",
-            "settings": "설정"
+            "settings": "설정",
+            "dataEvidence": "데이터 & 근거",
+            "dataUpload": "데이터 업로드",
+            "uploadHistory": "업로드 내역",
+            "literatureSearch": "심층 문헌 검색",
+            "ingestionStatus": "수집 상태",
+            "evidenceQuality": "근거 품질",
+            "ops": "운영 관리",
+            "systemStatus": "시스템 상태",
+            "queues": "작업 큐",
+            "audit": "감사 로그",
+            "logs": "로그"
         }
     }
 }
