@@ -96,39 +96,63 @@ async def search_evidence(
 @router.get("/quality/issues", response_model=List[QualityIssueResponse])
 async def get_quality_issues(
     status: Optional[str] = Query(None, description="Filter by status"),
+    db=Depends(get_db)
 ):
     """
     근거 품질 이슈 목록 조회
     """
-    # TODO: DB 연동
-    return [
-        {
-            "id": "iss_001",
-            "type": "conflict",
-            "description": "Conflicting toxicity data for MMAE payload",
-            "severity": "high",
-            "status": "open",
-            "evidence_id": "ev_002",
-            "created_at": datetime.utcnow().isoformat()
-        },
-        {
-            "id": "iss_002",
-            "type": "outdated",
-            "description": "Newer study contradicts efficacy claims",
-            "severity": "medium",
-            "status": "open",
-            "evidence_id": "ev_005",
-            "created_at": datetime.utcnow().isoformat()
-        }
-    ]
+    try:
+        query = db.table("quality_issues").select("*").order("created_at", desc=True)
+        
+        if status:
+            query = query.eq("status", status)
+            
+        result = query.execute()
+        
+        return [
+            QualityIssueResponse(
+                id=item["id"],
+                type=item["type"],
+                description=item["description"],
+                severity=item["severity"],
+                status=item["status"],
+                evidence_id=item.get("evidence_id") or "",
+                created_at=item["created_at"]
+            )
+            for item in result.data or []
+        ]
+    except Exception as e:
+        logger.error("get_quality_issues_failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/quality/resolve")
 async def resolve_issue(
     issue_id: str,
     resolution: str,
-    user_id: str = "system" # In real app, get from auth context
+    user_id: str = "system", # In real app, get from auth context
+    db=Depends(get_db)
 ):
     """
     품질 이슈 해결 처리
     """
-    return {"status": "resolved", "issue_id": issue_id}
+    try:
+        # 1. Check if issue exists
+        result = db.table("quality_issues").select("*").eq("id", issue_id).execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Issue not found")
+            
+        # 2. Update status
+        update_data = {
+            "status": "resolved",
+            "updated_at": datetime.utcnow().isoformat()
+        }
+        
+        db.table("quality_issues").update(update_data).eq("id", issue_id).execute()
+        
+        return {"status": "resolved", "issue_id": issue_id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("resolve_issue_failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
