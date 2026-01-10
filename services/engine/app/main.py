@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.api import health, design, catalog, staging, connectors, ingestion, fingerprint, feedback, observability, alerts
+from app.api import health, design, catalog, staging, connectors, ingestion, fingerprint, feedback, observability, alerts, uploads
 
 app = FastAPI(
     title="ADC Design Engine",
@@ -33,6 +33,7 @@ app.include_router(fingerprint.router, prefix="/api/v1/fingerprint", tags=["Fing
 app.include_router(feedback.router, prefix="/api/v1/feedback", tags=["Feedback"])
 app.include_router(observability.router, prefix="/api/v1/observability", tags=["Observability"])
 app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["Alerts"])
+app.include_router(uploads.router, prefix="/api/v1/uploads", tags=["Uploads"])
 
 
 @app.on_event("startup")

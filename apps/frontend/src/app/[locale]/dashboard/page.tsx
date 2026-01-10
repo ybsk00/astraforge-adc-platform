@@ -69,8 +69,8 @@ export default function DashboardPage() {
 
     const quickActions = [
         { label: '새로운 설계 시작', description: '신규 ADC 후보 물질 디자인', icon: Plus, href: '/design/runs', primary: true },
-        { label: '데이터 업로드', description: '실험 결과 데이터 연동 추가', icon: Upload, href: '/catalog', primary: false },
-        { label: '심층 문헌 검색', description: 'PubMed 약 약 6천 8백만 건 검색', icon: Search, href: '/catalog', primary: false },
+        { label: '데이터 업로드', description: '실험 결과 데이터 연동 추가', icon: Upload, href: '/data-upload', primary: false },
+        { label: '심층 문헌 검색', description: 'PubMed 약 약 6천 8백만 건 검색', icon: Search, href: '/literature-search', primary: false },
     ];
 
     const recentRuns = [
@@ -137,8 +137,8 @@ export default function DashboardPage() {
                                 key={index}
                                 href={action.href}
                                 className={`group p-5 rounded-xl border transition-all ${action.primary
-                                        ? 'bg-blue-600 hover:bg-blue-500 border-blue-500'
-                                        : 'bg-slate-900 hover:bg-slate-800 border-slate-800 hover:border-slate-700'
+                                    ? 'bg-blue-600 hover:bg-blue-500 border-blue-500'
+                                    : 'bg-slate-900 hover:bg-slate-800 border-slate-800 hover:border-slate-700'
                                     }`}
                             >
                                 <div className="flex items-center gap-4">
