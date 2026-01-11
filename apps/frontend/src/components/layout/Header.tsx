@@ -110,7 +110,7 @@ export default function Header() {
                     {user ? (
                         <div className="flex items-center gap-3">
                             <Link
-                                href="/dashboard"
+                                href={isAdmin ? '/admin' : '/dashboard'}
                                 className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
                             >
                                 {t('dashboard')}

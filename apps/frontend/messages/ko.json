@@ -166,6 +166,7 @@
         "catalog": "카탈로그",
         "admin": "관리자",
         "menu": {
+            "admin": "관리자",
             "overview": "개요",
             "dashboard": "대시보드",
             "designRuns": "설계 실행",
@@ -242,6 +243,8 @@
         "alerts": {
             "title": "알림 센터",
             "subtitle": "시스템 알림 및 에러 로그",
+            "refresh": "새로고침",
+            "unread": "읽지 않은 알림",
             "search": "알림 검색...",
             "filter": "필터",
             "all": "모든 타입",

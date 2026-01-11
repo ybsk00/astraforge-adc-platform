@@ -37,7 +37,7 @@ export async function updateSession(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     // Protected routes
-    const protectedPaths = ['/dashboard', '/design'];
+    const protectedPaths = ['/dashboard', '/design', '/admin'];
     const isProtectedPath = protectedPaths.some((path) =>
         request.nextUrl.pathname.includes(path)
     );
@@ -52,7 +52,12 @@ export async function updateSession(request: NextRequest) {
     // Redirect logged-in users away from login page
     if (request.nextUrl.pathname.includes('/login') && user) {
         const url = request.nextUrl.clone();
-        url.pathname = '/dashboard';
+        // Role-based redirection
+        if (user.email === 'admin@admin.com') {
+            url.pathname = '/admin';
+        } else {
+            url.pathname = '/dashboard';
+        }
         return NextResponse.redirect(url);
     }
 

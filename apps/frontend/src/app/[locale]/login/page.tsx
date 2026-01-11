@@ -12,6 +12,24 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+    useState(() => {
+        const checkSession = async () => {
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                if (session.user.email === 'admin@admin.com') {
+                    router.push('/admin');
+                } else {
+                    router.push('/dashboard');
+                }
+            } else {
+                setIsCheckingSession(false);
+            }
+        };
+        checkSession();
+    });
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,6 +50,7 @@ export default function LoginPage() {
             }
 
             if (data.user) {
+                // Role-based redirection
                 if (data.user.email === 'admin@admin.com') {
                     router.push('/admin');
                 } else {
@@ -63,6 +82,14 @@ export default function LoginPage() {
             },
         });
     };
+
+    if (isCheckingSession) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+                <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+            </div>
+        );
+    }
 
     return (
         <main className="min-h-screen flex items-center justify-center bg-slate-900 relative overflow-hidden">
