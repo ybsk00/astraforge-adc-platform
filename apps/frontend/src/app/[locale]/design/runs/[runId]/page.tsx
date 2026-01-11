@@ -3,11 +3,14 @@
 import { useState } from 'react';
 import { ArrowLeft, FileText, BarChart2, Activity, MoreHorizontal, Download, Share2 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
+import CandidatesList from '@/components/design/CandidatesList';
+import ParetoFrontView from '@/components/design/ParetoFrontView';
+import ReportPreview from '@/components/design/ReportPreview';
 
 export default function RunDetailsPage({ params }: { params: { runId: string } }) {
     const [activeTab, setActiveTab] = useState('candidates');
 
-    // Mock Data
+    // TODO: Fetch real run data from API
     const run = {
         id: params.runId,
         status: 'completed',
@@ -16,12 +19,6 @@ export default function RunDetailsPage({ params }: { params: { runId: string } }
         scoring_version: 'v2.1',
         ruleset_version: 'v1.5',
     };
-
-    const candidates = [
-        { id: 'C-001', target: 'HER2', linker: 'Val-Cit', payload: 'MMAE', eng: 0.95, bio: 0.88, safety: 0.91, total: 0.92, badges: [] },
-        { id: 'C-002', target: 'HER2', linker: 'GGFG', payload: 'DXd', eng: 0.88, bio: 0.91, safety: 0.85, total: 0.89, badges: ['negative'] },
-        { id: 'C-003', target: 'HER2', linker: 'SMCC', payload: 'DM1', eng: 0.82, bio: 0.70, safety: 0.65, total: 0.75, badges: ['conflict'] },
-    ];
 
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-8">
@@ -72,8 +69,8 @@ export default function RunDetailsPage({ params }: { params: { runId: string } }
                     <button
                         onClick={() => setActiveTab('candidates')}
                         className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'candidates'
-                                ? 'border-blue-500 text-blue-400'
-                                : 'border-transparent text-slate-400 hover:text-white'
+                            ? 'border-blue-500 text-blue-400'
+                            : 'border-transparent text-slate-400 hover:text-white'
                             }`}
                     >
                         후보 목록 (Candidates)
@@ -81,8 +78,8 @@ export default function RunDetailsPage({ params }: { params: { runId: string } }
                     <button
                         onClick={() => setActiveTab('pareto')}
                         className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pareto'
-                                ? 'border-blue-500 text-blue-400'
-                                : 'border-transparent text-slate-400 hover:text-white'
+                            ? 'border-blue-500 text-blue-400'
+                            : 'border-transparent text-slate-400 hover:text-white'
                             }`}
                     >
                         파레토 프론트 (Pareto)
@@ -90,8 +87,8 @@ export default function RunDetailsPage({ params }: { params: { runId: string } }
                     <button
                         onClick={() => setActiveTab('logs')}
                         className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'logs'
-                                ? 'border-blue-500 text-blue-400'
-                                : 'border-transparent text-slate-400 hover:text-white'
+                            ? 'border-blue-500 text-blue-400'
+                            : 'border-transparent text-slate-400 hover:text-white'
                             }`}
                     >
                         실행 로그 (Logs)
@@ -101,61 +98,14 @@ export default function RunDetailsPage({ params }: { params: { runId: string } }
                 {/* Tab Content */}
                 {activeTab === 'candidates' && (
                     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="border-b border-slate-800">
-                                    <th className="px-6 py-4 text-xs font-medium text-slate-500 uppercase">ID</th>
-                                    <th className="px-6 py-4 text-xs font-medium text-slate-500 uppercase">Components (T-L-P)</th>
-                                    <th className="px-6 py-4 text-xs font-medium text-slate-500 uppercase">Scores (E/B/S)</th>
-                                    <th className="px-6 py-4 text-xs font-medium text-slate-500 uppercase">Total</th>
-                                    <th className="px-6 py-4 text-xs font-medium text-slate-500 uppercase">Badges</th>
-                                    <th className="px-6 py-4 text-xs font-medium text-slate-500 uppercase">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-800">
-                                {candidates.map((candidate) => (
-                                    <tr key={candidate.id} className="hover:bg-slate-800/50 transition-colors">
-                                        <td className="px-6 py-4 text-sm font-medium text-white">
-                                            <Link href={`/design/candidates/${candidate.id}`} className="hover:underline">
-                                                {candidate.id}
-                                            </Link>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-slate-300">
-                                            {candidate.target}-{candidate.linker}-{candidate.payload}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-slate-400 font-mono">
-                                            {candidate.eng}/{candidate.bio}/{candidate.safety}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm font-bold text-blue-400">{candidate.total}</td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex gap-1">
-                                                {candidate.badges.map((badge) => (
-                                                    <span key={badge} className={`px-2 py-0.5 rounded text-xs font-medium uppercase ${badge === 'negative' ? 'bg-red-500/20 text-red-400' :
-                                                            badge === 'conflict' ? 'bg-yellow-500/20 text-yellow-400' :
-                                                                'bg-slate-500/20 text-slate-400'
-                                                        }`}>
-                                                        {badge}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <Link href={`/design/candidates/${candidate.id}`} className="text-blue-400 hover:text-blue-300 text-sm font-medium">
-                                                상세
-                                            </Link>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                        <CandidatesList runId={params.runId} />
                     </div>
                 )}
 
                 {activeTab === 'pareto' && (
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center">
-                        <BarChart2 className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-white mb-2">Pareto Front Visualization</h3>
-                        <p className="text-slate-400">Chart component placeholder</p>
+                    <div className="space-y-8">
+                        <ReportPreview runId={params.runId} />
+                        <ParetoFrontView runId={params.runId} />
                     </div>
                 )}
 

@@ -63,7 +63,7 @@
       "literatureSearchDesc": "Search ~68M PubMed records"
     },
     "recentRuns": "Recent Design Runs",
-    "viewAll": "View All",
+    "view All": "View All",
     "weeklyAnalysis": "Weekly Analysis Volume",
     "totalScans": "Total Scans",
     "table": {
@@ -144,6 +144,7 @@
   },
   "Common": {
     "login": "Login",
+    "logout": "Logout",
     "dashboard": "Dashboard",
     "designRuns": "Design Runs",
     "catalog": "Catalog",
@@ -160,6 +161,7 @@
       "observability": "Observability",
       "alerts": "Alerts",
       "settings": "Settings",
+      "seeds": "Seed Management",
       "dataEvidence": "Data & Evidence",
       "dataUpload": "Data Upload",
       "uploadHistory": "Upload History",
@@ -171,82 +173,140 @@
       "queues": "Queues",
       "audit": "Audit Logs",
       "logs": "Logs"
-    },
-    "logout": "Logout"
-  },
-  "SolutionsPage": {
-    "title": "Customized ADC Development Solutions",
-    "subtitle": "From research to clinical trials, we provide optimal solutions for successful ADC development.",
-    "target": {
-      "title": "Target Discovery & Validation",
-      "desc": "Identify and verify optimal target antigens with AI-based analysis.",
-      "example": "Analysis of major cancer antigens like HER2, Trop2"
-    },
-    "optimization": {
-      "title": "Linker-Payload Optimization",
-      "desc": "Propose optimal combinations to maximize drug efficacy and minimize toxicity.",
-      "example": "Comparison of Cleavable vs Non-cleavable linkers"
-    },
-    "risk": {
-      "title": "Development Risk Management",
-      "desc": "Predict potential toxicity and physical property issues in early stages to minimize risk.",
-      "example": "Immunogenicity and aggregation prediction"
-    },
-    "knowledge": {
-      "title": "Knowledge-Based Decision Making",
-      "desc": "Support data-driven decision making based on vast literature and patent data.",
-      "example": "Competitor drug patent analysis reports"
-    },
-    "deployment": {
-      "title": "Flexible Deployment Options",
-      "items": {
-        "0": "SaaS Cloud\nReady-to-use managed service",
-        "1": "On-Premise\nIn-house deployment for data security",
-        "2": "Hybrid\nFlexible resource management"
-      }
     }
   },
-  "FeaturesPage": {
-    "title": "Powerful Research Features",
-    "subtitle": "Discover innovative features that accelerate the entire ADC development process.",
-    "data": {
-      "title": "Integrated Data Management",
-      "items": {
-        "0": "Automated collection and classification of experimental data",
-        "1": "Support for standardized data formats",
-        "2": "Secure data storage"
+  "Admin": {
+    "title": "Admin Dashboard",
+    "subtitle": "Real-time system overview and management.",
+    "stats": {
+      "connectors": "Connectors",
+      "connectorsDesc": "Total connector executions",
+      "designRuns": "Design Runs",
+      "designRunsDesc": "Total design runs generated",
+      "queuedJobs": "Queued Jobs",
+      "queuedJobsDesc": "Jobs waiting in queue"
+    },
+    "recentActivity": "Recent Audit Logs",
+    "viewAll": "View All",
+    "table": {
+      "user": "User",
+      "action": "Action",
+      "entity": "Entity",
+      "date": "Date",
+      "noActivity": "No recent activity found."
+    },
+    "connectors": {
+      "title": "Connectors Management",
+      "subtitle": "Manage external data sources and ingestion pipelines.",
+      "add": "Add Connector",
+      "refresh": "Refresh",
+      "status": {
+        "queued": "Queued",
+        "running": "Running",
+        "succeeded": "Success",
+        "failed": "Failed",
+        "idle": "Idle",
+        "processing": "Processing...",
+        "run": "Run Connector",
+        "lastRun": "Last Run",
+        "never": "Never",
+        "enabled": "Enabled",
+        "disabled": "Disabled"
+      },
+      "modal": {
+        "title": "Add New Connector",
+        "name": "Name",
+        "type": "Type",
+        "placeholder": "e.g. PubMed API",
+        "api": "API Integration",
+        "crawler": "Web Crawler",
+        "create": "Create Connector"
       }
     },
-    "search": {
-      "title": "Intelligent Search Engine",
-      "items": {
-        "0": "Natural language-based literature search",
-        "1": "Chemical structure search support",
-        "2": "Real-time monitoring of similar patents"
+    "alerts": {
+      "title": "Alerts Center",
+      "subtitle": "System notifications and error logs.",
+      "search": "Search alerts...",
+      "refresh": "Refresh",
+      "filter": "Filter",
+      "all": "All Types",
+      "error": "Error",
+      "warning": "Warning",
+      "info": "Info",
+      "markRead": "Mark as Read",
+      "delete": "Delete",
+      "noAlerts": "No alerts found."
+    },
+    "observability": {
+      "title": "System Observability",
+      "subtitle": "Real-time metrics and system health monitoring.",
+      "period": {
+        "7d": "Last 7 Days",
+        "30d": "Last 30 Days",
+        "24h": "Last 24 Hours"
+      },
+      "totalLogs": "Total Ingestion Logs",
+      "health": "System Health",
+      "operational": "Operational",
+      "successRate": "Success Rate by Source",
+      "table": {
+        "source": "Source",
+        "total": "Total Runs",
+        "completed": "Completed",
+        "failed": "Failed",
+        "rate": "Success Rate"
       }
     },
-    "design": {
-      "title": "AI Design Tools",
-      "items": {
-        "0": "Antibody structure prediction and optimization",
-        "1": "Linker conjugation site recommendation",
-        "2": "Drug-Antibody Ratio (DAR) simulation"
+    "reports": {
+      "title": "Reports & Artifacts",
+      "subtitle": "Access and download generated design reports and evidence data.",
+      "search": "Search reports...",
+      "refresh": "Refresh",
+      "filter": "Filter",
+      "claimEvidence": "Claim-Evidence",
+      "assumptions": "Assumptions",
+      "noReports": "No reports generated yet."
+    },
+    "designRuns": {
+      "title": "Design Runs",
+      "subtitle": "Monitor and manage all report generation processes.",
+      "refresh": "Refresh",
+      "table": {
+        "runInfo": "Run Info",
+        "creator": "Creator",
+        "status": "Status",
+        "progress": "Progress",
+        "createdAt": "Created At",
+        "actions": "Actions",
+        "noRuns": "No design runs found."
+      },
+      "status": {
+        "queued": "Queued",
+        "running": "Running",
+        "retrieving": "Retrieving",
+        "structuring": "Structuring",
+        "writing": "Writing",
+        "qa": "QA Review",
+        "rendering": "Rendering",
+        "done": "Completed",
+        "failed": "Failed"
       }
     },
-    "scoring": {
-      "title": "Multi-dimensional Scoring",
-      "items": {
-        "0": "Development success probability prediction",
-        "1": "Scoring of physical properties and toxicity",
-        "2": "Comprehensive ranking system"
-      }
-    },
-    "collab": {
-      "title": "Collaboration Platform",
-      "items": {
-        "0": "Real-time project sharing",
-        "1": "Comments and feedback among team members",
-        "2": "Integrated research note management"
+    "seeds": {
+      "title": "Seed Management",
+      "subtitle": "Manage standard diseases, targets, drugs, and Seed Sets",
+      "tabs": {
+        "targets": "Targets",
+        "diseases": "Diseases",
+        "drugs": "Drugs",
+        "sets": "Seed Sets"
+      },
+      "table": {
+        "name": "Name",
+        "symbol": "Symbol",
+        "id": "ID",
+        "status": "Status",
+        "actions": "Actions"
       }
     }
   }

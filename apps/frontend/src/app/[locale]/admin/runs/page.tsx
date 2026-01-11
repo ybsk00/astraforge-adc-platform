@@ -13,6 +13,7 @@ import {
     User,
     Layers
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface DesignRun {
     id: string;
@@ -26,19 +27,20 @@ interface DesignRun {
     } | null;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; icon: any; class: string; color: string }> = {
-    queued: { label: 'Queued', icon: Clock, class: 'bg-amber-500/20 text-amber-400', color: 'text-amber-400' },
-    running: { label: 'Running', icon: Loader2, class: 'bg-blue-500/20 text-blue-400', color: 'text-blue-400' },
-    retrieving: { label: 'Retrieving', icon: Loader2, class: 'bg-blue-500/20 text-blue-400', color: 'text-blue-400' },
-    structuring: { label: 'Structuring', icon: Loader2, class: 'bg-blue-500/20 text-blue-400', color: 'text-blue-400' },
-    writing: { label: 'Writing', icon: Loader2, class: 'bg-blue-500/20 text-blue-400', color: 'text-blue-400' },
-    qa: { label: 'QA Review', icon: Loader2, class: 'bg-blue-500/20 text-blue-400', color: 'text-blue-400' },
-    rendering: { label: 'Rendering', icon: Loader2, class: 'bg-blue-500/20 text-blue-400', color: 'text-blue-400' },
-    done: { label: 'Completed', icon: CheckCircle2, class: 'bg-green-500/20 text-green-400', color: 'text-green-400' },
-    failed: { label: 'Failed', icon: AlertCircle, class: 'bg-red-500/20 text-red-400', color: 'text-red-400' },
+const STATUS_CONFIG: Record<string, { labelKey: string; icon: any; class: string; color: string }> = {
+    queued: { labelKey: 'status.queued', icon: Clock, class: 'bg-amber-500/20 text-amber-400', color: 'text-amber-400' },
+    running: { labelKey: 'status.running', icon: Loader2, class: 'bg-blue-500/20 text-blue-400', color: 'text-blue-400' },
+    retrieving: { labelKey: 'status.retrieving', icon: Loader2, class: 'bg-blue-500/20 text-blue-400', color: 'text-blue-400' },
+    structuring: { labelKey: 'status.structuring', icon: Loader2, class: 'bg-blue-500/20 text-blue-400', color: 'text-blue-400' },
+    writing: { labelKey: 'status.writing', icon: Loader2, class: 'bg-blue-500/20 text-blue-400', color: 'text-blue-400' },
+    qa: { labelKey: 'status.qa', icon: Loader2, class: 'bg-blue-500/20 text-blue-400', color: 'text-blue-400' },
+    rendering: { labelKey: 'status.rendering', icon: Loader2, class: 'bg-blue-500/20 text-blue-400', color: 'text-blue-400' },
+    done: { labelKey: 'status.done', icon: CheckCircle2, class: 'bg-green-500/20 text-green-400', color: 'text-green-400' },
+    failed: { labelKey: 'status.failed', icon: AlertCircle, class: 'bg-red-500/20 text-red-400', color: 'text-red-400' },
 };
 
 export default function RunsPage() {
+    const t = useTranslations('Admin.designRuns');
     const [runs, setRuns] = useState<DesignRun[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -75,15 +77,15 @@ export default function RunsPage() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-2xl font-bold text-white mb-1">Design Runs</h1>
-                        <p className="text-slate-400 text-sm">Monitor and manage all report generation processes.</p>
+                        <h1 className="text-2xl font-bold text-white mb-1">{t('title')}</h1>
+                        <p className="text-slate-400 text-sm">{t('subtitle')}</p>
                     </div>
                     <button
                         onClick={fetchRuns}
                         className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg border border-slate-700 flex items-center gap-2 transition-colors"
                     >
                         <RefreshCw className="w-4 h-4" />
-                        Refresh
+                        {t('refresh')}
                     </button>
                 </div>
 
@@ -93,12 +95,12 @@ export default function RunsPage() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-950/50">
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Run Info</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Creator</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Progress</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Created At</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('table.runInfo')}</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('table.creator')}</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('table.status')}</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('table.progress')}</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('table.createdAt')}</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">{t('table.actions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800">
@@ -132,7 +134,7 @@ export default function RunsPage() {
                                                 <td className="px-6 py-4">
                                                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.class}`}>
                                                         <StatusIcon className={`w-3 h-3 ${run.status !== 'done' && run.status !== 'failed' && run.status !== 'queued' ? 'animate-spin' : ''}`} />
-                                                        {statusConfig.label}
+                                                        {t(statusConfig.labelKey)}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -162,7 +164,7 @@ export default function RunsPage() {
                                 ) : (
                                     <tr>
                                         <td colSpan={6} className="px-6 py-12 text-center text-slate-500 text-sm">
-                                            No design runs found.
+                                            {t('table.noRuns')}
                                         </td>
                                     </tr>
                                 )}

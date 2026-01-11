@@ -64,17 +64,47 @@ class PubMedConnector(BaseConnector):
         시드에서 PubMed 쿼리 생성
         
         seed 예시:
+            {"seed_set_id": "uuid..."}
             {"query": "ADC antibody drug conjugate"}
-            {"query": "HER2 ADC", "mindate": "2024/01/01", "maxdate": "2024/12/31"}
         """
+        seed_set_id = seed.get("seed_set_id")
+        
+        if seed_set_id and self.db:
+            # Seed Set에 연결된 타겟과 질환 조회
+            targets_res = self.db.table("seed_set_targets").select("entity_targets(gene_symbol)").eq("seed_set_id", seed_set_id).execute()
+            diseases_res = self.db.table("seed_set_diseases").select("entity_diseases(disease_name)").eq("seed_set_id", seed_set_id).execute()
+            
+            target_symbols = [t["entity_targets"]["gene_symbol"] for t in targets_res.data if t.get("entity_targets")]
+            disease_names = [d["entity_diseases"]["disease_name"] for d in diseases_res.data if d.get("entity_diseases")]
+            
+            if not target_symbols or not disease_names:
+                self.logger.warning("empty_seed_set", seed_set_id=seed_set_id)
+                return []
+            
+            queries = []
+            for target in target_symbols:
+                for disease in disease_names:
+                    # 타겟과 질환을 조합한 쿼리 생성
+                    query_text = f'("{target}"[Title/Abstract]) AND ("{disease}"[Title/Abstract])'
+                    params = {
+                        "mindate": seed.get("mindate"),
+                        "maxdate": seed.get("maxdate"),
+                        "retmax": seed.get("retmax", 100),
+                    }
+                    queries.append(QuerySpec(query=query_text, params={k: v for k, v in params.items() if v}))
+            
+            self.logger.info("seed_set_queries_built", count=len(queries), seed_set_id=seed_set_id)
+            return queries
+            
+        # 기존 로직 (fallback)
         query = seed.get("query", "")
         if not query:
-            raise ValueError("query is required in seed")
+            raise ValueError("query or seed_set_id is required in seed")
         
         params = {
             "mindate": seed.get("mindate"),
             "maxdate": seed.get("maxdate"),
-            "retmax": seed.get("retmax", 100),  # 페이지당 결과 수
+            "retmax": seed.get("retmax", 100),
         }
         
         return [QuerySpec(query=query, params={k: v for k, v in params.items() if v})]

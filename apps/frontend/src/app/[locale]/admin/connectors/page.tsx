@@ -1,26 +1,5 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import {
-    getConnectors,
-    triggerConnectorRun,
-    createConnector
-} from '@/lib/actions/admin';
-import {
-    RefreshCw,
-    Play,
-    AlertCircle,
-    CheckCircle,
-    Loader2,
-    Database,
-    FileText,
-    Target,
-    FlaskConical,
-    Activity,
-    Shield,
-    Plus,
-    X
-} from 'lucide-react';
+import { Plus, X, Clock } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface Connector {
     id: string;
@@ -36,12 +15,12 @@ interface Connector {
     } | null;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; icon: any; class: string }> = {
-    queued: { label: 'Queued', icon: Clock, class: 'bg-amber-500/20 text-amber-400' },
-    running: { label: 'Running', icon: Loader2, class: 'bg-blue-500/20 text-blue-400' },
-    succeeded: { label: 'Success', icon: CheckCircle, class: 'bg-green-500/20 text-green-400' },
-    failed: { label: 'Failed', icon: AlertCircle, class: 'bg-red-500/20 text-red-400' },
-    idle: { label: 'Idle', icon: CheckCircle, class: 'bg-slate-500/20 text-slate-400' },
+const STATUS_CONFIG: Record<string, { labelKey: string; icon: any; class: string }> = {
+    queued: { labelKey: 'status.queued', icon: Clock, class: 'bg-amber-500/20 text-amber-400' },
+    running: { labelKey: 'status.running', icon: Loader2, class: 'bg-blue-500/20 text-blue-400' },
+    succeeded: { labelKey: 'status.succeeded', icon: CheckCircle, class: 'bg-green-500/20 text-green-400' },
+    failed: { labelKey: 'status.failed', icon: AlertCircle, class: 'bg-red-500/20 text-red-400' },
+    idle: { labelKey: 'status.idle', icon: CheckCircle, class: 'bg-slate-500/20 text-slate-400' },
 };
 
 function Clock(props: any) {
@@ -71,6 +50,7 @@ const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
 };
 
 export default function ConnectorsPage() {
+    const t = useTranslations('Admin.connectors');
     const [connectors, setConnectors] = useState<Connector[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -130,8 +110,8 @@ export default function ConnectorsPage() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-2xl font-bold text-white mb-1">Connectors Management</h1>
-                        <p className="text-slate-400 text-sm">Manage external data sources and ingestion pipelines.</p>
+                        <h1 className="text-2xl font-bold text-white mb-1">{t('title')}</h1>
+                        <p className="text-slate-400 text-sm">{t('subtitle')}</p>
                     </div>
                     <div className="flex gap-3">
                         <button
@@ -139,14 +119,14 @@ export default function ConnectorsPage() {
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors"
                         >
                             <Plus className="w-4 h-4" />
-                            Add Connector
+                            {t('add')}
                         </button>
                         <button
                             onClick={fetchConnectors}
                             className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg border border-slate-700 flex items-center gap-2 transition-colors"
                         >
                             <RefreshCw className="w-4 h-4" />
-                            Refresh
+                            {t('refresh')}
                         </button>
                     </div>
                 </div>
@@ -177,23 +157,23 @@ export default function ConnectorsPage() {
                                     </div>
                                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.class}`}>
                                         <StatusIcon className={`w-3 h-3 ${status === 'running' ? 'animate-spin' : ''}`} />
-                                        {statusConfig.label}
+                                        {t(statusConfig.labelKey)}
                                     </span>
                                 </div>
 
                                 <div className="text-xs text-slate-500 mb-6 space-y-2">
                                     <div className="flex justify-between">
-                                        <span>Status</span>
+                                        <span>{t('status.idle')}</span>
                                         <span className={connector.is_enabled ? 'text-green-400' : 'text-red-400'}>
-                                            {connector.is_enabled ? 'Enabled' : 'Disabled'}
+                                            {connector.is_enabled ? t('status.enabled') : t('status.disabled')}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span>Last Run</span>
+                                        <span>{t('status.lastRun')}</span>
                                         <span className="text-white">
                                             {connector.latest_run?.started_at
                                                 ? new Date(connector.latest_run.started_at).toLocaleString()
-                                                : 'Never'}
+                                                : t('status.never')}
                                         </span>
                                     </div>
                                     {connector.latest_run?.error_json && (
@@ -211,12 +191,12 @@ export default function ConnectorsPage() {
                                     {status === 'running' || status === 'queued' ? (
                                         <>
                                             <Loader2 className="w-4 h-4 animate-spin" />
-                                            Processing...
+                                            {t('status.processing')}
                                         </>
                                     ) : (
                                         <>
                                             <Play className="w-4 h-4" />
-                                            Run Connector
+                                            {t('status.run')}
                                         </>
                                     )}
                                 </button>
@@ -230,32 +210,32 @@ export default function ConnectorsPage() {
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md overflow-hidden">
                             <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-                                <h2 className="text-xl font-bold text-white">Add New Connector</h2>
+                                <h2 className="text-xl font-bold text-white">{t('modal.title')}</h2>
                                 <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
                             <form onSubmit={handleCreate} className="p-6 space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-400 mb-1">Name</label>
+                                    <label className="block text-sm font-medium text-slate-400 mb-1">{t('modal.name')}</label>
                                     <input
                                         required
                                         type="text"
                                         value={newConnector.name}
                                         onChange={e => setNewConnector({ ...newConnector, name: e.target.value })}
                                         className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
-                                        placeholder="e.g. PubMed API"
+                                        placeholder={t('modal.placeholder')}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-400 mb-1">Type</label>
+                                    <label className="block text-sm font-medium text-slate-400 mb-1">{t('modal.type')}</label>
                                     <select
                                         value={newConnector.type}
                                         onChange={e => setNewConnector({ ...newConnector, type: e.target.value })}
                                         className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
                                     >
-                                        <option value="api">API Integration</option>
-                                        <option value="crawler">Web Crawler</option>
+                                        <option value="api">{t('modal.api')}</option>
+                                        <option value="crawler">{t('modal.crawler')}</option>
                                     </select>
                                 </div>
                                 <div className="pt-4">
@@ -263,7 +243,7 @@ export default function ConnectorsPage() {
                                         type="submit"
                                         className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg transition-colors"
                                     >
-                                        Create Connector
+                                        {t('modal.create')}
                                     </button>
                                 </div>
                             </form>

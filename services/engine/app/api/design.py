@@ -11,6 +11,7 @@ from typing import List, Optional, Literal, Dict, Any
 from datetime import datetime
 import uuid
 import structlog
+from app.services.report_service import get_report_service
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -502,4 +503,23 @@ async def compare_candidates(
         
     except Exception as e:
         logger.error("compare_failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/runs/{run_id}/report")
+async def generate_run_report(
+    run_id: str,
+    db=Depends(get_db)
+):
+    """
+    특정 Run에 대한 분석 리포트 생성 (캐시 지원)
+    """
+    try:
+        service = get_report_service(db)
+        # 버전 정보는 기본값 사용 (향후 확장 가능)
+        versions = {"scoring": "v1", "ruleset": "v1", "template": "v1"}
+        url = await service.generate_report_with_cache(uuid.UUID(run_id), versions)
+        return {"url": url}
+    except Exception as e:
+        logger.error("report_generation_failed", run_id=run_id, error=str(e))
         raise HTTPException(status_code=500, detail=str(e))

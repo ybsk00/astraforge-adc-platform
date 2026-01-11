@@ -8,35 +8,37 @@ import {
     CheckCircle2,
     AlertCircle,
     FileText,
-    History
+    History,
+    ShieldCheck
 } from 'lucide-react';
+import GoldenValidationTrend from '@/components/admin/GoldenValidationTrend';
 
 export default async function AdminDashboardPage() {
-    const t = await getTranslations('Common');
+    const t = await getTranslations('Admin');
     const stats = await getAdminStats();
 
     const kpiCards = [
         {
-            title: t('menu.connectors'),
+            title: t('stats.connectors'),
             value: stats.connectorRunsCount,
             icon: Cable,
-            desc: 'Total connector executions',
+            desc: t('stats.connectorsDesc'),
             color: 'text-blue-400',
             bgColor: 'bg-blue-400/10'
         },
         {
-            title: 'Design Runs',
+            title: t('stats.designRuns'),
             value: stats.designRunsCount,
             icon: FileText,
-            desc: 'Total design runs generated',
+            desc: t('stats.designRunsDesc'),
             color: 'text-purple-400',
             bgColor: 'bg-purple-400/10'
         },
         {
-            title: 'Queued Jobs',
+            title: t('stats.queuedJobs'),
             value: stats.queuedJobs,
             icon: Clock,
-            desc: 'Jobs waiting in queue',
+            desc: t('stats.queuedJobsDesc'),
             color: 'text-amber-400',
             bgColor: 'bg-amber-400/10'
         }
@@ -47,8 +49,8 @@ export default async function AdminDashboardPage() {
             <div className="max-w-7xl mx-auto">
                 {/* Welcome Header */}
                 <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-white mb-1">Admin Dashboard</h1>
-                    <p className="text-sm text-slate-400">Real-time system overview and management.</p>
+                    <h1 className="text-2xl font-bold text-white mb-1">{t('title')}</h1>
+                    <p className="text-sm text-slate-400">{t('subtitle')}</p>
                 </div>
 
                 {/* KPI Grid */}
@@ -67,25 +69,34 @@ export default async function AdminDashboardPage() {
                     ))}
                 </div>
 
+                {/* Golden Set Validation Trend */}
+                <div className="mb-8">
+                    <div className="flex items-center gap-2 mb-4">
+                        <ShieldCheck className="w-5 h-5 text-green-400" />
+                        <h2 className="text-lg font-semibold text-white">Golden Set 검증 트렌드</h2>
+                    </div>
+                    <GoldenValidationTrend />
+                </div>
+
                 {/* Recent Activity */}
                 <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
                     <div className="p-6 border-b border-slate-800 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <History className="w-5 h-5 text-blue-400" />
-                            <h2 className="text-lg font-semibold text-white">Recent Audit Logs</h2>
+                            <h2 className="text-lg font-semibold text-white">{t('recentActivity')}</h2>
                         </div>
                         <button className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-                            View All
+                            {t('viewAll')}
                         </button>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-950/50">
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">User</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Action</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Entity</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Date</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('table.user')}</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('table.action')}</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('table.entity')}</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('table.date')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800">
@@ -112,7 +123,7 @@ export default async function AdminDashboardPage() {
                                 ) : (
                                     <tr>
                                         <td colSpan={4} className="px-6 py-8 text-center text-slate-500 text-sm">
-                                            No recent activity found.
+                                            {t('table.noActivity')}
                                         </td>
                                     </tr>
                                 )}

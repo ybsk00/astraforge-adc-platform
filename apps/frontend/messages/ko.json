@@ -25,6 +25,7 @@
         "admin": "관리자",
         "menu": {
             "overview": "개요",
+            "dashboard": "대시보드",
             "designRuns": "설계 실행",
             "catalog": "카탈로그",
             "connectors": "커넥터",
@@ -166,7 +167,9 @@
         "admin": "관리자",
         "menu": {
             "overview": "개요",
+            "dashboard": "대시보드",
             "designRuns": "설계 실행",
+            "reports": "보고서 및 아티팩트",
             "catalog": "카탈로그",
             "connectors": "커넥터",
             "staging": "스테이징",
@@ -174,6 +177,7 @@
             "observability": "관측성",
             "alerts": "알림",
             "settings": "설정",
+            "seeds": "Seed 관리",
             "dataEvidence": "데이터 & 근거",
             "dataUpload": "데이터 업로드",
             "uploadHistory": "업로드 내역",
@@ -187,79 +191,137 @@
             "logs": "로그"
         }
     },
-    "SolutionsPage": {
-        "title": "맞춤형 ADC 개발 솔루션",
-        "subtitle": "연구 단계부터 임상까지, 성공적인 ADC 개발을 위한 최적의 솔루션을 제공합니다.",
-        "target": {
-            "title": "표적 발굴 및 검증",
-            "desc": "AI 기반 분석으로 최적의 표적 항원을 식별하고 검증합니다.",
-            "example": "HER2, Trop2 등 주요 암 항원 분석"
+    "Admin": {
+        "title": "관리자 대시보드",
+        "subtitle": "시스템 실시간 개요 및 관리",
+        "stats": {
+            "connectors": "커넥터",
+            "connectorsDesc": "총 커넥터 실행 횟수",
+            "designRuns": "설계 실행",
+            "designRunsDesc": "생성된 총 설계 실행 수",
+            "queuedJobs": "대기 중인 작업",
+            "queuedJobsDesc": "큐에서 대기 중인 작업 수"
         },
-        "optimization": {
-            "title": "링커-페이로드 최적화",
-            "desc": "약물 효능을 극대화하고 독성을 최소화하는 최적의 조합을 제안합니다.",
-            "example": "Cleavable vs Non-cleavable 링커 비교"
+        "recentActivity": "최근 감사 로그",
+        "viewAll": "모두 보기",
+        "table": {
+            "user": "사용자",
+            "action": "작업",
+            "entity": "엔티티",
+            "date": "날짜",
+            "noActivity": "최근 활동이 없습니다."
         },
-        "risk": {
-            "title": "개발 리스크 관리",
-            "desc": "초기 단계에서 잠재적 독성 및 물성 이슈를 예측하여 리스크를 최소화합니다.",
-            "example": "면역원성 및 응집성 예측"
-        },
-        "knowledge": {
-            "title": "지식 기반 의사결정",
-            "desc": "방대한 문헌 및 특허 데이터를 기반으로 데이터 중심의 의사결정을 지원합니다.",
-            "example": "경쟁 약물 특허 분석 리포트"
-        },
-        "deployment": {
-            "title": "유연한 배포 옵션",
-            "items": {
-                "0": "SaaS 클라우드\n즉시 사용 가능한 관리형 서비스",
-                "1": "온프레미스\n데이터 보안을 위한 사내 구축",
-                "2": "하이브리드\n유연한 리소스 관리"
-            }
-        }
-    },
-    "FeaturesPage": {
-        "title": "강력한 연구 기능",
-        "subtitle": "ADC 개발의 전 과정을 가속화하는 혁신적인 기능들을 만나보세요.",
-        "data": {
-            "title": "통합 데이터 관리",
-            "items": {
-                "0": "실험 데이터 자동 수집 및 분류",
-                "1": "표준화된 데이터 포맷 지원",
-                "2": "안전한 데이터 저장소"
-            }
-        },
-        "search": {
-            "title": "지능형 검색 엔진",
-            "items": {
-                "0": "자연어 기반 문헌 검색",
-                "1": "화학 구조 검색 지원",
-                "2": "유사 특허 실시간 모니터링"
+        "connectors": {
+            "title": "커넥터 관리",
+            "subtitle": "외부 데이터 소스 및 수집 파이프라인 관리",
+            "add": "커넥터 추가",
+            "refresh": "새로고침",
+            "status": {
+                "queued": "대기 중",
+                "running": "실행 중",
+                "succeeded": "성공",
+                "failed": "실패",
+                "idle": "대기",
+                "processing": "처리 중...",
+                "run": "커넥터 실행",
+                "lastRun": "마지막 실행",
+                "never": "실행 내역 없음",
+                "enabled": "활성화됨",
+                "disabled": "비활성화됨"
+            },
+            "modal": {
+                "title": "새 커넥터 추가",
+                "name": "이름",
+                "type": "타입",
+                "placeholder": "예: PubMed API",
+                "api": "API 연동",
+                "crawler": "웹 크롤러",
+                "create": "커넥터 생성"
             }
         },
-        "design": {
-            "title": "AI 설계 도구",
-            "items": {
-                "0": "항체 구조 예측 및 최적화",
-                "1": "링커 접합 위치 추천",
-                "2": "약물-항체 비율(DAR) 시뮬레이션"
+        "alerts": {
+            "title": "알림 센터",
+            "subtitle": "시스템 알림 및 에러 로그",
+            "search": "알림 검색...",
+            "filter": "필터",
+            "all": "모든 타입",
+            "error": "에러",
+            "warning": "경고",
+            "info": "정보",
+            "markRead": "읽음 처리",
+            "delete": "삭제",
+            "noAlerts": "알림이 없습니다."
+        },
+        "observability": {
+            "title": "시스템 관측성",
+            "subtitle": "실시간 메트릭 및 시스템 상태 모니터링",
+            "period": {
+                "7d": "최근 7일",
+                "30d": "최근 30일",
+                "24h": "최근 24시간"
+            },
+            "totalLogs": "총 수집 로그",
+            "health": "시스템 상태",
+            "operational": "정상 작동 중",
+            "successRate": "소스별 성공률",
+            "table": {
+                "source": "소스",
+                "total": "총 실행",
+                "completed": "완료",
+                "failed": "실패",
+                "rate": "성공률"
             }
         },
-        "scoring": {
-            "title": "다차원 스코어링",
-            "items": {
-                "0": "개발 성공 확률 예측",
-                "1": "물성 및 독성 점수화",
-                "2": "종합 순위 시스템"
+        "reports": {
+            "title": "보고서 및 아티팩트",
+            "subtitle": "생성된 설계 보고서 및 근거 데이터 확인",
+            "search": "보고서 검색...",
+            "refresh": "새로고침",
+            "filter": "필터",
+            "claimEvidence": "주장-근거",
+            "assumptions": "가정 사항",
+            "noReports": "생성된 보고서가 없습니다."
+        },
+        "designRuns": {
+            "title": "설계 실행",
+            "subtitle": "모든 보고서 생성 프로세스 모니터링 및 관리",
+            "refresh": "새로고침",
+            "table": {
+                "runInfo": "실행 정보",
+                "creator": "생성자",
+                "status": "상태",
+                "progress": "진행률",
+                "createdAt": "생성일",
+                "actions": "작업",
+                "noRuns": "설계 실행 내역이 없습니다."
+            },
+            "status": {
+                "queued": "대기 중",
+                "running": "실행 중",
+                "retrieving": "데이터 조회 중",
+                "structuring": "구조화 중",
+                "writing": "작성 중",
+                "qa": "QA 검토 중",
+                "rendering": "렌더링 중",
+                "done": "완료",
+                "failed": "실패"
             }
         },
-        "collab": {
-            "title": "협업 플랫폼",
-            "items": {
-                "0": "실시간 프로젝트 공유",
-                "1": "팀원 간 코멘트 및 피드백",
-                "2": "연구 노트 통합 관리"
+        "seeds": {
+            "title": "Seed 관리",
+            "subtitle": "표준 암종, 표적, 약물 데이터 및 Seed Set 관리",
+            "tabs": {
+                "targets": "표적 (Targets)",
+                "diseases": "암종 (Diseases)",
+                "drugs": "약물 (Drugs)",
+                "sets": "Seed Sets"
+            },
+            "table": {
+                "name": "이름",
+                "symbol": "심볼",
+                "id": "ID",
+                "status": "상태",
+                "actions": "작업"
             }
         }
     }

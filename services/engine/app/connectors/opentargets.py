@@ -50,11 +50,28 @@ class OpenTargetsConnector(BaseConnector):
         시드에서 쿼리 생성
         
         seed 예시:
+            {"seed_set_id": "uuid..."}
             {"ensembl_ids": ["ENSG00000141736", "ENSG00000146648"]}
-            {"target_id": "ENSG00000141736"}
         """
         queries = []
+        seed_set_id = seed.get("seed_set_id")
         
+        if seed_set_id and self.db:
+            # Seed Set에 연결된 타겟 조회 (Ensembl ID 필요)
+            targets_res = self.db.table("seed_set_targets").select("entity_targets(ensembl_gene_id)").eq("seed_set_id", seed_set_id).execute()
+            
+            ensembl_ids = [t["entity_targets"]["ensembl_gene_id"] for t in targets_res.data if t.get("entity_targets") and t["entity_targets"].get("ensembl_gene_id")]
+            
+            for eid in ensembl_ids:
+                queries.append(QuerySpec(
+                    query=eid,
+                    params={"type": "associations"}
+                ))
+            
+            self.logger.info("seed_set_queries_built", count=len(queries), seed_set_id=seed_set_id)
+            return queries
+            
+        # 기존 로직 (fallback)
         ensembl_ids = seed.get("ensembl_ids", [])
         target_id = seed.get("target_id")
         

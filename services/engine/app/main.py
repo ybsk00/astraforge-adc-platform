@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
-from app.api import health, design, catalog, staging, connectors, ingestion, fingerprint, feedback, observability, alerts, uploads, evidence, reports, ops
+from app.api import health, design, catalog, staging, connectors, ingestion, fingerprint, feedback, observability, alerts, uploads, evidence, reports, ops, automation, pipeline
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,9 +25,16 @@ async def lifespan(app: FastAPI):
         # Log but don't crash, as per recommendation
         logger.error("database_connection_failed", error=str(e))
     
+    # 2. 스케줄러 시작 (Phase 15)
+    from app.services.scheduler_service import get_scheduler_service
+    scheduler = get_scheduler_service()
+    scheduler.start()
+    
     yield
     
     # Shutdown
+    # 3. 스케줄러 중지
+    scheduler.stop()
     logger.info("application_shutdown")
 
 app = FastAPI(
@@ -72,3 +79,5 @@ app.include_router(uploads.router, prefix="/api/v1/uploads", tags=["Uploads"])
 app.include_router(evidence.router, prefix="/api/v1/evidence", tags=["Evidence"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
 app.include_router(ops.router, prefix="/api/v1/ops", tags=["Ops"])
+app.include_router(automation.router, prefix="/api/v1", tags=["Automation"])
+app.include_router(pipeline.router, prefix="/api/v1/pipeline", tags=["Pipeline"])

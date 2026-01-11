@@ -14,6 +14,7 @@ import {
     CheckCircle,
     RefreshCw
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface Alert {
     id: string;
@@ -25,6 +26,7 @@ interface Alert {
 }
 
 export default function AlertsPage() {
+    const t = useTranslations('Admin.alerts');
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'error' | 'warning' | 'info'>('all');
@@ -76,9 +78,9 @@ export default function AlertsPage() {
                     <div>
                         <h1 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
                             <Bell className="w-6 h-6 text-yellow-400" />
-                            System Alerts
+                            {t('title')}
                         </h1>
-                        <p className="text-slate-400 text-sm">Manage and monitor system notifications.</p>
+                        <p className="text-slate-400 text-sm">{t('subtitle')}</p>
                     </div>
                     <div className="flex gap-3">
                         <button
@@ -86,11 +88,11 @@ export default function AlertsPage() {
                             className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors text-sm"
                         >
                             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                            Refresh
+                            {t('refresh')}
                         </button>
                         <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm">
                             <CheckCircle className="w-4 h-4" />
-                            Mark All Read
+                            {t('markRead')}
                         </button>
                     </div>
                 </div>
@@ -102,15 +104,15 @@ export default function AlertsPage() {
                         <div className="text-xl font-bold text-white">{stats.total}</div>
                     </div>
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                        <div className="text-red-400 text-xs font-medium mb-1">Critical Errors</div>
+                        <div className="text-red-400 text-xs font-medium mb-1">{t('error')}</div>
                         <div className="text-xl font-bold text-white">{stats.error}</div>
                     </div>
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                        <div className="text-yellow-400 text-xs font-medium mb-1">Warnings</div>
+                        <div className="text-yellow-400 text-xs font-medium mb-1">{t('warning')}</div>
                         <div className="text-xl font-bold text-white">{stats.warning}</div>
                     </div>
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                        <div className="text-blue-400 text-xs font-medium mb-1">Unread</div>
+                        <div className="text-blue-400 text-xs font-medium mb-1">{t('unread')}</div>
                         <div className="text-xl font-bold text-white">{stats.unread}</div>
                     </div>
                 </div>
@@ -121,23 +123,23 @@ export default function AlertsPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                         <input
                             type="text"
-                            placeholder="Search alerts by message or source..."
+                            placeholder={t('search')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
                     <div className="flex gap-2">
-                        {(['all', 'error', 'warning', 'info'] as const).map((t) => (
+                        {(['all', 'error', 'warning', 'info'] as const).map((filterType) => (
                             <button
-                                key={t}
-                                onClick={() => setFilter(t)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === t
-                                        ? 'bg-slate-800 text-white border border-slate-700'
-                                        : 'text-slate-400 hover:text-white'
+                                key={filterType}
+                                onClick={() => setFilter(filterType)}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === filterType
+                                    ? 'bg-slate-800 text-white border border-slate-700'
+                                    : 'text-slate-400 hover:text-white'
                                     }`}
                             >
-                                {t.charAt(0).toUpperCase() + t.slice(1)}
+                                {t(filterType)}
                             </button>
                         ))}
                     </div>
@@ -151,8 +153,7 @@ export default function AlertsPage() {
                                 <div className="w-12 h-12 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <CheckCircle2 className="w-6 h-6 text-slate-600" />
                                 </div>
-                                <h3 className="text-white font-medium mb-1">No alerts found</h3>
-                                <p className="text-slate-500 text-sm">Everything looks good! No notifications to show.</p>
+                                <h3 className="text-white font-medium mb-1">{t('noAlerts')}</h3>
                             </div>
                         ) : (
                             filteredAlerts.map((alert) => (
@@ -161,8 +162,8 @@ export default function AlertsPage() {
                                     className={`p-4 flex gap-4 hover:bg-slate-800/30 transition-colors ${!alert.is_read ? 'bg-blue-500/5' : ''}`}
                                 >
                                     <div className={`mt-1 p-2 rounded-lg shrink-0 ${alert.type === 'error' ? 'bg-red-500/10 text-red-500' :
-                                            alert.type === 'warning' ? 'bg-yellow-500/10 text-yellow-500' :
-                                                'bg-blue-500/10 text-blue-500'
+                                        alert.type === 'warning' ? 'bg-yellow-500/10 text-yellow-500' :
+                                            'bg-blue-500/10 text-blue-500'
                                         }`}>
                                         {alert.type === 'error' ? <XCircle className="w-5 h-5" /> :
                                             alert.type === 'warning' ? <AlertTriangle className="w-5 h-5" /> :
@@ -181,12 +182,12 @@ export default function AlertsPage() {
                                         <div className="flex items-center gap-4">
                                             {!alert.is_read && (
                                                 <button className="text-xs font-medium text-blue-400 hover:text-blue-300">
-                                                    Mark as read
+                                                    {t('markRead')}
                                                 </button>
                                             )}
                                             <button className="text-xs font-medium text-slate-500 hover:text-red-400 flex items-center gap-1">
                                                 <Trash2 className="w-3 h-3" />
-                                                Delete
+                                                {t('delete')}
                                             </button>
                                         </div>
                                     </div>

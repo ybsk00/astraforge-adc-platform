@@ -19,6 +19,7 @@ export default function AdminSidebar() {
 
     const adminMenuItems = [
         { href: '/admin', icon: LayoutDashboard, label: t('dashboard') },
+        { href: '/admin/seeds', icon: Database, label: t('seeds') },
         { href: '/admin/connectors', icon: Cable, label: t('connectors') },
         { href: '/admin/runs', icon: Layers, label: t('designRuns') },
         { href: '/admin/reports', icon: Download, label: t('reports') },
@@ -45,7 +46,7 @@ export default function AdminSidebar() {
                 {/* Admin Menu */}
                 <div>
                     <div className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        Admin
+                        {t('admin')}
                     </div>
                     <ul className="space-y-1">
                         {adminMenuItems.map((item) => {

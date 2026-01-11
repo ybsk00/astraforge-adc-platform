@@ -91,8 +91,8 @@ export default function CandidatesList({ runId, onSelect }: CandidatesListProps)
         <button
             onClick={() => handleSort(field)}
             className={`px-2 py-1 text-xs rounded transition-all ${sortBy === field
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                 }`}
         >
             {label} {sortBy === field && (sortOrder === "desc" ? "↓" : "↑")}
@@ -171,8 +171,8 @@ export default function CandidatesList({ runId, onSelect }: CandidatesListProps)
                                 <td className="px-4 py-3">
                                     {candidate.pareto_rank != null ? (
                                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${candidate.pareto_rank === 0
-                                                ? "bg-yellow-500/20 text-yellow-400"
-                                                : "bg-gray-600 text-gray-300"
+                                            ? "bg-yellow-500/20 text-yellow-400"
+                                            : "bg-gray-600 text-gray-300"
                                             }`}>
                                             P{candidate.pareto_rank}
                                         </span>

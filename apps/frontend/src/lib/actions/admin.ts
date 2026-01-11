@@ -237,3 +237,98 @@ export async function deleteAlert(alertId: string) {
     if (error) throw error;
     revalidatePath('/admin/alerts');
 }
+
+/**
+ * Seed Targets 목록 조회
+ */
+export async function getSeedTargets() {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('entity_targets')
+        .select('*')
+        .order('gene_symbol', { ascending: true });
+
+    if (error) throw error;
+    return data;
+}
+
+/**
+ * Seed Diseases 목록 조회
+ */
+export async function getSeedDiseases() {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('entity_diseases')
+        .select('*')
+        .order('disease_name', { ascending: true });
+
+    if (error) throw error;
+    return data;
+}
+
+/**
+ * Seed Sets 목록 조회
+ */
+export async function getSeedSets() {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('seed_sets')
+        .select(`
+            *,
+            seed_set_targets(target_id),
+            seed_set_diseases(disease_id)
+        `)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+}
+
+/**
+ * Seed Set 생성
+ */
+export async function createSeedSet(name: string, targetIds: string[], diseaseIds: string[]) {
+    const supabase = await createClient();
+
+    // 1. Seed Set 생성
+    const { data: seedSet, error: setError } = await supabase
+        .from('seed_sets')
+        .insert([{ seed_set_name: name }])
+        .select()
+        .single();
+
+    if (setError) throw setError;
+
+    // 2. Targets 연결
+    if (targetIds.length > 0) {
+        const targetInserts = targetIds.map(tid => ({ seed_set_id: seedSet.id, target_id: tid }));
+        const { error: tError } = await supabase.from('seed_set_targets').insert(targetInserts);
+        if (tError) throw tError;
+    }
+
+    // 3. Diseases 연결
+    if (diseaseIds.length > 0) {
+        const diseaseInserts = diseaseIds.map(did => ({ seed_set_id: seedSet.id, disease_id: did }));
+        const { error: dError } = await supabase.from('seed_set_diseases').insert(diseaseInserts);
+        if (dError) throw dError;
+    }
+
+    revalidatePath('/admin/seeds');
+    return seedSet;
+}
+
+/**
+ * 수집 결과(문헌 및 근거) 조회
+ */
+export async function getIngestionResults(limit: number = 50) {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from('literature_documents')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+    if (error) throw error;
+    return data;
+}

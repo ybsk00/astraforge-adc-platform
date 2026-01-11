@@ -14,6 +14,7 @@ import {
     ExternalLink,
     Activity
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface Report {
     id: string;
@@ -29,6 +30,7 @@ interface Report {
 }
 
 export default function ReportsPage() {
+    const t = useTranslations('Admin.reports');
     const [reports, setReports] = useState<Report[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -63,15 +65,15 @@ export default function ReportsPage() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-2xl font-bold text-white mb-1">Reports & Artifacts</h1>
-                        <p className="text-slate-400 text-sm">Access and download generated design reports and evidence data.</p>
+                        <h1 className="text-2xl font-bold text-white mb-1">{t('title')}</h1>
+                        <p className="text-slate-400 text-sm">{t('subtitle')}</p>
                     </div>
                     <button
                         onClick={fetchReports}
                         className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg border border-slate-700 flex items-center gap-2 transition-colors"
                     >
                         <RefreshCw className="w-4 h-4" />
-                        Refresh
+                        {t('refresh')}
                     </button>
                 </div>
 
@@ -81,13 +83,13 @@ export default function ReportsPage() {
                         <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
-                            placeholder="Search reports..."
+                            placeholder={t('search')}
                             className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
                         />
                     </div>
                     <button className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-slate-400 flex items-center gap-2 hover:bg-slate-800 transition-colors">
                         <Filter className="w-4 h-4" />
-                        Filter
+                        {t('filter')}
                     </button>
                 </div>
 
@@ -120,7 +122,7 @@ export default function ReportsPage() {
 
                                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
                                     <div>
-                                        <div className="text-[10px] text-slate-500 uppercase font-semibold mb-1">Claim-Evidence</div>
+                                        <div className="text-[10px] text-slate-500 uppercase font-semibold mb-1">{t('claimEvidence')}</div>
                                         <div className="flex items-center gap-2">
                                             <BarChart3 className="w-4 h-4 text-green-400" />
                                             <span className="text-sm font-bold text-white">
@@ -129,7 +131,7 @@ export default function ReportsPage() {
                                         </div>
                                     </div>
                                     <div>
-                                        <div className="text-[10px] text-slate-500 uppercase font-semibold mb-1">Assumptions</div>
+                                        <div className="text-[10px] text-slate-500 uppercase font-semibold mb-1">{t('assumptions')}</div>
                                         <div className="flex items-center gap-2">
                                             <Activity className="w-4 h-4 text-amber-400" />
                                             <span className="text-sm font-bold text-white">
@@ -145,8 +147,7 @@ export default function ReportsPage() {
                             <div className="inline-flex p-4 bg-slate-900 rounded-full mb-4">
                                 <FileText className="w-8 h-8 text-slate-700" />
                             </div>
-                            <h3 className="text-white font-medium">No reports generated yet</h3>
-                            <p className="text-slate-500 text-sm mt-1">Reports will appear here once design runs are completed.</p>
+                            <h3 className="text-white font-medium">{t('noReports')}</h3>
                         </div>
                     )}
                 </div>

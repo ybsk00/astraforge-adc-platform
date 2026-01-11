@@ -12,6 +12,7 @@ import {
     Database,
     Zap
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface MetricsData {
     by_source: Record<string, {
@@ -25,6 +26,7 @@ interface MetricsData {
 }
 
 export default function ObservabilityPage() {
+    const t = useTranslations('Admin.observability');
     const [metrics, setMetrics] = useState<MetricsData | null>(null);
     const [loading, setLoading] = useState(true);
     const [days, setDays] = useState(7);
@@ -61,9 +63,9 @@ export default function ObservabilityPage() {
                     <div>
                         <h1 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
                             <Activity className="w-6 h-6 text-blue-400" />
-                            System Observability
+                            {t('title')}
                         </h1>
-                        <p className="text-slate-400 text-sm">Real-time performance and ingestion metrics.</p>
+                        <p className="text-slate-400 text-sm">{t('subtitle')}</p>
                     </div>
                     <div className="flex gap-3">
                         <select
@@ -71,9 +73,9 @@ export default function ObservabilityPage() {
                             onChange={(e) => setDays(Number(e.target.value))}
                             className="bg-slate-900 border border-slate-800 text-white text-sm rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                            <option value={7}>Last 7 Days</option>
+                            <option value={7}>{t('period.7d')}</option>
                             <option value={14}>Last 14 Days</option>
-                            <option value={30}>Last 30 Days</option>
+                            <option value={30}>{t('period.30d')}</option>
                         </select>
                         <button
                             onClick={fetchData}
@@ -89,14 +91,14 @@ export default function ObservabilityPage() {
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
                         <div className="flex items-center gap-3 mb-2 text-slate-400">
                             <Zap className="w-4 h-4" />
-                            <span className="text-sm font-medium">Total Executions</span>
+                            <span className="text-sm font-medium">{t('totalLogs')}</span>
                         </div>
                         <div className="text-2xl font-bold text-white">{metrics?.total_logs || 0}</div>
                     </div>
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
                         <div className="flex items-center gap-3 mb-2 text-green-400">
                             <CheckCircle2 className="w-4 h-4" />
-                            <span className="text-sm font-medium">Success Rate</span>
+                            <span className="text-sm font-medium">{t('table.rate')}</span>
                         </div>
                         <div className="text-2xl font-bold text-white">
                             {metrics ? Math.round((Object.values(metrics.by_source).reduce((acc, curr) => acc + curr.completed, 0) / (metrics.total_logs || 1)) * 100) : 0}%
@@ -125,18 +127,18 @@ export default function ObservabilityPage() {
                     <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
                         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                             <BarChart3 className="w-5 h-5 text-blue-400" />
-                            Source Performance
+                            {t('successRate')}
                         </h2>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="bg-slate-950/50 text-slate-400 text-xs uppercase tracking-wider">
-                                    <th className="px-6 py-4 font-medium">Source</th>
-                                    <th className="px-6 py-4 font-medium text-right">Runs</th>
-                                    <th className="px-6 py-4 font-medium text-right">Success</th>
-                                    <th className="px-6 py-4 font-medium text-right">Failed</th>
-                                    <th className="px-6 py-4 font-medium text-right">Success Rate</th>
+                                    <th className="px-6 py-4 font-medium">{t('table.source')}</th>
+                                    <th className="px-6 py-4 font-medium text-right">{t('table.total')}</th>
+                                    <th className="px-6 py-4 font-medium text-right">{t('table.completed')}</th>
+                                    <th className="px-6 py-4 font-medium text-right">{t('table.failed')}</th>
+                                    <th className="px-6 py-4 font-medium text-right">{t('table.rate')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800">
@@ -153,7 +155,7 @@ export default function ObservabilityPage() {
                                                 <div className="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
                                                     <div
                                                         className={`h-full rounded-full ${stats.success_rate >= 90 ? 'bg-green-500' :
-                                                                stats.success_rate >= 70 ? 'bg-yellow-500' : 'bg-red-500'
+                                                            stats.success_rate >= 70 ? 'bg-yellow-500' : 'bg-red-500'
                                                             }`}
                                                         style={{ width: `${stats.success_rate}%` }}
                                                     />
@@ -173,14 +175,14 @@ export default function ObservabilityPage() {
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
                         <h3 className="text-white font-medium mb-4 flex items-center gap-2">
                             <Clock className="w-4 h-4 text-slate-400" />
-                            System Health
+                            {t('health')}
                         </h3>
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-slate-400">Database Connection</span>
                                 <span className="flex items-center gap-1.5 text-xs font-medium text-green-400">
                                     <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                                    Healthy
+                                    {t('operational')}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between">
