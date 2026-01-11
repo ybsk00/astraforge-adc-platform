@@ -132,6 +132,21 @@ GET /api/v1/design/runs/{run_id}/candidates/{candidate_id}/evidence
 
 ---
 
+## 5. 엔티티 레벨 근거 (v2)
+
+링커 및 페이로드 엔티티의 품질 검수를 위해 별도의 근거 시스템을 운영합니다.
+
+### 5.1 데이터 모델
+- **`evidence_snippets`**: 문헌에서 추출된 엔티티 관련 원문 조각.
+- **`entity_evidence_map`**: 특정 링커/페이로드와 근거 스니펫 간의 연결.
+
+### 5.2 RAG 연동 전략
+1. **추출**: 문헌 수집 시 LLM을 사용하여 링커/페이로드 언급 및 관련 특성(Cleavage, Mechanism 등) 추출.
+2. **저장**: 추출된 텍스트를 `evidence_snippets`에 저장하고 해당 엔티티와 매핑.
+3. **검수**: 관리자가 검수 큐에서 해당 근거를 확인하고 엔티티 정보를 확정.
+
+---
+
 ## 6. 코드 위치
 
 | 파일 | 설명 |
@@ -139,3 +154,4 @@ GET /api/v1/design/runs/{run_id}/candidates/{candidate_id}/evidence
 | `services/engine/app/services/evidence.py` | Evidence RAG 서비스 |
 | `services/engine/app/services/literature.py` | 문헌 처리 서비스 |
 | `services/worker/jobs/literature_ingest.py` | 문헌 수집 Job |
+| `apps/frontend/src/lib/actions/admin.ts` | 관리자 검수 및 근거 연동 서버 액션 |

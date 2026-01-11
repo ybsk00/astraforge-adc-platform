@@ -61,6 +61,38 @@ ADC Platform은 Supabase (PostgreSQL + pgvector)를 사용합니다.
 | is_gold | BOOLEAN | Gold Standard 여부 |
 | created_at | TIMESTAMPTZ | 생성일 |
 
+### `entity_linkers`
+링커 엔티티 (고도화 v2)
+
+| Column | Type | Description |
+|---|---|---|
+| id | UUID | PK |
+| name | TEXT | 링커 이름 |
+| synonyms | TEXT[] | 동의어 목록 |
+| smiles | TEXT | SMILES 구조 |
+| inchi_key | TEXT | InChIKey |
+| cleavage_trigger | TEXT | 분해 트리거 (Acid, Enzyme 등) |
+| structure_source | TEXT | 구조 출처 (PubChem, OPSIN, Manual 등) |
+| structure_status | TEXT | 구조 상태 (needs_review, confirmed) |
+| structure_confidence | NUMERIC | 구조 신뢰도 (0-1) |
+| created_at | TIMESTAMPTZ | 생성일 |
+
+### `entity_drugs` (Payloads)
+페이로드 엔티티 (고도화 v2)
+
+| Column | Type | Description |
+|---|---|---|
+| id | UUID | PK |
+| drug_name | TEXT | 약물 이름 |
+| synonyms | TEXT[] | 동의어 목록 |
+| smiles | TEXT | SMILES 구조 |
+| inchi_key | TEXT | InChIKey |
+| mechanism | TEXT | 작용 기전 |
+| structure_source | TEXT | 구조 출처 |
+| structure_status | TEXT | 구조 상태 |
+| structure_confidence | NUMERIC | 구조 신뢰도 |
+| created_at | TIMESTAMPTZ | 생성일 |
+
 ### `staging_components`
 스테이징 (검수 대기)
 
@@ -163,6 +195,29 @@ ADC Platform은 Supabase (PostgreSQL + pgvector)를 사용합니다.
 | template_id | TEXT | 프로토콜 템플릿 ID |
 | protocol | JSONB | 프로토콜 내용 |
 | rationale | TEXT | 추천 이유 |
+
+### `evidence_snippets`
+엔티티 레벨 근거 스니펫 (고도화 v2)
+
+| Column | Type | Description |
+|---|---|---|
+| id | UUID | PK |
+| source_type | TEXT | 출처 타입 (pubmed, patent 등) |
+| source_id | TEXT | 출처 ID (PMID 등) |
+| content_quote | TEXT | 원문 인용구 |
+| extracted_entities | JSONB | 추출된 엔티티 정보 |
+| confidence_score | NUMERIC | 추출 신뢰도 |
+| created_at | TIMESTAMPTZ | 생성일 |
+
+### `entity_evidence_map`
+엔티티-근거 매핑 테이블
+
+| Column | Type | Description |
+|---|---|---|
+| entity_type | TEXT | linker / payload |
+| entity_id | UUID | 엔티티 ID |
+| evidence_id | UUID | FK → evidence_snippets |
+| created_at | TIMESTAMPTZ | 생성일 |
 
 ---
 
@@ -320,3 +375,4 @@ Row Level Security가 다음 테이블에 적용됩니다:
 | `002_domain_data_automation.sql` | 자동 수집 테이블 |
 | `003_pareto_tables.sql` | 파레토 프론트 |
 | `004_refine_catalog_schema.sql` | 카탈로그 스키마 보완 |
+| `20260111154000_linker_payload_v2_schema.sql` | 링커-페이로드 v2 스키마 확장 |

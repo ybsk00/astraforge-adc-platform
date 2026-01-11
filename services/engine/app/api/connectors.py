@@ -118,59 +118,103 @@ async def list_connectors():
     """
     전체 커넥터 목록 및 상태
     """
-    db = get_db()
-    
-    connectors = []
-    
-    for source, info in CONNECTOR_REGISTRY.items():
-        # 모든 커서 상태 조회 (통계 합산용)
-        cursor_result = db.table("ingestion_cursors").select(
-            "status, last_success_at, stats, error_message, updated_at"
-        ).eq("source", source).order("last_success_at", desc=True).execute()
+    try:
+        db = get_db()
         
-        # 통계 합산 및 상태 결정
-        total_fetched = 0
-        total_new = 0
-        total_updated = 0
-        running_count = 0
-        failed_count = 0
-        last_success = None
-        last_error = None
+        connectors = []
         
-        for cursor in (cursor_result.data or []):
-            stats = cursor.get("stats", {}) or {}
-            total_fetched += stats.get("fetched", 0) or 0
-            total_new += stats.get("new", 0) or 0
-            total_updated += stats.get("updated", 0) or 0
+        for source, info in CONNECTOR_REGISTRY.items():
+            # 모든 커서 상태 조회 (통계 합산용)
+            try:
+                cursor_result = db.table("ingestion_cursors").select(
+                    "status, last_success_at, stats, error_message, updated_at"
+                ).eq("source", source).order("last_success_at", desc=True).execute()
+                cursors_data = cursor_result.data or []
+            except Exception as e:
+                logger.error("cursor_fetch_failed", source=source, error=str(e))
+                cursors_data = []
             
-            if cursor.get("status") == "running":
-                running_count += 1
-            if cursor.get("status") == "failed":
-                failed_count += 1
-                if not last_error:
-                    last_error = cursor.get("error_message")
+            # 통계 합산 및 상태 결정
+            total_fetched = 0
+            total_new = 0
+            total_updated = 0
+            running_count = 0
+            failed_count = 0
+            last_success = None
+            last_error = None
             
-            if cursor.get("last_success_at") and not last_success:
-                last_success = cursor.get("last_success_at")
+            for cursor in cursors_data:
+                stats = cursor.get("stats", {}) or {}
+                total_fetched += stats.get("fetched", 0) or 0
+                total_new += stats.get("new", 0) or 0
+                total_updated += stats.get("updated", 0) or 0
+                
+                if cursor.get("status") == "running":
+                    running_count += 1
+                if cursor.get("status") == "failed":
+                    failed_count += 1
+                    if not last_error:
+                        last_error = cursor.get("error_message")
+                
+                if cursor.get("last_success_at") and not last_success:
+                    last_success = cursor.get("last_success_at")
+            
+            # 전체 상태 결정: running > failed > idle
+            if running_count > 0:
+                overall_status = "running"
+            elif failed_count > 0 and not last_success:
+                overall_status = "failed"
+            else:
+                overall_status = "idle"
+            
+            connectors.append({
+                "source": source,
+                **info,
+                "status": overall_status,
+                "last_success_at": last_success,
+                "stats": {"fetched": total_fetched, "new": total_new, "updated": total_updated},
+                "error_message": last_error if overall_status == "failed" else None,
+            })
         
-        # 전체 상태 결정: running > failed > idle
-        if running_count > 0:
-            overall_status = "running"
-        elif failed_count > 0 and not last_success:
-            overall_status = "failed"
-        else:
-            overall_status = "idle"
+        return {"connectors": connectors}
+    except Exception as e:
+        logger.error("list_connectors_failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/setup-defaults")
+async def setup_default_connectors():
+    """
+    CONNECTOR_REGISTRY에 정의된 기본 커넥터들을 ingestion_cursors에 등록
+    """
+    try:
+        db = get_db()
         
-        connectors.append({
-            "source": source,
-            **info,
-            "status": overall_status,
-            "last_success_at": last_success,
-            "stats": {"fetched": total_fetched, "new": total_new, "updated": total_updated},
-            "error_message": last_error if overall_status == "failed" else None,
-        })
-    
-    return {"connectors": connectors}
+        # 현재 등록된 커넥터 소스 목록 조회
+        existing_res = db.table("ingestion_cursors").select("source").execute()
+        existing_sources = {row["source"] for row in (existing_res.data or [])}
+        
+        new_cursors = []
+        for source, info in CONNECTOR_REGISTRY.items():
+            if source not in existing_sources:
+                new_cursors.append({
+                    "source": source,
+                    "status": "idle",
+                    "cursor": {},
+                    "stats": {"fetched": 0, "new": 0, "updated": 0}
+                })
+        
+        if new_cursors:
+            db.table("ingestion_cursors").insert(new_cursors).execute()
+            
+        return {
+            "status": "success", 
+            "message": f"Added {len(new_cursors)} new connectors",
+            "added": [c["source"] for c in new_cursors]
+        }
+    except Exception as e:
+        logger.error("setup_defaults_failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{source}")

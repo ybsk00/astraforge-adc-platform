@@ -14,11 +14,12 @@ import {
     RefreshCw,
     Play,
     ChevronRight,
-    ArrowRight
+    ArrowRight,
+    Download
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { getConnectors, triggerConnectorRun, createConnector } from '@/lib/actions/admin';
+import { getConnectors, triggerConnectorRun, createConnector, setupDefaultConnectors } from '@/lib/actions/admin';
 import { clsx } from 'clsx';
 
 interface Connector {
@@ -85,6 +86,18 @@ export default function ConnectorsPage() {
         }
     };
 
+    const handleFetchDefaults = async () => {
+        try {
+            setLoading(true);
+            await setupDefaultConnectors();
+            await fetchConnectors();
+        } catch (err) {
+            alert(err instanceof Error ? err.message : 'Failed to fetch default connectors');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -115,6 +128,14 @@ export default function ConnectorsPage() {
                         <p className="text-slate-400 text-sm">{t('subtitle')}</p>
                     </div>
                     <div className="flex gap-3">
+                        <button
+                            onClick={handleFetchDefaults}
+                            disabled={loading}
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-indigo-600/20 disabled:opacity-50"
+                        >
+                            <Download className="w-4 h-4" />
+                            {t('fetchDefaults')}
+                        </button>
                         <button
                             onClick={() => setIsModalOpen(true)}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-blue-600/20"

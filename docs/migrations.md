@@ -14,6 +14,7 @@ Supabase 데이터베이스 스키마를 설정하기 위한 마이그레이션 
 | 5 | `004_refine_catalog_schema.sql` | 컴포넌트 카탈로그 스키마 개선 | Yes |
 | 6 | `005_enable_rls.sql` | **RLS (Row Level Security)** 보안 정책 적용 | **Critical** |
 | 7 | `006_add_search_function.sql` | 벡터 검색용 RPC 함수 (`match_literature_chunks`) | **Critical** |
+| 8 | `20260111154000_linker_payload_v2_schema.sql` | 링커-페이로드 v2 스키마 확장 | Yes |
 
 ## How to Apply
 

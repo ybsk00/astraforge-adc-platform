@@ -199,6 +199,7 @@
       "title": "Connectors Management",
       "subtitle": "Manage external data sources and ingestion pipelines.",
       "add": "Add Connector",
+      "fetchDefaults": "Fetch Default Connectors",
       "refresh": "Refresh",
       "status": {
         "queued": "Queued",
@@ -307,6 +308,25 @@
         "id": "ID",
         "status": "Status",
         "actions": "Actions"
+      }
+    },
+    "review": {
+      "title": "Review Queue",
+      "subtitle": "Review data quality for RAG ingestion and API lookup results.",
+      "tabs": {
+        "linkers": "Linkers",
+        "payloads": "Payloads"
+      },
+      "search": "Search by name...",
+      "noItems": "No items to review.",
+      "status": {
+        "confirmed": "Confirmed",
+        "resolved": "Resolved",
+        "needs_review": "Needs Review"
+      },
+      "actions": {
+        "resolve": "Resolve Structure",
+        "approve": "Approve"
       }
     }
   }

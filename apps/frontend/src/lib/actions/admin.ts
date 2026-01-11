@@ -15,10 +15,10 @@ export async function getAdminStats() {
         { data: recentLogs },
         { count: queuedJobs }
     ] = await Promise.all([
-        supabase.from('connector_runs').select('*', { count: 'exact', head: true }),
+        supabase.from('ingestion_logs').select('*', { count: 'exact', head: true }),
         supabase.from('design_runs').select('*', { count: 'exact', head: true }),
         supabase.from('audit_logs').select('*, profiles(name, email)').order('created_at', { ascending: false }).limit(5),
-        supabase.from('connector_runs').select('*', { count: 'exact', head: true }).eq('status', 'queued')
+        supabase.from('ingestion_logs').select('*', { count: 'exact', head: true }).eq('status', 'started')
     ]);
 
     return {
@@ -33,28 +33,28 @@ export async function getAdminStats() {
  * 커넥터 목록 조회 (최신 실행 상태 포함)
  */
 export async function getConnectors() {
-    const supabase = await createClient();
-    const { data: connectors, error } = await supabase
-        .from('connectors')
-        .select(`
-            *,
-            connector_runs (
-                status,
-                started_at,
-                ended_at,
-                error_json
-            )
-        `)
-        .order('created_at', { ascending: false });
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const response = await fetch(`${apiUrl}/api/v1/connectors`, { cache: 'no-store' });
+    if (!response.ok) throw new Error('Failed to fetch connectors');
+    const data = await response.json();
 
-    if (error) throw error;
-
-    // 각 커넥터별로 최신 실행 1건만 추출
-    return connectors.map(c => ({
-        ...c,
-        latest_run: c.connector_runs?.sort((a: any, b: any) =>
-            new Date(b.started_at || b.created_at).getTime() - new Date(a.started_at || a.created_at).getTime()
-        )[0] || null
+    return data.connectors.map((c: any) => ({
+        id: c.source,
+        name: c.name,
+        type: c.type,
+        is_enabled: true,
+        config: {},
+        latest_run: c.last_success_at ? {
+            status: c.status,
+            started_at: c.last_success_at,
+            ended_at: c.last_success_at,
+            error_json: c.error_message ? { message: c.error_message } : null
+        } : (c.status !== 'idle' ? {
+            status: c.status,
+            started_at: null,
+            ended_at: null,
+            error_json: c.error_message ? { message: c.error_message } : null
+        } : null)
     }));
 }
 
@@ -93,35 +93,32 @@ export async function createConnector(formData: { name: string; type: string; co
  * 커넥터 실행 트리거
  */
 export async function triggerConnectorRun(connectorId: string) {
-    const supabase = await createClient();
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const response = await fetch(`${apiUrl}/api/v1/connectors/${connectorId}/run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ batch_mode: true, limit: 100 })
+    });
 
-    // 1. Job 생성
-    const { data: run, error } = await supabase
-        .from('connector_runs')
-        .insert([{
-            connector_id: connectorId,
-            status: 'queued',
-            attempt: 0
-        }])
-        .select()
-        .single();
+    if (!response.ok) throw new Error('Failed to trigger connector run');
 
-    if (error) throw error;
+    revalidatePath('/admin/connectors');
+    return response.json();
+}
 
-    // 2. 감사 로그 기록
-    const { data: userData } = await supabase.auth.getUser();
-    if (userData.user) {
-        await supabase.from('audit_logs').insert([{
-            actor_user_id: userData.user.id,
-            action: 'TRIGGER_CONNECTOR',
-            entity_type: 'connector',
-            entity_id: connectorId,
-            details: { run_id: run.id }
-        }]);
-    }
+/**
+ * 기본 커넥터 설정
+ */
+export async function setupDefaultConnectors() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const response = await fetch(`${apiUrl}/api/v1/connectors/setup-defaults`, {
+        method: 'POST'
+    });
 
-    revalidatePath('/admin/ingestion');
-    return run;
+    if (!response.ok) throw new Error('Failed to setup default connectors');
+
+    revalidatePath('/admin/connectors');
+    return response.json();
 }
 
 /**
@@ -161,11 +158,11 @@ export async function getObservabilityMetrics(days: number = 7) {
     startDate.setDate(startDate.getDate() - days);
 
     const { data: runs, error } = await supabase
-        .from('connector_runs')
+        .from('ingestion_logs')
         .select(`
             status,
-            started_at,
-            connectors (name)
+            created_at,
+            source
         `)
         .gte('created_at', startDate.toISOString());
 
@@ -174,12 +171,12 @@ export async function getObservabilityMetrics(days: number = 7) {
     // 데이터 가공 (Source별, 일별 통계)
     const by_source: Record<string, any> = {};
     runs.forEach((run: any) => {
-        const source = run.connectors?.name || 'unknown';
+        const source = run.source || 'unknown';
         if (!by_source[source]) {
             by_source[source] = { total_runs: 0, completed: 0, failed: 0, success_rate: 0 };
         }
         by_source[source].total_runs++;
-        if (run.status === 'succeeded') by_source[source].completed++;
+        if (run.status === 'completed') by_source[source].completed++;
         if (run.status === 'failed') by_source[source].failed++;
     });
 

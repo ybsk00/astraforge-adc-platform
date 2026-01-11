@@ -92,10 +92,30 @@ pip install rdkit  # 일부 환경에서 동작
 
 ---
 
-## 5. 코드 위치
+## 6. 하이브리드 구조 조회 (v2)
+
+SMILES 구조의 자동 확보를 위해 PubChem과 OPSIN API를 결합한 하이브리드 전략을 사용합니다.
+
+### 6.1 조회 워크플로우
+1. **PubChem 조회**: 엔티티 명칭 및 동의어를 기반으로 PubChem PUG REST API 호출.
+2. **OPSIN 조회**: PubChem에서 결과가 없거나 신뢰도가 낮은 경우, IUPAC 명칭을 OPSIN API로 해석.
+3. **신뢰도 계산**: 매칭 방식(Exact, Synonym, IUPAC)에 따라 0~1 사이의 신뢰도 점수 부여.
+
+### 6.2 신뢰도 점수 (Confidence Score)
+| 매칭 타입 | 점수 | 설명 |
+|---|---|---|
+| `exact` | 1.0 | PubChem 기본 명칭과 완전 일치 |
+| `synonym` | 0.8 | PubChem 동의어 목록 중 일치 |
+| `iupac` | 0.7 | OPSIN을 통한 IUPAC 명칭 해석 성공 |
+| `manual` | 1.0 | 관리자가 직접 입력 및 승인 |
+
+---
+
+## 7. 코드 위치
 
 | 파일 | 설명 |
 |---|---|
+| `apps/frontend/src/lib/chem/resolver.ts` | PubChem/OPSIN 통합 구조 Resolver |
 | `services/engine/app/services/fingerprint.py` | Fingerprint 서비스 |
 | `services/engine/app/api/fingerprint.py` | API 라우터 |
 | `services/worker/jobs/rdkit_precompute.py` | Precompute Job |

@@ -19,6 +19,13 @@
             "protocol": "프로토콜 자동화",
             "protocolDesc": "실험 프로토콜을 자동으로 생성하고 최적화하여 연구 효율을 높입니다."
         },
+        "platformName": "AI 신약 개발 플랫폼",
+        "titlePrefix": "차세대 ADC",
+        "titleMain": "발굴 가속화",
+        "badges": {
+            "fda": "FDA 데이터 준수",
+            "security": "엔터프라이즈 보안"
+        },
         "interfaceTitle": "시스템 인터페이스",
         "interfaceSubtitle": "직관적인 대시보드로 연구 데이터를 한눈에 파악하세요.",
         "literature": "문헌",
@@ -202,6 +209,7 @@
             "title": "커넥터 관리",
             "subtitle": "외부 데이터 소스 및 수집 파이프라인 관리",
             "add": "커넥터 추가",
+            "fetchDefaults": "기본 커넥터 가져오기",
             "refresh": "새로고침",
             "status": {
                 "queued": "대기 중",
