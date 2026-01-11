@@ -1,5 +1,19 @@
-import { Plus, X, Clock } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import {
+    Plus,
+    X,
+    Clock,
+    Loader2,
+    CheckCircle,
+    AlertCircle,
+    Activity,
+    Database,
+    FileText,
+    RefreshCw,
+    Play
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { getConnectors, triggerConnectorRun, createConnector } from '@/lib/actions/admin';
 
 interface Connector {
     id: string;
@@ -22,26 +36,6 @@ const STATUS_CONFIG: Record<string, { labelKey: string; icon: any; class: string
     failed: { labelKey: 'status.failed', icon: AlertCircle, class: 'bg-red-500/20 text-red-400' },
     idle: { labelKey: 'status.idle', icon: CheckCircle, class: 'bg-slate-500/20 text-slate-400' },
 };
-
-function Clock(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
-        </svg>
-    );
-}
 
 const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
     api: { icon: Activity, color: 'text-blue-400', bg: 'bg-blue-500/20' },
