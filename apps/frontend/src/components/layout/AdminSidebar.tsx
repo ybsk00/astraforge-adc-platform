@@ -10,6 +10,7 @@ import {
     Activity,
     Bell,
     LayoutDashboard,
+    Database,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
