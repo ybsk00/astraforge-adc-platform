@@ -267,6 +267,35 @@ export async function getSeedDiseases() {
 }
 
 /**
+ * Seed Linkers 목록 조회
+ */
+export async function getSeedLinkers() {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('entity_linkers')
+        .select('*')
+        .order('name', { ascending: true });
+
+    if (error) throw error;
+    return data;
+}
+
+/**
+ * Seed Payloads 목록 조회 (entity_drugs 중 drug_role='payload'인 것)
+ */
+export async function getSeedPayloads() {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('entity_drugs')
+        .select('*')
+        .eq('drug_role', 'payload')
+        .order('drug_name', { ascending: true });
+
+    if (error) throw error;
+    return data;
+}
+
+/**
  * Seed Sets 목록 조회
  */
 export async function getSeedSets() {
@@ -276,7 +305,9 @@ export async function getSeedSets() {
         .select(`
             *,
             seed_set_targets(target_id),
-            seed_set_diseases(disease_id)
+            seed_set_diseases(disease_id),
+            seed_set_linkers(linker_id),
+            seed_set_payloads(drug_id)
         `)
         .order('created_at', { ascending: false });
 
@@ -287,7 +318,13 @@ export async function getSeedSets() {
 /**
  * Seed Set 생성
  */
-export async function createSeedSet(name: string, targetIds: string[], diseaseIds: string[]) {
+export async function createSeedSet(
+    name: string,
+    targetIds: string[],
+    diseaseIds: string[],
+    linkerIds: string[] = [],
+    payloadIds: string[] = []
+) {
     const supabase = await createClient();
 
     // 1. Seed Set 생성
@@ -313,6 +350,20 @@ export async function createSeedSet(name: string, targetIds: string[], diseaseId
         if (dError) throw dError;
     }
 
+    // 4. Linkers 연결
+    if (linkerIds.length > 0) {
+        const linkerInserts = linkerIds.map(lid => ({ seed_set_id: seedSet.id, linker_id: lid }));
+        const { error: lError } = await supabase.from('seed_set_linkers').insert(linkerInserts);
+        if (lError) throw lError;
+    }
+
+    // 5. Payloads 연결
+    if (payloadIds.length > 0) {
+        const payloadInserts = payloadIds.map(pid => ({ seed_set_id: seedSet.id, drug_id: pid }));
+        const { error: pError } = await supabase.from('seed_set_payloads').insert(payloadInserts);
+        if (pError) throw pError;
+    }
+
     revalidatePath('/admin/seeds');
     return seedSet;
 }
@@ -331,4 +382,107 @@ export async function getIngestionResults(limit: number = 50) {
 
     if (error) throw error;
     return data;
+}
+
+/**
+ * 링커 구조 자동 조회 및 업데이트
+ */
+export async function resolveLinkerStructure(linkerId: string) {
+    const supabase = await createClient();
+    const { data: linker, error: fetchError } = await supabase
+        .from('entity_linkers')
+        .select('*')
+        .eq('id', linkerId)
+        .single();
+
+    if (fetchError) throw fetchError;
+
+    const { resolveStructure } = await import('@/lib/chem/resolver');
+    const candidates = await resolveStructure(linker.name, linker.synonyms || []);
+
+    if (candidates.length > 0) {
+        const best = candidates[0];
+        const { error: updateError } = await supabase
+            .from('entity_linkers')
+            .update({
+                smiles: best.smiles,
+                inchi_key: best.inchi_key,
+                external_id: best.external_id,
+                structure_source: best.source,
+                structure_status: best.confidence >= 90 ? 'confirmed' : 'resolved',
+                structure_confidence: best.confidence
+            })
+            .eq('id', linkerId);
+
+        if (updateError) throw updateError;
+    }
+
+    revalidatePath('/admin/seeds');
+    return candidates;
+}
+
+/**
+ * 페이로드 구조 자동 조회 및 업데이트
+ */
+export async function resolvePayloadStructure(payloadId: string) {
+    const supabase = await createClient();
+    const { data: payload, error: fetchError } = await supabase
+        .from('entity_drugs')
+        .select('*')
+        .eq('id', payloadId)
+        .single();
+
+    if (fetchError) throw fetchError;
+
+    const { resolveStructure } = await import('@/lib/chem/resolver');
+    const candidates = await resolveStructure(payload.drug_name, payload.synonyms || []);
+
+    if (candidates.length > 0) {
+        const best = candidates[0];
+        const { error: updateError } = await supabase
+            .from('entity_drugs')
+            .update({
+                smiles: best.smiles,
+                inchi_key: best.inchi_key,
+                external_id: best.external_id,
+                structure_source: best.source,
+                structure_status: best.confidence >= 90 ? 'confirmed' : 'resolved',
+                structure_confidence: best.confidence
+            })
+            .eq('id', payloadId);
+
+        if (updateError) throw updateError;
+    }
+
+    revalidatePath('/admin/seeds');
+    return candidates;
+}
+
+/**
+ * 엔티티 구조 수동 업데이트 (검수용)
+ */
+export async function updateEntityStructure(
+    type: 'linker' | 'payload',
+    id: string,
+    data: {
+        smiles?: string;
+        inchi_key?: string;
+        structure_status: string;
+        structure_confidence?: number;
+    }
+) {
+    const supabase = await createClient();
+    const table = type === 'linker' ? 'entity_linkers' : 'entity_drugs';
+
+    const { error } = await supabase
+        .from(table)
+        .update({
+            ...data,
+            structure_source: 'manual'
+        })
+        .eq('id', id);
+
+    if (error) throw error;
+
+    revalidatePath('/admin/seeds');
 }

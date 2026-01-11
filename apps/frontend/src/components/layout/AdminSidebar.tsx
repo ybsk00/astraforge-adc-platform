@@ -11,6 +11,7 @@ import {
     Bell,
     LayoutDashboard,
     Database,
+    ClipboardCheck,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -25,6 +26,7 @@ export default function AdminSidebar() {
         { href: '/admin/runs', icon: Layers, label: t('designRuns') },
         { href: '/admin/reports', icon: Download, label: t('reports') },
         { href: '/admin/observability', icon: Activity, label: t('observability') },
+        { href: '/admin/review', icon: ClipboardCheck, label: t('review') },
         { href: '/admin/alerts', icon: Bell, label: t('alerts') },
     ];
 
