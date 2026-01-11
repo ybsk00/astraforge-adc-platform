@@ -331,7 +331,7 @@ export default function SeedManagementPage() {
                                         selectedItems={selectedTargets}
                                         setSelectedItems={setSelectedTargets}
                                         searchQuery={modalSearch.targets}
-                                        setSearchQuery={(q) => setModalSearch({ ...modalSearch, targets: q })}
+                                        setSearchQuery={(q: string) => setModalSearch({ ...modalSearch, targets: q })}
                                         displayKey="gene_symbol"
                                         t={t}
                                     />
@@ -343,7 +343,7 @@ export default function SeedManagementPage() {
                                         selectedItems={selectedDiseases}
                                         setSelectedItems={setSelectedDiseases}
                                         searchQuery={modalSearch.diseases}
-                                        setSearchQuery={(q) => setModalSearch({ ...modalSearch, diseases: q })}
+                                        setSearchQuery={(q: string) => setModalSearch({ ...modalSearch, diseases: q })}
                                         displayKey="disease_name"
                                         t={t}
                                     />
@@ -355,7 +355,7 @@ export default function SeedManagementPage() {
                                         selectedItems={selectedLinkers}
                                         setSelectedItems={setSelectedLinkers}
                                         searchQuery={modalSearch.linkers}
-                                        setSearchQuery={(q) => setModalSearch({ ...modalSearch, linkers: q })}
+                                        setSearchQuery={(q: string) => setModalSearch({ ...modalSearch, linkers: q })}
                                         displayKey="name"
                                         t={t}
                                     />
@@ -367,7 +367,7 @@ export default function SeedManagementPage() {
                                         selectedItems={selectedPayloads}
                                         setSelectedItems={setSelectedPayloads}
                                         searchQuery={modalSearch.payloads}
-                                        setSearchQuery={(q) => setModalSearch({ ...modalSearch, payloads: q })}
+                                        setSearchQuery={(q: string) => setModalSearch({ ...modalSearch, payloads: q })}
                                         displayKey="drug_name"
                                         t={t}
                                     />
