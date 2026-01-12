@@ -58,7 +58,11 @@ async def execute_golden_seed(ctx, run_id: str, config: dict):
     # Config Parsing
     target_count = config.get("target_count", 100)
     min_evidence = config.get("min_evidence", 2)
-    seed_version = config.get("seed_version", "v1")
+    
+    # Generate Dynamic Version for every run (e.g., v1-20240112-123045)
+    base_version = config.get("seed_version", "v1")
+    timestamp_suffix = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+    seed_version = f"{base_version}-{timestamp_suffix}"
     
     summary = {
         "fetched": 0,
@@ -136,10 +140,10 @@ async def execute_golden_seed(ctx, run_id: str, config: dict):
                 "updated_at": datetime.utcnow().isoformat()
             }
 
-            # Upsert based on Unique Key (golden_set_id, drug_name, target, antibody, linker, payload)
+            # Upsert based on Unique Key (golden_set_id, source_ref)
             res = db.table("golden_candidates").upsert(
                 data, 
-                on_conflict="golden_set_id,drug_name,target,antibody,linker,payload"
+                on_conflict="golden_set_id,source_ref"
             ).execute()
             
             # Get the inserted candidate ID
@@ -197,11 +201,11 @@ def _fetch_mock_candidates(limit):
         if random.random() < 0.1: continue # Skip some
         
         item = {
-            "intervention": f"Drug: {drug_name} #{i+1}",
+            "intervention": f"Drug: {drug_name}",
             "nct_id": f"NCT{random.randint(10000000, 99999999)}",
             "phase": random.choice(["Phase 1", "Phase 2", "Phase 3"]),
             "status": random.choice(["Recruiting", "Completed", "Active"]),
-            "title": f"Study of {drug_name} #{i+1} in Cancer"
+            "title": f"Study of {drug_name} in Cancer"
         }
         results.append(item)
         
