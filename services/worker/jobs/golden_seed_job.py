@@ -72,60 +72,46 @@ async def execute_golden_seed(ctx, run_id: str, config: dict):
         "errors": []
     }
 
+import hashlib
+
+# ... (imports)
+
+def make_program_key(c):
+    """
+    Generate a unique key for the drug program (combination of components)
+    """
+    s = "|".join([
+        (c.get("drug_name") or "").lower().strip(),
+        (c.get("target") or "").lower().strip(),
+        (c.get("antibody") or "").lower().strip(),
+        (c.get("linker") or "").lower().strip(),
+        (c.get("payload") or "").lower().strip(),
+    ])
+    return hashlib.sha1(s.encode("utf-8")).hexdigest()
+
+# ... (inside execute_golden_seed)
+
     # 1. Fetch Candidates (Mock for v1)
     # 실제 구현 시에는 ClinicalTrials API 호출 로직으로 대체
     raw_candidates = _fetch_mock_candidates(config.get("candidate_fetch_size", 500))
+    
+    # 1.1 Raw Level Dedup (NCT ID 기준)
+    seen_ncts = set()
+    deduped_raw = []
+    for r in raw_candidates:
+        nct = r.get("nct_id")
+        if not nct or nct in seen_ncts:
+            continue
+        seen_ncts.add(nct)
+        deduped_raw.append(r)
+    
+    raw_candidates = deduped_raw
     summary["fetched"] = len(raw_candidates)
 
-    # 2. Extract & Normalize
-    processed_candidates = []
-    for raw in raw_candidates:
-        extracted = _extract_components(raw)
-        if extracted:
-            processed_candidates.append(extracted)
-    
-    summary["extracted"] = len(processed_candidates)
-
-    # 3. Quality Gate & Scoring
-    valid_candidates = []
-    for cand in processed_candidates:
-        score, reasons = _calculate_confidence_score(cand, min_evidence)
-        cand["confidence_score"] = score
-        cand["score_reasons"] = reasons
-        
-        # Recommendation A: Relaxed Gate
-        # NCT(evidence_refs)와 Title만 있으면 통과 (점수 기준 30점으로 완화)
-        # 기존 4요소 필수 조건 제거 -> 추출이 완벽하지 않아도 후보군 확보 우선
-        if cand["evidence_refs"] and cand["raw_source"].get("title") and score >= 30:
-            valid_candidates.append(cand)
+    # ... (inside loop)
             
-    summary["passed_gate"] = len(valid_candidates)
-
-    # 4. Deterministic Sort (Score DESC, Name ASC)
-    # 점수 높은 순, 동점이면 이름 알파벳 순 -> 항상 같은 결과 보장
-    valid_candidates.sort(key=lambda x: (-x["confidence_score"], x["drug_name"]))
-    
-    # Top N Selection
-    final_selection = valid_candidates[:target_count]
-
-    # 5. DB Upsert
-    upsert_count = 0
-    
-    # Ensure Golden Set Version Exists and Get ID
-    golden_set_id = _ensure_golden_set_version(db, "ADC_GOLDEN_100", seed_version, config)
-    
-    if not golden_set_id:
-        summary["errors"].append("Failed to get Golden Set ID. Aborting upsert.")
-        return summary
-
-    for item in final_selection:
-        try:
-            # Prepare Evidence JSON
-            evidence_data = {
-                "sources": item["evidence_refs"],
-                "score_reasons": item["score_reasons"],
-                "raw_data": item["raw_source"]
-            }
+            # Generate Program Key
+            program_key = make_program_key(item)
 
             data = {
                 "golden_set_id": golden_set_id,  # Link to Golden Set
@@ -134,6 +120,7 @@ async def execute_golden_seed(ctx, run_id: str, config: dict):
                 "antibody": item["antibody"],
                 "linker": item["linker"],
                 "payload": item["payload"],
+                "program_key": program_key,      # New Grouping Key
                 "approval_status": item["approval_status"],
                 "source_ref": item["evidence_refs"][0] if item["evidence_refs"] else None,
                 "confidence_score": item["confidence_score"],
