@@ -51,8 +51,9 @@ export default function GoldenValidationTrend() {
                 );
                 setData(sorted);
             } else {
-                console.error("Failed to fetch trend data:", res.status, res.statusText);
-                setError(`서버 응답 오류: ${res.status}`);
+                const errorData = await res.json().catch(() => ({}));
+                console.error("Failed to fetch trend data:", res.status, res.statusText, errorData);
+                setError(`서버 응답 오류: ${res.status} ${errorData.details || errorData.error || ''}`);
             }
         } catch (error) {
             console.error("Failed to fetch trend data:", error);

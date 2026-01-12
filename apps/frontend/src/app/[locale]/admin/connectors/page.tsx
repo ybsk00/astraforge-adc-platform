@@ -32,6 +32,7 @@ interface Connector {
         status: string;
         started_at: string | null;
         ended_at: string | null;
+        result_summary: any;
         error_json: any;
     } | null;
 }
@@ -47,6 +48,7 @@ const STATUS_CONFIG: Record<string, { labelKey: string; icon: any; class: string
 const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
     api: { icon: Activity, color: 'text-blue-400', bg: 'bg-blue-500/20' },
     crawler: { icon: Database, color: 'text-purple-400', bg: 'bg-purple-500/20' },
+    golden_seed: { icon: Database, color: 'text-amber-400', bg: 'bg-amber-500/20' },
     default: { icon: FileText, color: 'text-slate-400', bg: 'bg-slate-500/20' },
 };
 
@@ -212,6 +214,16 @@ export default function ConnectorsPage() {
                                                 <AlertCircle className="w-3 h-3" /> Error Details
                                             </div>
                                             {JSON.stringify(connector.latest_run.error_json)}
+                                        </div>
+                                    )}
+                                    {connector.latest_run?.status === 'succeeded' && connector.latest_run?.result_summary && (
+                                        <div className="text-green-400 bg-green-400/10 p-3 rounded-xl mt-2 text-[10px] break-all border border-green-400/20">
+                                            <div className="font-bold mb-1 flex items-center gap-1">
+                                                <CheckCircle className="w-3 h-3" /> Result Summary
+                                            </div>
+                                            <pre className="whitespace-pre-wrap font-mono">
+                                                {JSON.stringify(connector.latest_run.result_summary, null, 2)}
+                                            </pre>
                                         </div>
                                     )}
                                 </div>

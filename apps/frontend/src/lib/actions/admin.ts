@@ -98,18 +98,56 @@ export async function createConnector(formData: { name: string; type: string; co
 /**
  * 커넥터 실행 트리거
  */
+/**
+ * 커넥터 실행 트리거 (DB Polling 패턴)
+ */
 export async function triggerConnectorRun(connectorId: string) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const response = await fetch(`${apiUrl}/api/v1/connectors/${connectorId}/run`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ batch_mode: true, limit: 100 })
-    });
+    const supabase = await createClient();
 
-    if (!response.ok) throw new Error('Failed to trigger connector run');
+    // 1. Connector ID 조회 (source 이름으로 조회)
+    const { data: connector } = await supabase
+        .from('connectors')
+        .select('id')
+        .eq('name', connectorId) // connectorId가 source 이름(예: pubmed)이라고 가정
+        .single();
+
+    if (!connector) {
+        // 커넥터가 없으면 생성 시도 (동기화)
+        const info = CONNECTOR_REGISTRY[connectorId];
+        if (info) {
+            const { data: newConnector, error: createError } = await supabase
+                .from('connectors')
+                .insert([{
+                    name: connectorId,
+                    type: info.category === 'literature' || info.category === 'target' ? 'api' : 'db', // 임시 타입 추론
+                    config: {}
+                }])
+                .select()
+                .single();
+
+            if (createError) throw createError;
+
+            // 재귀 호출로 실행
+            return triggerConnectorRun(connectorId);
+        }
+        throw new Error(`Connector not found: ${connectorId}`);
+    }
+
+    // 2. 작업 큐에 추가
+    const { data: run, error } = await supabase
+        .from('connector_runs')
+        .insert([{
+            connector_id: connector.id,
+            status: 'queued',
+            attempt: 0
+        }])
+        .select()
+        .single();
+
+    if (error) throw error;
 
     revalidatePath('/admin/connectors');
-    return response.json();
+    return run;
 }
 
 /**
@@ -122,7 +160,7 @@ export async function setupDefaultConnectors() {
     const { data: existing } = await supabase.from('ingestion_cursors').select('source');
     const existingSources = new Set(existing?.map(e => e.source) || []);
 
-    // 2. 누락된 커넥터 필터링
+    // 2. 누락된 커넥터 필터링 (ingestion_cursors)
     const newCursors = Object.keys(CONNECTOR_REGISTRY)
         .filter(source => !existingSources.has(source))
         .map(source => ({
@@ -137,8 +175,25 @@ export async function setupDefaultConnectors() {
         if (error) throw error;
     }
 
+    // 3. connectors 테이블 동기화 (Worker용)
+    const { data: existingConnectors } = await supabase.from('connectors').select('name');
+    const existingConnectorNames = new Set(existingConnectors?.map(c => c.name) || []);
+
+    const newConnectors = Object.entries(CONNECTOR_REGISTRY)
+        .filter(([name]) => !existingConnectorNames.has(name))
+        .map(([name, info]) => ({
+            name,
+            type: info.category === 'literature' || info.category === 'target' ? 'api' : 'db', // 단순화된 타입 매핑
+            config: {}
+        }));
+
+    if (newConnectors.length > 0) {
+        const { error } = await supabase.from('connectors').insert(newConnectors);
+        if (error) throw error;
+    }
+
     revalidatePath('/admin/connectors');
-    return { status: 'success', added: newCursors.length };
+    return { status: 'success', added_cursors: newCursors.length, added_connectors: newConnectors.length };
 }
 
 /**

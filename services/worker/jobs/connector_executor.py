@@ -84,6 +84,11 @@ async def execute_connector_run(ctx: Dict[str, Any], run_id: str):
             }
             res = await pubmed_fetch_job(ctx, seed)
             result_summary = res
+        elif connector_type == "golden_seed":
+            # Golden Seed 자동화 파이프라인 실행
+            from jobs.golden_seed_job import execute_golden_seed
+            result_summary = await execute_golden_seed(ctx, run_id, connector.get("config", {}))
+            
         elif connector_type == "crawler":
             # 크롤러 타입 로직 (추후 확장)
             result_summary = {"message": "Crawler logic not implemented yet"}

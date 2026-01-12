@@ -4,6 +4,7 @@ Arq Worker Settings and Job Definitions
 import asyncio
 from datetime import datetime
 from arq.connections import RedisSettings
+from arq.cron import cron
 import os
 from dotenv import load_dotenv
 import structlog
@@ -169,38 +170,31 @@ async def poll_db_jobs(ctx):
     
     logger.info("polling_db_jobs_started")
 
-    # 1. Connector Runs 폴링 및 잠금
-    # 대상: queued 상태 OR (failed 상태 AND 재시도 가능) OR (running 상태 AND stale lock)
-    connector_query = db.table("connector_runs").select("id, status, attempt").or_(
-        "status.eq.queued,"
-        f"and(status.eq.failed,next_retry_at.lte.{now},attempt.lt.3),"
-        f"and(status.eq.running,locked_at.lte.{(datetime.utcnow().timestamp() - stale_timeout)})"
-    ).limit(5).execute()
+    # Stale Timeout 계산 (ISO 포맷)
+    stale_threshold = (datetime.utcnow().timestamp() - stale_timeout)
+    stale_threshold_iso = datetime.fromtimestamp(stale_threshold).isoformat()
 
-    if connector_result := connector_query.data:
-        from jobs.connector_executor import execute_connector_run
-        for run in connector_result:
-            # 원자적 잠금 시도
-            lock_res = db.table("connector_runs").update({
-                "status": "running",
-                "locked_by": worker_id,
-                "locked_at": now,
-                "started_at": now
-            }).eq("id", run["id"]).or_(
-                "status.eq.queued,"
-                "status.eq.failed,"
-                f"and(status.eq.running,locked_at.lte.{(datetime.utcnow().timestamp() - stale_timeout)})"
-            ).execute()
+    # 1. Connector Runs 폴링 (RPC 기반 Atomic Pickup)
+    try:
+        # RPC 호출로 안전하게 작업 가져오기 (SKIP LOCKED)
+        rpc_res = db.rpc("pick_connector_run", {"worker_id": worker_id}).execute()
+        
+        if rpc_res.data:
+            run = rpc_res.data
+            logger.info("connector_run_picked", run_id=run["id"], worker_id=worker_id)
             
-            if lock_res.data:
-                logger.info("connector_run_locked", run_id=run["id"])
-                await execute_connector_run(ctx, run["id"])
+            # 커넥터 실행 로직 호출
+            from jobs.connector_executor import execute_connector_run
+            await execute_connector_run(ctx, run["id"])
+            
+    except Exception as e:
+        logger.error("connector_polling_error", error=str(e))
 
     # 2. Design Runs 폴링 및 잠금
     design_query = db.table("design_runs").select("id, status, attempt").or_(
         "status.eq.queued,"
         f"and(status.eq.failed,next_retry_at.lte.{now},attempt.lt.3),"
-        f"and(status.eq.running,locked_at.lte.{(datetime.utcnow().timestamp() - stale_timeout)})"
+        f"and(status.eq.running,locked_at.lte.{stale_threshold_iso})"
     ).limit(5).execute()
 
     if design_result := design_query.data:
@@ -258,7 +252,9 @@ class WorkerSettings:
     
     # Phase F Jobs
     from jobs.seed_job import seed_fetch_job
+    from jobs.seed_job import seed_fetch_job
     from jobs.resolve_job import resolve_fetch_job
+    from jobs.golden_seed_job import execute_golden_seed
     
     functions = [
         compute_component_descriptors,
@@ -305,4 +301,9 @@ class WorkerSettings:
     # 재시도 설정
     max_tries = 3
     retry_delay = 60
+
+    # Cron Jobs (주기적 실행)
+    cron_jobs = [
+        cron(poll_db_jobs, second={0, 10, 20, 30, 40, 50}) # 10초마다 실행
+    ]
 
