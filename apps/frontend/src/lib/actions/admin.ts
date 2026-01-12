@@ -36,29 +36,37 @@ export async function getAdminStats() {
 export async function getConnectors() {
     const supabase = await createClient();
 
-    // 1. DB에서 커서 정보 조회
-    const { data: cursors, error } = await supabase
-        .from('ingestion_cursors')
+    // 1. DB에서 커넥터 정보 조회
+    const { data: dbConnectors } = await supabase
+        .from('connectors')
+        .select('*');
+
+    // 2. 최근 실행 이력 조회 (최신 100개)
+    const { data: recentRuns } = await supabase
+        .from('connector_runs')
         .select('*')
-        .order('last_success_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
 
-    if (error) throw error;
-
-    // 2. 레지스트리와 병합
+    // 3. 레지스트리와 병합
     return Object.entries(CONNECTOR_REGISTRY).map(([source, info]) => {
-        const cursor = cursors?.find(c => c.source === source);
+        const dbConnector = dbConnectors?.find(c => c.name === source);
+        const latestRun = dbConnector
+            ? recentRuns?.find(r => r.connector_id === dbConnector.id)
+            : null;
 
         return {
             id: source,
             name: info.name,
             type: info.category,
-            is_enabled: true,
-            config: cursor?.config || {},
-            latest_run: cursor ? {
-                status: cursor.status,
-                started_at: cursor.last_success_at,
-                ended_at: cursor.last_success_at,
-                error_json: cursor.error_message ? { message: cursor.error_message } : null
+            is_enabled: !!dbConnector,
+            config: dbConnector?.config || {},
+            latest_run: latestRun ? {
+                status: latestRun.status,
+                started_at: latestRun.started_at || latestRun.created_at,
+                ended_at: latestRun.ended_at,
+                result_summary: latestRun.result_summary,
+                error_json: latestRun.error_json
             } : null
         };
     });
