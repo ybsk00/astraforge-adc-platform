@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { CONNECTOR_REGISTRY } from '@/lib/connectors/registry';
 
 /**
  * Admin Dashboard 통계 데이터 조회
@@ -30,32 +31,37 @@ export async function getAdminStats() {
 }
 
 /**
- * 커넥터 목록 조회 (최신 실행 상태 포함)
+ * 커넥터 목록 조회 (Supabase 직접 조회)
  */
 export async function getConnectors() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const response = await fetch(`${apiUrl}/api/v1/connectors`, { cache: 'no-store' });
-    if (!response.ok) throw new Error('Failed to fetch connectors');
-    const data = await response.json();
+    const supabase = await createClient();
 
-    return data.connectors.map((c: any) => ({
-        id: c.source,
-        name: c.name,
-        type: c.type,
-        is_enabled: true,
-        config: {},
-        latest_run: c.last_success_at ? {
-            status: c.status,
-            started_at: c.last_success_at,
-            ended_at: c.last_success_at,
-            error_json: c.error_message ? { message: c.error_message } : null
-        } : (c.status !== 'idle' ? {
-            status: c.status,
-            started_at: null,
-            ended_at: null,
-            error_json: c.error_message ? { message: c.error_message } : null
-        } : null)
-    }));
+    // 1. DB에서 커서 정보 조회
+    const { data: cursors, error } = await supabase
+        .from('ingestion_cursors')
+        .select('*')
+        .order('last_success_at', { ascending: false });
+
+    if (error) throw error;
+
+    // 2. 레지스트리와 병합
+    return Object.entries(CONNECTOR_REGISTRY).map(([source, info]) => {
+        const cursor = cursors?.find(c => c.source === source);
+
+        return {
+            id: source,
+            name: info.name,
+            type: info.category,
+            is_enabled: true,
+            config: cursor?.config || {},
+            latest_run: cursor ? {
+                status: cursor.status,
+                started_at: cursor.last_success_at,
+                ended_at: cursor.last_success_at,
+                error_json: cursor.error_message ? { message: cursor.error_message } : null
+            } : null
+        };
+    });
 }
 
 /**
@@ -107,18 +113,32 @@ export async function triggerConnectorRun(connectorId: string) {
 }
 
 /**
- * 기본 커넥터 설정
+ * 기본 커넥터 설정 (Supabase 직접 삽입)
  */
 export async function setupDefaultConnectors() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const response = await fetch(`${apiUrl}/api/v1/connectors/setup-defaults`, {
-        method: 'POST'
-    });
+    const supabase = await createClient();
 
-    if (!response.ok) throw new Error('Failed to setup default connectors');
+    // 1. 현재 등록된 소스 확인
+    const { data: existing } = await supabase.from('ingestion_cursors').select('source');
+    const existingSources = new Set(existing?.map(e => e.source) || []);
+
+    // 2. 누락된 커넥터 필터링
+    const newCursors = Object.keys(CONNECTOR_REGISTRY)
+        .filter(source => !existingSources.has(source))
+        .map(source => ({
+            source,
+            status: 'idle',
+            cursor: {},
+            stats: { fetched: 0, new: 0, updated: 0 }
+        }));
+
+    if (newCursors.length > 0) {
+        const { error } = await supabase.from('ingestion_cursors').insert(newCursors);
+        if (error) throw error;
+    }
 
     revalidatePath('/admin/connectors');
-    return response.json();
+    return { status: 'success', added: newCursors.length };
 }
 
 /**

@@ -42,7 +42,7 @@ export default function GoldenValidationTrend() {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`${API_URL}/api/v1/admin/golden/trend`);
+            const res = await fetch(`/api/admin/golden/trend`);
             if (res.ok) {
                 const result = await res.json();
                 // 날짜순 정렬
