@@ -34,6 +34,7 @@ type TabType = 'targets' | 'diseases' | 'linkers' | 'payloads' | 'sets';
 
 export default function SeedManagementPage() {
     const t = useTranslations('Admin.seeds');
+    const tConnectors = useTranslations('Admin.connectors');
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<TabType>('targets');
     const [targets, setTargets] = useState<any[]>([]);
@@ -128,11 +129,6 @@ export default function SeedManagementPage() {
 
     const data = filteredData();
 
-    // Modal filtering helper
-    const getFilteredModalItems = (items: any[], query: string, key: string) => {
-        return items.filter(item => (item[key] || '').toLowerCase().includes(query.toLowerCase()));
-    };
-
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
@@ -155,7 +151,7 @@ export default function SeedManagementPage() {
                             className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg border border-slate-700 flex items-center gap-2 transition-colors"
                         >
                             <RefreshCw className={clsx("w-4 h-4", loading && "animate-spin")} />
-                            {useTranslations('Admin.connectors')('refresh')}
+                            {tConnectors('refresh')}
                         </button>
                     </div>
                 </div>

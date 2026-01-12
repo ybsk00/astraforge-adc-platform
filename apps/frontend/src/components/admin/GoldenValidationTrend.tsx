@@ -24,7 +24,7 @@ export default function GoldenValidationTrend() {
     const [loading, setLoading] = useState(true);
     const [activeAxis, setActiveAxis] = useState("overall");
 
-    const ENGINE_URL = process.env.NEXT_PUBLIC_ENGINE_URL || "http://localhost:8000";
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
     useEffect(() => {
         fetchTrendData();
@@ -33,7 +33,7 @@ export default function GoldenValidationTrend() {
     const fetchTrendData = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${ENGINE_URL}/api/v1/admin/golden/trend`);
+            const res = await fetch(`${API_URL}/api/v1/admin/golden/trend`);
             if (res.ok) {
                 const result = await res.json();
                 // 날짜순 정렬
@@ -41,6 +41,8 @@ export default function GoldenValidationTrend() {
                     new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
                 );
                 setData(sorted);
+            } else {
+                console.error("Failed to fetch trend data:", res.status, res.statusText);
             }
         } catch (error) {
             console.error("Failed to fetch trend data:", error);

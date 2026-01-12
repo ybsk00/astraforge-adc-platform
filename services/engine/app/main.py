@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
-from app.api import health, design, catalog, staging, connectors, ingestion, fingerprint, feedback, observability, alerts, uploads, evidence, reports, ops, automation, pipeline
+from app.api import health, design, catalog, staging, connectors, ingestion, fingerprint, feedback, observability, alerts, uploads, evidence, reports, ops, automation, pipeline, admin
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -45,9 +45,6 @@ app = FastAPI(
 )
 
 # CORS 설정
-# allow_credentials=True일 경우 allow_origins에 "*"를 사용할 수 없음
-# settings.cors_origins_list가 ["*"]인 경우, 개발 환경이라도 명시적인 로컬호스트 주소로 변경하거나
-# 프론트엔드 도메인을 정확히 지정해야 함.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
@@ -64,7 +61,6 @@ app.add_exception_handler(HTTPException, global_exception_handler)
 app.add_exception_handler(Exception, global_exception_handler)
 
 # 라우터 등록
-# Health router moved to /api/v1/health (and /api/v1/status, /api/v1/health/worker)
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])
 app.include_router(catalog.router, prefix="/api/v1/catalog", tags=["Catalog"])
 app.include_router(design.router, prefix="/api/v1/design", tags=["Design"])
@@ -81,3 +77,4 @@ app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
 app.include_router(ops.router, prefix="/api/v1/ops", tags=["Ops"])
 app.include_router(automation.router, prefix="/api/v1", tags=["Automation"])
 app.include_router(pipeline.router, prefix="/api/v1/pipeline", tags=["Pipeline"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
