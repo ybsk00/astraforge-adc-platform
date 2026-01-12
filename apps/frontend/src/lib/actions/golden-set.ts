@@ -76,7 +76,7 @@ export async function getGoldenSetById(id: string) {
 
     return {
         ...(setInfo as GoldenSet),
-        candidates: candidates as GoldenCandidate[]
+        candidates: (candidates || []) as GoldenCandidate[]
     };
 }
 

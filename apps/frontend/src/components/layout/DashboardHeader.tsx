@@ -4,7 +4,7 @@ import { Search, Bell, User } from 'lucide-react';
 
 export default function DashboardHeader() {
     return (
-        <header className="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6 sticky top-0 z-30 ml-64">
+        <header className="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6 fixed top-0 right-0 left-64 z-30">
             {/* Search */}
             <div className="flex-1 max-w-xl">
                 <div className="relative">

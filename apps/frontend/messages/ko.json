@@ -163,19 +163,6 @@
             "dashboard": "대시보드",
             "designRuns": "설계 실행",
             "reports": "보고서 및 아티팩트",
-            "catalog": "카탈로그",
-            "connectors": "커넥터",
-            "ops": "운영 관리",
-            "systemStatus": "시스템 상태",
-            "queues": "작업 큐",
-            "audit": "감사 로그",
-            "logs": "로그"
-        }
-    },
-    "Admin": {
-        "title": "관리자 대시보드",
-        "subtitle": "시스템 실시간 개요 및 관리",
-        "stats": {
             "connectors": "커넥터",
             "connectorsDesc": "총 커넥터 실행 횟수",
             "designRuns": "설계 실행",

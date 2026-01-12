@@ -10,7 +10,7 @@ interface Props {
     candidates: GoldenCandidate[];
 }
 
-export default function GoldenCandidateList({ candidates }: Props) {
+export default function GoldenCandidateList({ candidates = [] }: Props) {
     const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
     const [search, setSearch] = useState("");
     const [selectedCandidate, setSelectedCandidate] = useState<GoldenCandidate | null>(null);

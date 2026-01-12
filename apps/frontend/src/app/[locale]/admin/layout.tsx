@@ -38,7 +38,7 @@ export default function AdminLayout({
         <div className="min-h-screen bg-slate-950">
             <AdminSidebar />
             <DashboardHeader />
-            <main className="ml-64 p-6">
+            <main className="ml-64 p-6 pt-20">
                 {children}
             </main>
         </div>
