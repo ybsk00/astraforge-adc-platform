@@ -35,28 +35,31 @@ async def get_golden_trend(db=Depends(get_db)):
         metrics_map = {}
         for m in metrics_res.data:
             rid = m["run_id"]
+            axis = m["axis"] or "overall"
             if rid not in metrics_map:
                 metrics_map[rid] = {}
+            if axis not in metrics_map[rid]:
+                metrics_map[rid][axis] = {}
+            
             # MAE, Spearman 등 주요 지표 추출
-            if m["axis"] == "overall" or m["metric"] in ["MAE", "Spearman"]:
-                metrics_map[rid][f"{m['axis']}_{m['metric']}"] = m["value"]
-                # 하위 호환성을 위해 summary 구조 유지
-                if "summary" not in metrics_map[rid]:
-                    metrics_map[rid]["summary"] = {}
-                metrics_map[rid]["summary"][m["metric"]] = m["value"]
+            metrics_map[rid][axis][m["metric"]] = m["value"]
 
         # 4. 최종 결과 조립
         items = []
         for r in runs_res.data:
             rid = r["id"]
             run_metrics = metrics_map.get(rid, {})
+            # 하위 호환성을 위한 summary (overall 기준)
+            summary = run_metrics.get("overall", {})
+            
             items.append({
                 "id": rid,
                 "created_at": r["created_at"],
                 "pass": r["pass"],
                 "scoring_version": r["scoring_version"],
                 "dataset_version": r.get("dataset_version", "v1.0"),
-                "summary": run_metrics.get("summary", r.get("summary", {}))
+                "metrics": run_metrics,
+                "summary": summary
             })
             
         return {"items": items}

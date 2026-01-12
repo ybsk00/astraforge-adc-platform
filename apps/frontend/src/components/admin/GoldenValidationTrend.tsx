@@ -17,11 +17,19 @@ interface ValidationRun {
         Spearman?: number;
         TopKOverlap?: number;
     };
+    metrics: {
+        [axis: string]: {
+            MAE?: number;
+            Spearman?: number;
+            TopKOverlap?: number;
+        };
+    };
 }
 
 export default function GoldenValidationTrend() {
     const [data, setData] = useState<ValidationRun[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [activeAxis, setActiveAxis] = useState("overall");
 
     const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -32,6 +40,7 @@ export default function GoldenValidationTrend() {
 
     const fetchTrendData = async () => {
         setLoading(true);
+        setError(null);
         try {
             const res = await fetch(`${API_URL}/api/v1/admin/golden/trend`);
             if (res.ok) {
@@ -43,15 +52,31 @@ export default function GoldenValidationTrend() {
                 setData(sorted);
             } else {
                 console.error("Failed to fetch trend data:", res.status, res.statusText);
+                setError(`서버 응답 오류: ${res.status}`);
             }
         } catch (error) {
             console.error("Failed to fetch trend data:", error);
+            setError("백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해 주세요.");
         } finally {
             setLoading(false);
         }
     };
 
     if (loading) return <div className="h-64 flex items-center justify-center bg-gray-900/50 rounded-xl animate-pulse text-gray-500">트렌드 데이터 로드 중...</div>;
+
+    if (error) return (
+        <div className="h-64 flex flex-col items-center justify-center bg-red-900/10 rounded-xl border border-dashed border-red-700/50 text-red-400 p-6 text-center">
+            <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
+            <p className="text-sm font-bold mb-1">데이터 로드 실패</p>
+            <p className="text-xs opacity-70 mb-4">{error}</p>
+            <button
+                onClick={fetchTrendData}
+                className="px-4 py-2 bg-red-900/20 hover:bg-red-900/40 border border-red-700/50 rounded-lg text-xs transition-all"
+            >
+                다시 시도
+            </button>
+        </div>
+    );
 
     if (data.length === 0) return (
         <div className="h-64 flex flex-col items-center justify-center bg-gray-900/50 rounded-xl border border-dashed border-gray-700 text-gray-500">
@@ -61,6 +86,7 @@ export default function GoldenValidationTrend() {
     );
 
     const latest = data[data.length - 1];
+    const currentMetrics = latest.metrics[activeAxis] || latest.summary;
 
     return (
         <div className="space-y-6">
@@ -68,18 +94,18 @@ export default function GoldenValidationTrend() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-gray-800 border border-gray-700 p-4 rounded-xl">
                     <div className="flex justify-between items-start mb-2">
-                        <p className="text-xs text-gray-400">최신 MAE (오차)</p>
+                        <p className="text-xs text-gray-400">{activeAxis.toUpperCase()} MAE (오차)</p>
                         <TrendingDown className="w-4 h-4 text-green-400" />
                     </div>
-                    <p className="text-2xl font-bold text-white">{latest.summary.MAE?.toFixed(2) || "N/A"}</p>
+                    <p className="text-2xl font-bold text-white">{currentMetrics.MAE?.toFixed(2) || "N/A"}</p>
                     <p className="text-[10px] text-gray-500 mt-1">Lower is better | {latest.scoring_version}</p>
                 </div>
                 <div className="bg-gray-800 border border-gray-700 p-4 rounded-xl">
                     <div className="flex justify-between items-start mb-2">
-                        <p className="text-xs text-gray-400">최신 Spearman (상관성)</p>
+                        <p className="text-xs text-gray-400">{activeAxis.toUpperCase()} Spearman (상관성)</p>
                         <TrendingUp className="w-4 h-4 text-blue-400" />
                     </div>
-                    <p className="text-2xl font-bold text-white">{latest.summary.Spearman?.toFixed(2) || "N/A"}</p>
+                    <p className="text-2xl font-bold text-white">{currentMetrics.Spearman?.toFixed(2) || "N/A"}</p>
                     <p className="text-[10px] text-gray-500 mt-1">Higher is better | {latest.scoring_version}</p>
                 </div>
                 <div className="bg-gray-800 border border-gray-700 p-4 rounded-xl">
@@ -132,8 +158,8 @@ export default function GoldenValidationTrend() {
                             <Line
                                 yAxisId="left"
                                 type="monotone"
-                                dataKey="summary.MAE"
-                                name="MAE (오차)"
+                                dataKey={`metrics.${activeAxis}.MAE`}
+                                name={`${activeAxis} MAE (오차)`}
                                 stroke="#F87171"
                                 strokeWidth={2}
                                 dot={{ r: 4, fill: '#F87171' }}
@@ -142,8 +168,8 @@ export default function GoldenValidationTrend() {
                             <Line
                                 yAxisId="right"
                                 type="monotone"
-                                dataKey="summary.Spearman"
-                                name="Spearman (상관성)"
+                                dataKey={`metrics.${activeAxis}.Spearman`}
+                                name={`${activeAxis} Spearman (상관성)`}
                                 stroke="#60A5FA"
                                 strokeWidth={2}
                                 dot={{ r: 4, fill: '#60A5FA' }}
