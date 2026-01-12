@@ -197,11 +197,11 @@ def _fetch_mock_candidates(limit):
         if random.random() < 0.1: continue # Skip some
         
         item = {
-            "intervention": f"Drug: {drug_name}",
+            "intervention": f"Drug: {drug_name} #{i+1}",
             "nct_id": f"NCT{random.randint(10000000, 99999999)}",
             "phase": random.choice(["Phase 1", "Phase 2", "Phase 3"]),
             "status": random.choice(["Recruiting", "Completed", "Active"]),
-            "title": f"Study of {drug_name} in Cancer"
+            "title": f"Study of {drug_name} #{i+1} in Cancer"
         }
         results.append(item)
         
