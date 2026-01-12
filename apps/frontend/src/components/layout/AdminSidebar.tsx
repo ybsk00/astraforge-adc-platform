@@ -12,6 +12,7 @@ import {
     LayoutDashboard,
     Database,
     ClipboardCheck,
+    Sparkles,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -21,6 +22,7 @@ export default function AdminSidebar() {
 
     const adminMenuItems = [
         { href: '/admin', icon: LayoutDashboard, label: t('dashboard') },
+        { href: '/admin/golden-sets', icon: Sparkles, label: t('goldenSets') },
         { href: '/admin/seeds', icon: Database, label: t('seeds') },
         { href: '/admin/connectors', icon: Cable, label: t('connectors') },
         { href: '/admin/runs', icon: Layers, label: t('designRuns') },
