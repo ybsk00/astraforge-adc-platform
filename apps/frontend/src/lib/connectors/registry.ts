@@ -71,4 +71,10 @@ export const CONNECTOR_REGISTRY: Record<string, ConnectorInfo> = {
         "category": "system",
         "rate_limit": "External APIs",
     },
+    "GOLDEN_SEED_ADC_100": {
+        "name": "Golden Seed (ADC 100)",
+        "description": "ADC Top 100 Golden Set 자동 생성",
+        "category": "golden_seed",
+        "rate_limit": "None",
+    },
 };
