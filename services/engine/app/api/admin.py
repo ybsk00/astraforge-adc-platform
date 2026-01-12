@@ -1,48 +1,66 @@
 from typing import List, Dict, Any
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
-from datetime import datetime, timedelta
-import random
+from fastapi import APIRouter, Depends, HTTPException
+from app.core.database import get_db
+from app.core.security import require_admin
+import structlog
 
-router = APIRouter()
-
-class ValidationSummary(BaseModel):
-    MAE: float
-    Spearman: float
-    TopKOverlap: float
-
-class ValidationRun(BaseModel):
-    id: str
-    created_at: str
-    pass_status: bool  # 'pass' is a reserved keyword in Python, using pass_status
-    scoring_version: str
-    summary: ValidationSummary
-
-class TrendResponse(BaseModel):
-    items: List[Dict[str, Any]]
+router = APIRouter(dependencies=[Depends(require_admin)])
+logger = structlog.get_logger()
 
 @router.get("/golden/trend")
-async def get_golden_trend():
+async def get_golden_trend(db=Depends(get_db)):
     """
-    Golden Set 검증 트렌드 데이터 조회
-    현재는 시각화를 위한 Mock 데이터를 반환합니다.
+    Golden Set 검증 트렌드 데이터 조회 (Real DB)
     """
-    # 실제 구현 시에는 DB의 validation_runs 테이블 등에서 조회
-    items = []
-    base_date = datetime.utcnow() - timedelta(days=10)
-    
-    for i in range(10):
-        date = (base_date + timedelta(days=i)).isoformat()
-        items.append({
-            "id": f"run-{i}",
-            "created_at": date,
-            "pass": True if random.random() > 0.2 else False,
-            "scoring_version": "v1.2.0",
-            "summary": {
-                "MAE": 0.5 - (i * 0.02) + (random.random() * 0.05),
-                "Spearman": 0.7 + (i * 0.01) + (random.random() * 0.05),
-                "TopKOverlap": 0.6 + (i * 0.015)
-            }
-        })
-    
-    return {"items": items}
+    try:
+        # 1. 최근 검증 실행 내역 조회
+        runs_res = db.table("golden_validation_runs")\
+            .select("*")\
+            .order("created_at", desc=True)\
+            .limit(20)\
+            .execute()
+        
+        if not runs_res.data:
+            return {"items": []}
+            
+        run_ids = [r["id"] for r in runs_res.data]
+        
+        # 2. 상세 지표 조회
+        metrics_res = db.table("golden_validation_metrics")\
+            .select("*")\
+            .in_("run_id", run_ids)\
+            .execute()
+            
+        # 3. 데이터 가공 (run_id별로 metrics 그룹화)
+        metrics_map = {}
+        for m in metrics_res.data:
+            rid = m["run_id"]
+            if rid not in metrics_map:
+                metrics_map[rid] = {}
+            # MAE, Spearman 등 주요 지표 추출
+            if m["axis"] == "overall" or m["metric"] in ["MAE", "Spearman"]:
+                metrics_map[rid][f"{m['axis']}_{m['metric']}"] = m["value"]
+                # 하위 호환성을 위해 summary 구조 유지
+                if "summary" not in metrics_map[rid]:
+                    metrics_map[rid]["summary"] = {}
+                metrics_map[rid]["summary"][m["metric"]] = m["value"]
+
+        # 4. 최종 결과 조립
+        items = []
+        for r in runs_res.data:
+            rid = r["id"]
+            run_metrics = metrics_map.get(rid, {})
+            items.append({
+                "id": rid,
+                "created_at": r["created_at"],
+                "pass": r["pass"],
+                "scoring_version": r["scoring_version"],
+                "dataset_version": r.get("dataset_version", "v1.0"),
+                "summary": run_metrics.get("summary", r.get("summary", {}))
+            })
+            
+        return {"items": items}
+        
+    except Exception as e:
+        logger.error("get_golden_trend_failed", error=str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch golden trend data")
