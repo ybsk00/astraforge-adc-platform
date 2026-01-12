@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { GoldenCandidate, updateCandidateReviewStatus } from "@/lib/actions/golden-set";
 import { Check, X, Search, Filter, FileText, Eye } from "lucide-react";
@@ -107,8 +109,8 @@ export default function GoldenCandidateList({ candidates }: Props) {
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium border ${c.review_status === 'approved' ? 'bg-green-900/20 text-green-400 border-green-800' :
-                                                c.review_status === 'rejected' ? 'bg-red-900/20 text-red-400 border-red-800' :
-                                                    'bg-amber-900/20 text-amber-400 border-amber-800'
+                                            c.review_status === 'rejected' ? 'bg-red-900/20 text-red-400 border-red-800' :
+                                                'bg-amber-900/20 text-amber-400 border-amber-800'
                                             }`}>
                                             {c.review_status.toUpperCase()}
                                         </span>
