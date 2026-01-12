@@ -136,10 +136,10 @@ async def execute_golden_seed(ctx, run_id: str, config: dict):
                 "updated_at": datetime.utcnow().isoformat()
             }
 
-            # Upsert based on Unique Key (drug_name, target, antibody, linker, payload)
+            # Upsert based on Unique Key (golden_set_id, drug_name, target, antibody, linker, payload)
             res = db.table("golden_candidates").upsert(
                 data, 
-                on_conflict="drug_name,target,antibody,linker,payload"
+                on_conflict="golden_set_id,drug_name,target,antibody,linker,payload"
             ).execute()
             
             # Get the inserted candidate ID
