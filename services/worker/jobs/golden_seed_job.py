@@ -108,8 +108,17 @@ def make_program_key(c):
     raw_candidates = deduped_raw
     summary["fetched"] = len(raw_candidates)
 
-    # ... (inside loop)
-            
+    # 2. Process & Upsert
+    upsert_count = 0
+    golden_set_id = _ensure_golden_set_version(db, "Golden Set A", seed_version, config)
+
+    for raw in raw_candidates:
+        try:
+            item = _extract_components(raw)
+            score, reasons = _calculate_confidence_score(item, min_evidence)
+            item["confidence_score"] = score
+            evidence_data = {"reasons": reasons}
+
             # Generate Program Key
             program_key = make_program_key(item)
 
