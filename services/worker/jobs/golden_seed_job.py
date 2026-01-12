@@ -105,8 +105,12 @@ async def execute_golden_seed(ctx, run_id: str, config: dict):
     # 5. DB Upsert
     upsert_count = 0
     
-    # Ensure Golden Set Version Exists
-    _ensure_golden_set_version(db, "ADC_GOLDEN_100", seed_version, config)
+    # Ensure Golden Set Version Exists and Get ID
+    golden_set_id = _ensure_golden_set_version(db, "ADC_GOLDEN_100", seed_version, config)
+    
+    if not golden_set_id:
+        summary["errors"].append("Failed to get Golden Set ID. Aborting upsert.")
+        return summary
 
     for item in final_selection:
         try:
@@ -118,6 +122,7 @@ async def execute_golden_seed(ctx, run_id: str, config: dict):
             }
 
             data = {
+                "golden_set_id": golden_set_id,  # Link to Golden Set
                 "drug_name": item["drug_name"],
                 "target": item["target"],
                 "antibody": item["antibody"],
@@ -132,12 +137,30 @@ async def execute_golden_seed(ctx, run_id: str, config: dict):
             }
 
             # Upsert based on Unique Key (drug_name, target, antibody, linker, payload)
-            # Note: Supabase-py upsert requires on_conflict columns
-            db.table("golden_candidates").upsert(
+            res = db.table("golden_candidates").upsert(
                 data, 
                 on_conflict="drug_name,target,antibody,linker,payload"
             ).execute()
             
+            # Get the inserted candidate ID
+            if res.data and len(res.data) > 0:
+                candidate_id = res.data[0]['id']
+                
+                # Insert Evidence into separate table
+                if item["evidence_refs"]:
+                    evidence_records = []
+                    for ref in item["evidence_refs"]:
+                        evidence_records.append({
+                            "candidate_id": candidate_id,
+                            "source": "ClinicalTrials.gov" if "NCT" in ref else "PubMed",
+                            "ref_id": ref,
+                            "url": f"https://clinicaltrials.gov/study/{ref}" if "NCT" in ref else None,
+                            "snippet": f"Evidence for {item['drug_name']} from {ref}"
+                        })
+                    
+                    if evidence_records:
+                        db.table("golden_candidate_evidence").insert(evidence_records).execute()
+
             upsert_count += 1
         except Exception as e:
             summary["errors"].append(f"Upsert failed for {item['drug_name']}: {str(e)}")
@@ -273,13 +296,18 @@ def _calculate_confidence_score(cand, min_evidence):
 
 def _ensure_golden_set_version(db, name, version, config):
     """
-    Ensure the Golden Set version record exists
+    Ensure the Golden Set version record exists and return its ID
     """
     try:
-        db.table("golden_sets").upsert({
+        res = db.table("golden_sets").upsert({
             "name": name,
             "version": version,
             "config": config
         }, on_conflict="name,version").execute()
+        
+        if res.data and len(res.data) > 0:
+            return res.data[0]['id']
+        return None
     except Exception as e:
         print(f"Warning: Failed to ensure golden_set version: {e}")
+        return None
