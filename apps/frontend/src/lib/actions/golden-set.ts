@@ -75,7 +75,7 @@ export async function getGoldenSetById(id: string) {
     if (candidateError) throw candidateError;
 
     return {
-        ...setInfo,
+        ...(setInfo as GoldenSet),
         candidates: candidates as GoldenCandidate[]
     };
 }

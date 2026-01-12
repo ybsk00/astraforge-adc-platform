@@ -1,4 +1,4 @@
-import { getGoldenSetById } from "@/lib/actions/golden-set";
+import { getGoldenSetById, GoldenCandidate } from "@/lib/actions/golden-set";
 import Link from "next/link";
 import { ArrowLeft, Database, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import GoldenCandidateList from "@/components/admin/GoldenCandidateList";
@@ -56,19 +56,19 @@ export default async function GoldenSetDetailPage({ params }: { params: { id: st
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
                         <p className="text-xs text-slate-500 mb-1">승인됨 (Approved)</p>
                         <p className="text-2xl font-bold text-green-400">
-                            {goldenSet.candidates.filter(c => c.review_status === 'approved').length}
+                            {goldenSet.candidates.filter((c: GoldenCandidate) => c.review_status === 'approved').length}
                         </p>
                     </div>
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
                         <p className="text-xs text-slate-500 mb-1">거절됨 (Rejected)</p>
                         <p className="text-2xl font-bold text-red-400">
-                            {goldenSet.candidates.filter(c => c.review_status === 'rejected').length}
+                            {goldenSet.candidates.filter((c: GoldenCandidate) => c.review_status === 'rejected').length}
                         </p>
                     </div>
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
                         <p className="text-xs text-slate-500 mb-1">대기 중 (Pending)</p>
                         <p className="text-2xl font-bold text-amber-400">
-                            {goldenSet.candidates.filter(c => c.review_status === 'pending').length}
+                            {goldenSet.candidates.filter((c: GoldenCandidate) => c.review_status === 'pending').length}
                         </p>
                     </div>
                 </div>
