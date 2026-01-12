@@ -2,7 +2,29 @@ import asyncio
 from typing import Dict, Any, List
 import structlog
 from datetime import datetime
-from .worker import get_supabase
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+from supabase import create_client, Client
+
+# .env 파일 로드
+def find_env():
+    current = Path(__file__).resolve()
+    for _ in range(5):
+        current = current.parent
+        env_path = current / ".env"
+        if env_path.exists():
+            return str(env_path)
+    return ".env"
+
+load_dotenv(find_env())
+
+def get_supabase() -> Client:
+    """Supabase 클라이언트"""
+    return create_client(
+        os.getenv("SUPABASE_URL", ""),
+        os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+    )
 
 logger = structlog.get_logger()
 
@@ -43,71 +65,96 @@ GOLD_ANTIBODIES = [
 
 async def seed_fetch_job(ctx, seed: Dict[str, Any] = None):
     """
-    Gold Standard 데이터를 component_catalog에 시딩하는 Job
+    기초 데이터 시딩 Job
+    
+    1. 고정된 Seed Data (Target, Antibody, Linker, Payload)를 component_catalog에 적재
+    2. targets_seed_200.json 파일이 있으면 추가 로드
     """
-    logger.info("seed_job_started")
+    logger.info("seed_fetch_job_started")
     db = get_supabase()
     
-    stats = {"targets": 0, "payloads": 0, "linkers": 0, "antibodies": 0, "errors": 0}
+    stats = {"targets": 0, "antibodies": 0, "linkers": 0, "payloads": 0}
     
-    # 1. Targets
-    for item in GOLD_TARGETS:
-        try:
+    try:
+        # 1. Targets
+        # 1-1. Hardcoded Targets
+        targets = list(GOLD_TARGETS) # Copy list
+        
+        # 1-2. Load from JSON file (targets_seed_200.json)
+        import json
+        from pathlib import Path
+        
+        # services/worker/seeds/targets_seed_200.json
+        # 현재 파일 위치: services/worker/jobs/seed_job.py
+        # -> ../seeds/targets_seed_200.json
+        json_path = Path(__file__).parent.parent / "seeds" / "targets_seed_200.json"
+        
+        if json_path.exists():
+            try:
+                with open(json_path, "r", encoding="utf-8") as f:
+                    file_targets = json.load(f)
+                    logger.info("seed_file_loaded", path=str(json_path), count=len(file_targets))
+                    
+                    # Merge logic: gene_symbol 기준으로 중복 제거 (파일 데이터 우선)
+                    existing_symbols = {t["gene_symbol"] for t in targets if "gene_symbol" in t}
+                    
+                    for ft in file_targets:
+                        if ft.get("gene_symbol") and ft["gene_symbol"] not in existing_symbols:
+                            targets.append(ft)
+                        elif ft.get("gene_symbol") and ft["gene_symbol"] in existing_symbols:
+                            # 이미 존재하면 넘어감 (기존 GOLD_TARGETS 우선)
+                            pass
+                            
+            except Exception as e:
+                logger.error("seed_file_load_failed", error=str(e))
+        else:
+            logger.warning("seed_file_not_found", path=str(json_path))
+        
+        for item in targets:
             data = {
                 "type": "target",
                 "name": item["name"],
-                "gene_symbol": item["gene_symbol"],
-                "uniprot_accession": item["uniprot_accession"],
-                "ensembl_gene_id": item["ensembl_gene_id"],
-                "is_gold": True,
+                "gene_symbol": item.get("gene_symbol"),
+                "uniprot_accession": item.get("uniprot_accession"),
+                "ensembl_gene_id": item.get("ensembl_gene_id"),
+                "is_gold": item.get("quality_grade") == "gold" or item.get("is_gold", False),
+                "quality_grade": item.get("quality_grade", "silver"),
                 "is_active": True,
-                "quality_grade": "gold"
+                "updated_at": datetime.utcnow().isoformat()
             }
-            # Upsert based on type + name (using the unique index we created)
-            # Note: Supabase-py upsert requires 'on_conflict' column
-            # We created a unique index on (type, name) where workspace_id is null.
-            # However, postgrest upsert might need explicit constraint name or columns.
-            # Let's try upserting by 'type, name' if possible, or just insert and ignore conflict?
-            # Better to check existence first or use upsert with on_conflict.
             
-            # Since we can't easily specify partial index constraint in postgrest,
-            # we will try to select first.
-            existing = db.table("component_catalog").select("id").eq("type", "target").eq("name", item["name"]).is_("workspace_id", "null").execute()
-            
-            if existing.data:
-                db.table("component_catalog").update(data).eq("id", existing.data[0]["id"]).execute()
+            # Upsert logic: gene_symbol이 있으면 그것으로, 없으면 name으로
+            if data.get("gene_symbol"):
+                # Check existing by gene_symbol
+                existing = db.table("component_catalog").select("id").eq("type", "target").eq("gene_symbol", data["gene_symbol"]).is_("workspace_id", "null").execute()
+                if existing.data:
+                    db.table("component_catalog").update(data).eq("id", existing.data[0]["id"]).execute()
+                else:
+                    db.table("component_catalog").insert(data).execute()
             else:
-                db.table("component_catalog").insert(data).execute()
+                # Check existing by name
+                existing = db.table("component_catalog").select("id").eq("type", "target").eq("name", data["name"]).is_("workspace_id", "null").execute()
+                if existing.data:
+                    db.table("component_catalog").update(data).eq("id", existing.data[0]["id"]).execute()
+                else:
+                    db.table("component_catalog").insert(data).execute()
             stats["targets"] += 1
-        except Exception as e:
-            logger.error("seed_target_failed", name=item["name"], error=str(e))
-            stats["errors"] += 1
 
-    # 2. Payloads
-    for item in GOLD_PAYLOADS:
-        try:
+        # 2. Antibodies
+        for item in GOLD_ANTIBODIES:
             data = {
-                "type": "payload",
+                "type": "antibody",
                 "name": item["name"],
-                "inchikey": item["inchikey"],
-                "pubchem_cid": item["pubchem_cid"],
+                "properties": {"target": item["target"]},
                 "is_gold": True,
                 "is_active": True,
-                "quality_grade": "gold"
+                "updated_at": datetime.utcnow().isoformat()
             }
-            existing = db.table("component_catalog").select("id").eq("type", "payload").eq("name", item["name"]).is_("workspace_id", "null").execute()
-            if existing.data:
-                db.table("component_catalog").update(data).eq("id", existing.data[0]["id"]).execute()
-            else:
-                db.table("component_catalog").insert(data).execute()
-            stats["payloads"] += 1
-        except Exception as e:
-            logger.error("seed_payload_failed", name=item["name"], error=str(e))
-            stats["errors"] += 1
+            db.table("component_catalog").upsert(data, on_conflict="type,name").execute()
+            stats["antibodies"] += 1
 
-    # 3. Linkers
-    for item in GOLD_LINKERS:
-        try:
+        # 3. Linkers
+        for item in GOLD_LINKERS:
             data = {
                 "type": "linker",
                 "name": item["name"],
@@ -115,38 +162,28 @@ async def seed_fetch_job(ctx, seed: Dict[str, Any] = None):
                 "pubchem_cid": item["pubchem_cid"],
                 "is_gold": True,
                 "is_active": True,
-                "quality_grade": "gold"
+                "updated_at": datetime.utcnow().isoformat()
             }
-            existing = db.table("component_catalog").select("id").eq("type", "linker").eq("name", item["name"]).is_("workspace_id", "null").execute()
-            if existing.data:
-                db.table("component_catalog").update(data).eq("id", existing.data[0]["id"]).execute()
-            else:
-                db.table("component_catalog").insert(data).execute()
+            db.table("component_catalog").upsert(data, on_conflict="type,name").execute()
             stats["linkers"] += 1
-        except Exception as e:
-            logger.error("seed_linker_failed", name=item["name"], error=str(e))
-            stats["errors"] += 1
 
-    # 4. Antibodies
-    for item in GOLD_ANTIBODIES:
-        try:
+        # 4. Payloads
+        for item in GOLD_PAYLOADS:
             data = {
-                "type": "antibody",
+                "type": "payload",
                 "name": item["name"],
-                "properties": {"target": item["target"]},
+                "inchikey": item["inchikey"],
+                "pubchem_cid": item["pubchem_cid"],
                 "is_gold": True,
                 "is_active": True,
-                "quality_grade": "gold"
+                "updated_at": datetime.utcnow().isoformat()
             }
-            existing = db.table("component_catalog").select("id").eq("type", "antibody").eq("name", item["name"]).is_("workspace_id", "null").execute()
-            if existing.data:
-                db.table("component_catalog").update(data).eq("id", existing.data[0]["id"]).execute()
-            else:
-                db.table("component_catalog").insert(data).execute()
-            stats["antibodies"] += 1
-        except Exception as e:
-            logger.error("seed_antibody_failed", name=item["name"], error=str(e))
-            stats["errors"] += 1
+            db.table("component_catalog").upsert(data, on_conflict="type,name").execute()
+            stats["payloads"] += 1
+            
+    except Exception as e:
+        logger.error("seed_fetch_job_failed", error=str(e))
+        raise
 
-    logger.info("seed_job_completed", stats=stats)
-    return stats
+    logger.info("seed_fetch_job_completed", stats=stats)
+    return {"status": "completed", "stats": stats}

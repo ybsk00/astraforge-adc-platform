@@ -1,0 +1,947 @@
+[
+    {
+        "name": "HER2",
+        "gene_symbol": "ERBB2",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "HER3",
+        "gene_symbol": "ERBB3",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "TROP2",
+        "gene_symbol": "TACSTD2",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "Nectin-4",
+        "gene_symbol": "NECTIN4",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "EGFR",
+        "gene_symbol": "EGFR",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "MET",
+        "gene_symbol": "MET",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "Mesothelin",
+        "gene_symbol": "MSLN",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "PSMA",
+        "gene_symbol": "FOLH1",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "Claudin-18",
+        "gene_symbol": "CLDN18",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "LIV-1",
+        "gene_symbol": "SLC39A6",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "CD19",
+        "gene_symbol": "CD19",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "CD20",
+        "gene_symbol": "MS4A1",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "CD22",
+        "gene_symbol": "CD22",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "CD30",
+        "gene_symbol": "TNFRSF8",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "CD33",
+        "gene_symbol": "CD33",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "CD79b",
+        "gene_symbol": "CD79B",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "BCMA",
+        "gene_symbol": "TNFRSF17",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "DLL3",
+        "gene_symbol": "DLL3",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "Tissue Factor",
+        "gene_symbol": "F3",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "CEACAM5",
+        "gene_symbol": "CEACAM5",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "MUC1",
+        "gene_symbol": "MUC1",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "EpCAM",
+        "gene_symbol": "EPCAM",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "FGFR2",
+        "gene_symbol": "FGFR2",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "FGFR3",
+        "gene_symbol": "FGFR3",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "PD-L1",
+        "gene_symbol": "CD274",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "PD-1",
+        "gene_symbol": "PDCD1",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "B7-H3",
+        "gene_symbol": "CD276",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "CD123",
+        "gene_symbol": "IL3RA",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "SLAMF7",
+        "gene_symbol": "SLAMF7",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "GPNMB",
+        "gene_symbol": "GPNMB",
+        "quality_grade": "gold"
+    },
+    {
+        "name": "FOLR1",
+        "gene_symbol": "FOLR1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "STEAP1",
+        "gene_symbol": "STEAP1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "SLC44A4",
+        "gene_symbol": "SLC44A4",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CA9",
+        "gene_symbol": "CA9",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "MUC16",
+        "gene_symbol": "MUC16",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "LY6E",
+        "gene_symbol": "LY6E",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "PTK7",
+        "gene_symbol": "PTK7",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "EFNA4",
+        "gene_symbol": "EFNA4",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "DR5",
+        "gene_symbol": "TNFRSF10B",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CD38",
+        "gene_symbol": "CD38",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CD47",
+        "gene_symbol": "CD47",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CD52",
+        "gene_symbol": "CD52",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CD70",
+        "gene_symbol": "CD70",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CD74",
+        "gene_symbol": "CD74",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CD138",
+        "gene_symbol": "SDC1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "IGF1R",
+        "gene_symbol": "IGF1R",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "VEGFR1",
+        "gene_symbol": "FLT1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "VEGFR2",
+        "gene_symbol": "KDR",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "VEGFR3",
+        "gene_symbol": "FLT4",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "KIT",
+        "gene_symbol": "KIT",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "FLT3",
+        "gene_symbol": "FLT3",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CTLA4",
+        "gene_symbol": "CTLA4",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "LAG3",
+        "gene_symbol": "LAG3",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TIM3",
+        "gene_symbol": "HAVCR2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TIGIT",
+        "gene_symbol": "TIGIT",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "Nectin-2",
+        "gene_symbol": "NECTIN2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "E-Cadherin",
+        "gene_symbol": "CDH1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "P-Cadherin",
+        "gene_symbol": "CDH3",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "Integrin alpha-V",
+        "gene_symbol": "ITGAV",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "Integrin beta-6",
+        "gene_symbol": "ITGB6",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "ROR1",
+        "gene_symbol": "ROR1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "ROR2",
+        "gene_symbol": "ROR2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "AXL",
+        "gene_symbol": "AXL",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "MER",
+        "gene_symbol": "MERTK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TYRO3",
+        "gene_symbol": "TYRO3",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "ALK",
+        "gene_symbol": "ALK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "ROS1",
+        "gene_symbol": "ROS1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "RET",
+        "gene_symbol": "RET",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "NTRK1",
+        "gene_symbol": "NTRK1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "NTRK2",
+        "gene_symbol": "NTRK2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "NTRK3",
+        "gene_symbol": "NTRK3",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "BRAF",
+        "gene_symbol": "BRAF",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "KRAS",
+        "gene_symbol": "KRAS",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "NRAS",
+        "gene_symbol": "NRAS",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "HRAS",
+        "gene_symbol": "HRAS",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "PIK3CA",
+        "gene_symbol": "PIK3CA",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "PTEN",
+        "gene_symbol": "PTEN",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "AKT1",
+        "gene_symbol": "AKT1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "MTOR",
+        "gene_symbol": "MTOR",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "BRCA1",
+        "gene_symbol": "BRCA1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "BRCA2",
+        "gene_symbol": "BRCA2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "ATM",
+        "gene_symbol": "ATM",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "ATR",
+        "gene_symbol": "ATR",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "PARP1",
+        "gene_symbol": "PARP1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CDK4",
+        "gene_symbol": "CDK4",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CDK6",
+        "gene_symbol": "CDK6",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "RB1",
+        "gene_symbol": "RB1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TP53",
+        "gene_symbol": "TP53",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "MYC",
+        "gene_symbol": "MYC",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "BCL2",
+        "gene_symbol": "BCL2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "BCL6",
+        "gene_symbol": "BCL6",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "MCL1",
+        "gene_symbol": "MCL1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "EZH2",
+        "gene_symbol": "EZH2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "IDH1",
+        "gene_symbol": "IDH1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "IDH2",
+        "gene_symbol": "IDH2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "VHL",
+        "gene_symbol": "VHL",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "HIF1A",
+        "gene_symbol": "HIF1A",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CD27",
+        "gene_symbol": "CD27",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CD40",
+        "gene_symbol": "CD40",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "OX40",
+        "gene_symbol": "TNFRSF4",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "4-1BB",
+        "gene_symbol": "TNFRSF9",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "GITR",
+        "gene_symbol": "TNFRSF18",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "ICOS",
+        "gene_symbol": "ICOS",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "VISTA",
+        "gene_symbol": "VSIR",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "BTLA",
+        "gene_symbol": "BTLA",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CD160",
+        "gene_symbol": "CD160",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CD244",
+        "gene_symbol": "CD244",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CD96",
+        "gene_symbol": "CD96",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "PVRIG",
+        "gene_symbol": "PVRIG",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CD112R",
+        "gene_symbol": "PVR",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CD39",
+        "gene_symbol": "ENTPD1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CD73",
+        "gene_symbol": "NT5E",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "A2AR",
+        "gene_symbol": "ADORA2A",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "A2BR",
+        "gene_symbol": "ADORA2B",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TGFB1",
+        "gene_symbol": "TGFB1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TGFBR1",
+        "gene_symbol": "TGFBR1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TGFBR2",
+        "gene_symbol": "TGFBR2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CSF1R",
+        "gene_symbol": "CSF1R",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CCR2",
+        "gene_symbol": "CCR2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CCR4",
+        "gene_symbol": "CCR4",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CXCR4",
+        "gene_symbol": "CXCR4",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CXCR2",
+        "gene_symbol": "CXCR2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "IL1B",
+        "gene_symbol": "IL1B",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "IL6",
+        "gene_symbol": "IL6",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "IL8",
+        "gene_symbol": "CXCL8",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TNF",
+        "gene_symbol": "TNF",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "IFNG",
+        "gene_symbol": "IFNG",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "JAK1",
+        "gene_symbol": "JAK1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "JAK2",
+        "gene_symbol": "JAK2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "JAK3",
+        "gene_symbol": "JAK3",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TYK2",
+        "gene_symbol": "TYK2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "STAT3",
+        "gene_symbol": "STAT3",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "STAT5A",
+        "gene_symbol": "STAT5A",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "STAT5B",
+        "gene_symbol": "STAT5B",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "NFKB1",
+        "gene_symbol": "NFKB1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "MAPK1",
+        "gene_symbol": "MAPK1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "MAPK3",
+        "gene_symbol": "MAPK3",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "ERK",
+        "gene_symbol": "MAPK1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "MEK",
+        "gene_symbol": "MAP2K1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "RAF1",
+        "gene_symbol": "RAF1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "SRC",
+        "gene_symbol": "SRC",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "YES1",
+        "gene_symbol": "YES1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "FYN",
+        "gene_symbol": "FYN",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "LCK",
+        "gene_symbol": "LCK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "ABL1",
+        "gene_symbol": "ABL1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "DDR1",
+        "gene_symbol": "DDR1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "DDR2",
+        "gene_symbol": "DDR2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "EPHA2",
+        "gene_symbol": "EPHA2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "EPHA3",
+        "gene_symbol": "EPHA3",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "EPHB4",
+        "gene_symbol": "EPHB4",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "FGFR1",
+        "gene_symbol": "FGFR1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "FGFR4",
+        "gene_symbol": "FGFR4",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "IGF2R",
+        "gene_symbol": "IGF2R",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "INSR",
+        "gene_symbol": "INSR",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "MET",
+        "gene_symbol": "MET",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "MST1R",
+        "gene_symbol": "MST1R",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "PDGFRA",
+        "gene_symbol": "PDGFRA",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "PDGFRB",
+        "gene_symbol": "PDGFRB",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TEK",
+        "gene_symbol": "TEK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TIE1",
+        "gene_symbol": "TIE1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TRKA",
+        "gene_symbol": "NTRK1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TRKB",
+        "gene_symbol": "NTRK2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TRKC",
+        "gene_symbol": "NTRK3",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "RET",
+        "gene_symbol": "RET",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "ROS1",
+        "gene_symbol": "ROS1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "ALK",
+        "gene_symbol": "ALK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "LTK",
+        "gene_symbol": "LTK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "MATK",
+        "gene_symbol": "MATK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "CSK",
+        "gene_symbol": "CSK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "PTK6",
+        "gene_symbol": "PTK6",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "SRMS",
+        "gene_symbol": "SRMS",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "FRK",
+        "gene_symbol": "FRK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "BLK",
+        "gene_symbol": "BLK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "HCK",
+        "gene_symbol": "HCK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "FGR",
+        "gene_symbol": "FGR",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "LYN",
+        "gene_symbol": "LYN",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "ZAP70",
+        "gene_symbol": "ZAP70",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "SYK",
+        "gene_symbol": "SYK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TEC",
+        "gene_symbol": "TEC",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "BTK",
+        "gene_symbol": "BTK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "ITK",
+        "gene_symbol": "ITK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TXK",
+        "gene_symbol": "TXK",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "BMX",
+        "gene_symbol": "BMX",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "ACK1",
+        "gene_symbol": "TNK2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "TNK1",
+        "gene_symbol": "TNK1",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "FAK",
+        "gene_symbol": "PTK2",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "PYK2",
+        "gene_symbol": "PTK2B",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "FES",
+        "gene_symbol": "FES",
+        "quality_grade": "silver"
+    },
+    {
+        "name": "FER",
+        "gene_symbol": "FER",
+        "quality_grade": "silver"
+    }
+]

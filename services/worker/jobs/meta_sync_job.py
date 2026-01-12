@@ -280,6 +280,16 @@ async def hpa_fetch_job(ctx, seed: Dict[str, Any]):
         
         base_url = "https://www.proteinatlas.org"
         
+        # 기본 쿼리 설정
+        if not seed.get("ensembl_ids") and not seed.get("gene_symbols"):
+            logger.info("hpa_using_default_targets")
+            # HER2(ERBB2), TROP2(TACSTD2), CD20(MS4A1), CD19, TP53
+            seed["gene_symbols"] = ["ERBB2", "TACSTD2", "MS4A1", "CD19", "TP53"]
+            
+            db.table("ingestion_logs").update({
+                "meta": {"seed": seed, "note": "Using default HPA targets"}
+            }).eq("id", log_id).execute()
+
         identifiers = []
         identifiers.extend(seed.get("ensembl_ids", []))
         identifiers.extend(seed.get("gene_symbols", []))
