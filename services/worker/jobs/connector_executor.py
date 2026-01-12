@@ -45,6 +45,7 @@ async def execute_connector_run(ctx: Dict[str, Any], run_id: str):
         
         result_summary = {}
         
+        # 3-1. 시드 기반 실행 (Seed Set ID가 있는 경우)
         if seed_set_id:
             # 시드 기반 자동 쿼리 생성 및 수집
             from .domain_resolver import resolve_entities, generate_queries
@@ -67,15 +68,85 @@ async def execute_connector_run(ctx: Dict[str, Any], run_id: str):
                 total_fetched = 0
                 for q in queries[:20]: # 상위 20개 조합 우선 실행
                     res = await opentargets_fetch_job(ctx, q)
-            # PubMed RAG 기반 Seed 생성
-            from .rag_seed_job import rag_seed_query_job
-            result_summary = await rag_seed_query_job(ctx, run_id, connector.get("config", {}))
-
-        elif connector_type == "crawler":
-            # 크롤러 타입 로직 (추후 확장)
-            result_summary = {"message": "Crawler logic not implemented yet"}
+                    if res.get("status") == "completed":
+                        total_fetched += res.get("fetched", 0)
+                result_summary = {"total_fetched": total_fetched, "queries_count": len(queries)}
+            else:
+                result_summary = {"message": f"Seed-based ingestion for {connector_type}/{connector.get('name')} not fully implemented"}
+        
+        # 3-2. 일반 실행 (직접 실행 또는 스케줄링)
         else:
-            raise ValueError(f"Unsupported connector type: {connector_type}")
+            if connector_type == "api":
+                connector_name = connector.get("name", "").lower()
+                config = connector.get("config", {})
+                
+                if connector_name == "pubmed":
+                    from .pubmed_job import pubmed_fetch_job
+                    seed = {"query": config.get("query", "antibody drug conjugate"), "retmax": config.get("limit", 100)}
+                    result_summary = await pubmed_fetch_job(ctx, seed)
+                    
+                elif connector_name == "uniprot":
+                    from .uniprot_job import uniprot_fetch_job
+                    result_summary = await uniprot_fetch_job(ctx, config)
+                    
+                elif connector_name == "opentargets":
+                    from .meta_sync_job import opentargets_fetch_job
+                    result_summary = await opentargets_fetch_job(ctx, config)
+                    
+                elif connector_name == "clinicaltrials":
+                    from .clinical_job import clinicaltrials_fetch_job
+                    result_summary = await clinicaltrials_fetch_job(ctx, config)
+                    
+                elif connector_name == "openfda":
+                    from .clinical_job import openfda_fetch_job
+                    result_summary = await openfda_fetch_job(ctx, config)
+                    
+                else:
+                    result_summary = {"message": f"No job implementation for API connector: {connector_name}"}
+
+            elif connector_type == "db":
+                connector_name = connector.get("name", "").lower()
+                config = connector.get("config", {})
+                
+                if connector_name == "hpa":
+                    from .meta_sync_job import hpa_fetch_job
+                    result_summary = await hpa_fetch_job(ctx, config)
+                elif connector_name == "chembl":
+                    from .meta_sync_job import chembl_fetch_job
+                    result_summary = await chembl_fetch_job(ctx, config)
+                elif connector_name == "pubchem":
+                    from .meta_sync_job import pubchem_fetch_job
+                    result_summary = await pubchem_fetch_job(ctx, config)
+                else:
+                    result_summary = {"message": f"No job implementation for DB connector: {connector_name}"}
+
+            elif connector_type == "system":
+                connector_name = connector.get("name", "").lower()
+                
+                if connector_name == "seed":
+                    from .seed_job import seed_fetch_job
+                    result_summary = await seed_fetch_job(ctx, connector.get("config", {}))
+                elif connector_name == "resolve":
+                    from .resolve_job import resolve_fetch_job
+                    result_summary = await resolve_fetch_job(ctx, connector.get("config", {}))
+                else:
+                    result_summary = {"message": f"No job implementation for System connector: {connector_name}"}
+
+            elif connector_type == "golden_seed":
+                # Golden Seed 자동화 파이프라인 실행
+                from .golden_seed_job import execute_golden_seed
+                result_summary = await execute_golden_seed(ctx, run_id, connector.get("config", {}))
+                
+            elif connector_type == "RAG_SEED_FROM_PUBMED":
+                # PubMed RAG 기반 Seed 생성
+                from .rag_seed_job import rag_seed_query_job
+                result_summary = await rag_seed_query_job(ctx, run_id, connector.get("config", {}))
+
+            elif connector_type == "crawler":
+                # 크롤러 타입 로직 (추후 확장)
+                result_summary = {"message": "Crawler logic not implemented yet"}
+            else:
+                raise ValueError(f"Unsupported connector type: {connector_type}")
 
         # 4. 성공 업데이트
         db.table("connector_runs").update({
