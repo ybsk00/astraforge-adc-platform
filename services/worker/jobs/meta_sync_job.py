@@ -71,6 +71,20 @@ async def opentargets_fetch_job(ctx, seed: Dict[str, Any]):
         # 쿼리가 입력되면 Ensembl ID로 간주하고 추가
         ensembl_ids.append(query)
         
+    # Batch Mode: Catalog에서 ID 조회
+    if seed.get("batch_mode"):
+        logger.info("opentargets_batch_mode_enabled")
+        # Fetch targets with ensembl_gene_id
+        targets = db.table("component_catalog").select("ensembl_gene_id").eq("type", "target").not_.is_("ensembl_gene_id", "null").execute()
+        catalog_ids = [t["ensembl_gene_id"] for t in targets.data if t.get("ensembl_gene_id")]
+        if catalog_ids:
+            ensembl_ids.extend(catalog_ids)
+            logger.info("opentargets_batch_targets_loaded", count=len(catalog_ids))
+        else:
+            logger.warning("opentargets_batch_no_targets_found")
+            if not ensembl_ids and not target_id and not query:
+                 return {"status": "completed", "message": "No targets with Ensembl ID found in Catalog"}
+
     # 기본 쿼리 설정
     if not ensembl_ids:
         # Ensembl ID가 없으면 기본 ADC 타겟 목록 사용
@@ -280,6 +294,29 @@ async def hpa_fetch_job(ctx, seed: Dict[str, Any]):
         
         base_url = "https://www.proteinatlas.org"
         
+        # Batch Mode: Catalog에서 ID 조회
+        if seed.get("batch_mode"):
+            logger.info("hpa_batch_mode_enabled")
+            # Fetch targets with ensembl_gene_id or gene_symbol
+            targets = db.table("component_catalog").select("ensembl_gene_id, gene_symbol").eq("type", "target").execute()
+            
+            catalog_ensembls = [t["ensembl_gene_id"] for t in targets.data if t.get("ensembl_gene_id")]
+            catalog_symbols = [t["gene_symbol"] for t in targets.data if t.get("gene_symbol") and not t.get("ensembl_gene_id")]
+            
+            if catalog_ensembls or catalog_symbols:
+                if not seed.get("ensembl_ids"):
+                    seed["ensembl_ids"] = []
+                if not seed.get("gene_symbols"):
+                    seed["gene_symbols"] = []
+                    
+                seed["ensembl_ids"].extend(catalog_ensembls)
+                seed["gene_symbols"].extend(catalog_symbols)
+                logger.info("hpa_batch_targets_loaded", ensembls=len(catalog_ensembls), symbols=len(catalog_symbols))
+            else:
+                logger.warning("hpa_batch_no_targets_found")
+                if not seed.get("ensembl_ids") and not seed.get("gene_symbols"):
+                     return {"status": "completed", "message": "No targets found in Catalog"}
+
         # 기본 쿼리 설정
         if not seed.get("ensembl_ids") and not seed.get("gene_symbols"):
             logger.info("hpa_using_default_targets")

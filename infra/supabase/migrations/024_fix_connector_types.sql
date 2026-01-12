@@ -4,12 +4,12 @@
 
 UPDATE connectors
 SET type = 'api'
-WHERE name IN ('ClinicalTrials.gov', 'openFDA');
+WHERE name IN ('clinicaltrials', 'openfda');
 
 UPDATE connectors
 SET type = 'system'
-WHERE name IN ('Seed Data', 'Resolve IDs');
+WHERE name IN ('seed', 'resolve');
 
 -- Ensure others are correct
-UPDATE connectors SET type = 'api' WHERE name IN ('PubMed', 'UniProt', 'Open Targets');
-UPDATE connectors SET type = 'db' WHERE name IN ('Human Protein Atlas', 'ChEMBL', 'PubChem');
+UPDATE connectors SET type = 'api' WHERE name IN ('pubmed', 'uniprot', 'opentargets');
+UPDATE connectors SET type = 'db' WHERE name IN ('hpa', 'chembl', 'pubchem');
