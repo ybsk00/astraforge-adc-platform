@@ -120,7 +120,7 @@ async def compute_component_descriptors(ctx, component_id: str):
 
 # Import full design_run_execute implementation (optional - requires scoring module)
 try:
-    from jobs.run_execute_job import design_run_execute
+    from .run_execute_job import design_run_execute
 except ImportError as e:
     logger.warning("design_run_execute not available", error=str(e))
     # Fallback stub if scoring module not available
@@ -184,7 +184,8 @@ async def poll_db_jobs(ctx):
             logger.info("connector_run_picked", run_id=run["id"], worker_id=worker_id)
             
             # 커넥터 실행 로직 호출
-            from jobs.connector_executor import execute_connector_run
+            # 커넥터 실행 로직 호출
+            from .connector_executor import execute_connector_run
             await execute_connector_run(ctx, run["id"])
             
     except Exception as e:
@@ -198,7 +199,7 @@ async def poll_db_jobs(ctx):
     ).limit(5).execute()
 
     if design_result := design_query.data:
-        from jobs.run_execute_job import design_run_execute
+        from .run_execute_job import design_run_execute
         for run in design_result:
             lock_res = db.table("design_runs").update({
                 "status": "running",
@@ -237,24 +238,25 @@ class WorkerSettings:
     """Arq Worker 설정"""
     
     # Phase A Jobs
-    from jobs.pubmed_job import pubmed_fetch_job, pubmed_chunk_job, pubmed_embed_job
-    from jobs.uniprot_job import uniprot_fetch_job, uniprot_enrich_from_catalog_job, uniprot_batch_sync_job
+    # Phase A Jobs
+    from .pubmed_job import pubmed_fetch_job, pubmed_chunk_job, pubmed_embed_job
+    from .uniprot_job import uniprot_fetch_job, uniprot_enrich_from_catalog_job, uniprot_batch_sync_job
     
     # Real Data Integration Jobs
-    from jobs.parse_candidate_csv_job import parse_candidate_csv_job
-    from jobs.index_literature_job import index_literature_job
+    from .parse_candidate_csv_job import parse_candidate_csv_job
+    from .index_literature_job import index_literature_job
     
     # Phase B Jobs
-    from jobs.meta_sync_job import opentargets_fetch_job, hpa_fetch_job, chembl_fetch_job, pubchem_fetch_job, enrich_targets_batch_job
+    from .meta_sync_job import opentargets_fetch_job, hpa_fetch_job, chembl_fetch_job, pubchem_fetch_job, enrich_targets_batch_job
     
     # Phase C Jobs
-    from jobs.clinical_job import clinicaltrials_fetch_job, openfda_fetch_job
+    from .clinical_job import clinicaltrials_fetch_job, openfda_fetch_job
     
     # Phase F Jobs
-    from jobs.seed_job import seed_fetch_job
-    from jobs.seed_job import seed_fetch_job
-    from jobs.resolve_job import resolve_fetch_job
-    from jobs.golden_seed_job import execute_golden_seed
+    from .seed_job import seed_fetch_job
+    from .resolve_job import resolve_fetch_job
+    from .golden_seed_job import execute_golden_seed
+    from .rag_seed_job import rag_seed_query_job
     
     functions = [
         compute_component_descriptors,
@@ -284,6 +286,7 @@ class WorkerSettings:
         # Phase F jobs
         seed_fetch_job,
         resolve_fetch_job,
+        rag_seed_query_job,
     ]
     
     on_startup = startup

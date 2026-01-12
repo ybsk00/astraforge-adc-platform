@@ -2,7 +2,7 @@ import asyncio
 from typing import Dict, Any, List
 import structlog
 from datetime import datetime
-from jobs.worker import get_supabase
+from .worker import get_supabase
 
 logger = structlog.get_logger()
 

@@ -47,7 +47,7 @@ async def execute_connector_run(ctx: Dict[str, Any], run_id: str):
         
         if seed_set_id:
             # 시드 기반 자동 쿼리 생성 및 수집
-            from jobs.domain_resolver import resolve_entities, generate_queries
+            from .domain_resolver import resolve_entities, generate_queries
             
             # 엔티티 ID 해결 (EFO, Ensembl 등)
             await resolve_entities(ctx, seed_set_id)
@@ -56,39 +56,21 @@ async def execute_connector_run(ctx: Dict[str, Any], run_id: str):
             queries = await generate_queries(ctx, seed_set_id, connector.get("name", "").lower())
             
             if connector_type == "api" and connector.get("name", "").lower() == "pubmed":
-                from jobs.pubmed_job import pubmed_fetch_job
+                from .pubmed_job import pubmed_fetch_job
                 total_fetched = 0
                 for q in queries[:10]: # MVP에서는 상위 10개 쿼리만 우선 실행
                     res = await pubmed_fetch_job(ctx, {"query": q["query"], "retmax": 50})
                     total_fetched += res.get("fetched", 0)
                 result_summary = {"total_fetched": total_fetched, "queries_count": len(queries)}
             elif connector_type == "api" and connector.get("name", "").lower() == "opentargets":
-                from jobs.opentargets_job import opentargets_fetch_job
+                from .opentargets_job import opentargets_fetch_job
                 total_fetched = 0
                 for q in queries[:20]: # 상위 20개 조합 우선 실행
                     res = await opentargets_fetch_job(ctx, q)
-                    if res.get("status") == "completed":
-                        total_fetched += res.get("fetched", 0)
-                result_summary = {"total_fetched": total_fetched, "queries_count": len(queries)}
-            else:
-                result_summary = {"message": f"Seed-based ingestion for {connector_type}/{connector.get('name')} not fully implemented"}
-        
-        elif connector_type == "api":
-            # API 타입 커넥터 로직 (예시로 PubMed 호출)
-            from jobs.pubmed_job import pubmed_fetch_job
-            # 커넥터 설정(config)에서 쿼리 등을 가져옴
-            config = connector.get("config", {})
-            seed = {
-                "query": config.get("query", "antibody drug conjugate"),
-                "retmax": config.get("limit", 100)
-            }
-            res = await pubmed_fetch_job(ctx, seed)
-            result_summary = res
-        elif connector_type == "golden_seed":
-            # Golden Seed 자동화 파이프라인 실행
-            from jobs.golden_seed_job import execute_golden_seed
-            result_summary = await execute_golden_seed(ctx, run_id, connector.get("config", {}))
-            
+            # PubMed RAG 기반 Seed 생성
+            from .rag_seed_job import rag_seed_query_job
+            result_summary = await rag_seed_query_job(ctx, run_id, connector.get("config", {}))
+
         elif connector_type == "crawler":
             # 크롤러 타입 로직 (추후 확장)
             result_summary = {"message": "Crawler logic not implemented yet"}
