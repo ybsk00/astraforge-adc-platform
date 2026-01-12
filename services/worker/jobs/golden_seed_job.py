@@ -57,7 +57,7 @@ async def execute_golden_seed(ctx, run_id: str, config: dict):
     
     # Config Parsing
     target_count = config.get("target_count", 100)
-    min_evidence = config.get("min_evidence", 2)
+    min_evidence = config.get("min_evidence", 1)
     
     # Generate Dynamic Version for every run (e.g., v1-20240112-123045)
     base_version = config.get("seed_version", "v1")
@@ -93,8 +93,10 @@ async def execute_golden_seed(ctx, run_id: str, config: dict):
         cand["confidence_score"] = score
         cand["score_reasons"] = reasons
         
-        # Hard Gate: 4요소 필수 + 최소 점수
-        if all([cand["target"], cand["antibody"], cand["linker"], cand["payload"]]) and score >= 50:
+        # Recommendation A: Relaxed Gate
+        # NCT(evidence_refs)와 Title만 있으면 통과 (점수 기준 30점으로 완화)
+        # 기존 4요소 필수 조건 제거 -> 추출이 완벽하지 않아도 후보군 확보 우선
+        if cand["evidence_refs"] and cand["raw_source"].get("title") and score >= 30:
             valid_candidates.append(cand)
             
     summary["passed_gate"] = len(valid_candidates)
