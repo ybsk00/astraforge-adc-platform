@@ -28,26 +28,32 @@ export interface GoldenCandidate {
 /**
  * Fetch all Golden Sets
  */
-export async function getGoldenSets() {
+export async function getGoldenSets(page: number = 1, limit: number = 20) {
     const supabase = await createClient();
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
         .from('golden_sets')
         .select(`
             *,
             candidates:golden_candidates(count)
-        `)
-        .order('created_at', { ascending: false });
+        `, { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
     if (error) {
         console.error("Failed to fetch golden sets:", error);
         throw new Error("Failed to fetch golden sets");
     }
 
-    return data.map((item: any) => ({
-        ...item,
-        candidate_count: item.candidates?.[0]?.count || 0
-    }));
+    return {
+        data: data.map((item: any) => ({
+            ...item,
+            candidate_count: item.candidates?.[0]?.count || 0
+        })),
+        count: count || 0
+    };
 }
 
 /**

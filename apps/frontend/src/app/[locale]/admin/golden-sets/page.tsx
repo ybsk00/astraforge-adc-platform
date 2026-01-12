@@ -3,9 +3,16 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Database, Calendar, CheckCircle2, AlertCircle, ArrowRight } from "lucide-react";
 
-export default async function GoldenSetsPage() {
+export default async function GoldenSetsPage({
+    searchParams,
+}: {
+    searchParams: { page?: string };
+}) {
     const t = await getTranslations("Admin");
-    const goldenSets = await getGoldenSets();
+    const page = Number(searchParams.page) || 1;
+    const limit = 20;
+    const { data: goldenSets, count } = await getGoldenSets(page, limit);
+    const totalPages = Math.ceil(count / limit);
 
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-8">
@@ -31,50 +38,77 @@ export default async function GoldenSetsPage() {
                             </Link>
                         </div>
                     ) : (
-                        goldenSets.map((set: any) => (
-                            <div key={set.id} className="bg-slate-900 border border-slate-800 rounded-xl p-6 hover:border-slate-700 transition-all">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`p-3 rounded-lg ${set.status === 'promoted' ? 'bg-green-500/10 text-green-400' :
+                        <>
+                            {goldenSets.map((set: any) => (
+                                <div key={set.id} className="bg-slate-900 border border-slate-800 rounded-xl p-6 hover:border-slate-700 transition-all">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`p-3 rounded-lg ${set.status === 'promoted' ? 'bg-green-500/10 text-green-400' :
                                                 set.status === 'archived' ? 'bg-slate-800 text-slate-500' :
                                                     'bg-blue-500/10 text-blue-400'
-                                            }`}>
-                                            <Database className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="text-lg font-bold text-white">{set.name}</h3>
-                                                <span className="px-2 py-0.5 text-xs font-medium bg-slate-800 text-slate-300 rounded border border-slate-700">
-                                                    {set.version}
-                                                </span>
-                                                {set.status === 'promoted' && (
-                                                    <span className="px-2 py-0.5 text-xs font-medium bg-green-900/30 text-green-400 rounded border border-green-800 flex items-center gap-1">
-                                                        <CheckCircle2 className="w-3 h-3" /> Promoted
+                                                }`}>
+                                                <Database className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <h3 className="text-lg font-bold text-white">{set.name}</h3>
+                                                    <span className="px-2 py-0.5 text-xs font-medium bg-slate-800 text-slate-300 rounded border border-slate-700">
+                                                        {set.version}
                                                     </span>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
-                                                <div className="flex items-center gap-1">
-                                                    <Calendar className="w-3 h-3" />
-                                                    {new Date(set.created_at).toLocaleString()}
+                                                    {set.status === 'promoted' && (
+                                                        <span className="px-2 py-0.5 text-xs font-medium bg-green-900/30 text-green-400 rounded border border-green-800 flex items-center gap-1">
+                                                            <CheckCircle2 className="w-3 h-3" /> Promoted
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                <div>•</div>
-                                                <div>
-                                                    후보 <span className="text-slate-300 font-medium">{set.candidate_count}</span>개
+                                                <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
+                                                    <div className="flex items-center gap-1">
+                                                        <Calendar className="w-3 h-3" />
+                                                        {new Date(set.created_at).toLocaleString()}
+                                                    </div>
+                                                    <div>•</div>
+                                                    <div>
+                                                        후보 <span className="text-slate-300 font-medium">{set.candidate_count}</span>개
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <Link
-                                        href={`/admin/golden-sets/${set.id}`}
-                                        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm transition-colors"
-                                    >
-                                        상세 보기 <ArrowRight className="w-4 h-4" />
-                                    </Link>
+                                        <Link
+                                            href={`/admin/golden-sets/${set.id}`}
+                                            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm transition-colors"
+                                        >
+                                            상세 보기 <ArrowRight className="w-4 h-4" />
+                                        </Link>
+                                    </div>
                                 </div>
-                            </div>
-                        ))
+                            ))}
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="flex justify-center gap-2 mt-8">
+                                    {page > 1 && (
+                                        <Link
+                                            href={`/admin/golden-sets?page=${page - 1}`}
+                                            className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-white hover:border-slate-700 transition-colors"
+                                        >
+                                            이전
+                                        </Link>
+                                    )}
+                                    <span className="px-4 py-2 text-slate-500">
+                                        Page {page} of {totalPages}
+                                    </span>
+                                    {page < totalPages && (
+                                        <Link
+                                            href={`/admin/golden-sets?page=${page + 1}`}
+                                            className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-white hover:border-slate-700 transition-colors"
+                                        >
+                                            다음
+                                        </Link>
+                                    )}
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </div>

@@ -35,7 +35,7 @@ export default function AdminSidebar() {
     const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
 
     return (
-        <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-screen fixed left-0 top-0 z-40">
+        <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-screen fixed left-0 top-0 z-50">
             {/* Navigation */}
 
             {/* Navigation */}
