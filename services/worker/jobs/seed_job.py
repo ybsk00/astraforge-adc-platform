@@ -150,7 +150,12 @@ async def seed_fetch_job(ctx, seed: Dict[str, Any] = None):
                 "is_active": True,
                 "updated_at": datetime.utcnow().isoformat()
             }
-            db.table("component_catalog").upsert(data, on_conflict="type,name").execute()
+            # Explicit check for partial index (workspace_id is null)
+            existing = db.table("component_catalog").select("id").eq("type", "antibody").eq("name", item["name"]).is_("workspace_id", "null").execute()
+            if existing.data:
+                db.table("component_catalog").update(data).eq("id", existing.data[0]["id"]).execute()
+            else:
+                db.table("component_catalog").insert(data).execute()
             stats["antibodies"] += 1
 
         # 3. Linkers
@@ -164,7 +169,11 @@ async def seed_fetch_job(ctx, seed: Dict[str, Any] = None):
                 "is_active": True,
                 "updated_at": datetime.utcnow().isoformat()
             }
-            db.table("component_catalog").upsert(data, on_conflict="type,name").execute()
+            existing = db.table("component_catalog").select("id").eq("type", "linker").eq("name", item["name"]).is_("workspace_id", "null").execute()
+            if existing.data:
+                db.table("component_catalog").update(data).eq("id", existing.data[0]["id"]).execute()
+            else:
+                db.table("component_catalog").insert(data).execute()
             stats["linkers"] += 1
 
         # 4. Payloads
@@ -178,7 +187,11 @@ async def seed_fetch_job(ctx, seed: Dict[str, Any] = None):
                 "is_active": True,
                 "updated_at": datetime.utcnow().isoformat()
             }
-            db.table("component_catalog").upsert(data, on_conflict="type,name").execute()
+            existing = db.table("component_catalog").select("id").eq("type", "payload").eq("name", item["name"]).is_("workspace_id", "null").execute()
+            if existing.data:
+                db.table("component_catalog").update(data).eq("id", existing.data[0]["id"]).execute()
+            else:
+                db.table("component_catalog").insert(data).execute()
             stats["payloads"] += 1
             
     except Exception as e:
