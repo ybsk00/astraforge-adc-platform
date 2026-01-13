@@ -27,6 +27,16 @@ QUERY_PROFILES = {
         "description": "Broad collection of clinical candidates",
         "keywords": ["Phase 1", "Phase 2", "Phase 3", "solid tumor"],
         "min_confidence": 0.7
+    },
+    "golden_adc_antibody_precision": {
+        "description": "Golden Set용: ADC/항체/이중항체(항암) precision 수집",
+        "keywords": [
+            "antibody-drug conjugate",
+            "immunoconjugate",
+            "bispecific antibody",
+            "monoclonal antibody",
+            "t-cell engager"
+        ]
     }
 }
 

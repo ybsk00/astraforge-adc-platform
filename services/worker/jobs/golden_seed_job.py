@@ -1,6 +1,7 @@
 import json
 import time
 import random
+import re
 from datetime import datetime
 from supabase import Client
 from .dictionaries import PAYLOAD_DICTIONARY, LINKER_DICTIONARY, TARGET_DICTIONARY
@@ -39,7 +40,7 @@ async def execute_golden_seed(ctx, run_id: str, config: dict):
     target_count = config.get("target_count", 100)
     min_evidence = config.get("min_evidence", 1)
     # Profiles to run: default to all or specific list
-    profiles_to_run = config.get("profiles", ["clinical_candidate_pool", "adc_validation"])
+    profiles_to_run = config.get("profiles", ["golden_adc_antibody_precision"])
     
     # Generate Dynamic Version
     base_version = config.get("seed_version", "v2")
@@ -276,79 +277,176 @@ import requests
 
 # ... (imports)
 
+ONCOLOGY_TERMS = [
+    "cancer", "tumor", "carcinoma", "neoplasm", "metast",
+    "lymphoma", "leukemia", "myeloma", "sarcoma", "malignan"
+]
+
+def is_oncology_condition(conditions: list) -> bool:
+    if not conditions:
+        return False
+    blob = " ".join([c.lower() for c in conditions if c])
+    return any(t in blob for t in ONCOLOGY_TERMS)
+
+def is_antibody_like(name: str) -> bool:
+    if not name:
+        return False
+    n = name.lower()
+    # 항체/이중항체 키워드 + -mab 계열
+    if re.search(r'(^|[^a-z0-9])[a-z0-9-]*mab([^a-z0-9]|$)', n):
+        return True
+    if "antibody" in n:
+        return True
+    if "monoclonal" in n:
+        return True
+    if "bispecific" in n:
+        return True
+    if "t-cell engager" in n or "t cell engager" in n:
+        return True
+    if "bite" in n:
+        return True
+    return False
+
+def is_adc_like(name: str) -> bool:
+    if not name:
+        return False
+    n = name.lower()
+    # 약물명 리스트를 넣지 않더라도, ADC 형태 신호(문구 기반)를 우선 사용
+    if "antibody-drug conjugate" in n or "antibody drug conjugate" in n:
+        return True
+    if "immunoconjugate" in n:
+        return True
+    if "antibody conjugate" in n:
+        return True
+    # ADC라는 단어는 노이즈가 있으나, 여기는 "intervention name"에서만 쓰므로 비교적 안전
+    if re.search(r'(^|[^a-z0-9])adc([^a-z0-9]|$)', n):
+        return True
+    # (선택) 접미사 기반은 “약물명 리스트”가 아니라 패턴이므로 포함 가능
+    if any(s in n for s in ["vedotin", "deruxtecan", "govitecan", "mertansine", "ozogamicin", "soravtansine"]):
+        return True
+    return False
+
 async def _fetch_real_candidates(target_count, config, profile):
-    """
-    Fetch real candidates using QueryProfile
-    """
     base_url = "https://clinicaltrials.gov/api/v2/studies"
     results = []
     seen_ncts = set()
-    
-    # Use keywords from profile
-    keywords = profile.get("keywords", [])
-    # Construct query from keywords
-    query_term = " OR ".join([f'"{k}"' if " " in k else k for k in keywords])
-    
+
+    # 1) Query.term: ADC/항체/이중항체 범주 + 온콜로지 AND
+    adc_terms = [
+        '"antibody-drug conjugate"',
+        '"antibody drug conjugate"',
+        '"immunoconjugate"',
+        '"antibody conjugate"',
+        'ADC',
+    ]
+    antibody_terms = [
+        '"monoclonal antibody"', 'monoclonal antibody', 'mAb',
+        '"therapeutic antibody"', 'antibody therapy', 'antibody',
+        'bispecific', '"bispecific antibody"', 'BiTE', '"T-cell engager"', '"T cell engager"'
+    ]
+    oncology_gate = '(cancer OR tumor OR carcinoma OR neoplasm OR metastatic OR lymphoma OR leukemia OR myeloma OR sarcoma OR malignancy)'
+
+    # profile 키워드가 있으면 추가로 OR에 넣되, 전체는 oncology_gate로 제한
+    profile_terms = profile.get("keywords", [])
+    term_bucket = adc_terms + antibody_terms + profile_terms
+    # 공백 포함 키워드는 따옴표
+    def _q(t: str) -> str:
+        t = t.strip()
+        if " " in t and not (t.startswith('"') and t.endswith('"')):
+            return f'"{t}"'
+        return t
+
+    concept_or = " OR ".join(_q(t) for t in term_bucket if t)
+    query_term = f"({concept_or}) AND {oncology_gate}"
+
     params = {
         "pageSize": 50,
-        "fields": "protocolSection.identificationModule,protocolSection.statusModule,protocolSection.armsInterventionsModule,protocolSection.conditionsModule,protocolSection.referencesModule",
+        "fields": ",".join([
+            "protocolSection.identificationModule",
+            "protocolSection.statusModule",
+            "protocolSection.armsInterventionsModule",
+            "protocolSection.conditionsModule",
+            "protocolSection.referencesModule",
+        ]),
         "query.term": query_term,
         "filter.overallStatus": "RECRUITING,ACTIVE_NOT_RECRUITING,COMPLETED"
     }
     
     print(f"[GoldenSeed] Fetching with query: {query_term}")
-    
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         "Accept": "application/json"
     }
-    
+
     def fetch_sync():
         return requests.get(base_url, params=params, headers=headers, timeout=30.0)
 
     try:
-        # Run synchronous requests in a thread to avoid blocking the event loop
         resp = await asyncio.to_thread(fetch_sync)
         resp.raise_for_status()
         data = resp.json()
         studies = data.get("studies", [])
-        
+
         for study in studies:
-            # ... (Same extraction logic as before, but simplified)
-            proto = study.get("protocolSection", {})
-            ident = proto.get("identificationModule", {})
+            proto = study.get("protocolSection", {}) or {}
+            ident = proto.get("identificationModule", {}) or {}
             nct_id = ident.get("nctId")
-            
-            if not nct_id or nct_id in seen_ncts: continue
-            
-            # Extract Intervention
-            interventions = proto.get("armsInterventionsModule", {}).get("interventions", [])
-            drug_name = "Unknown"
+            if not nct_id or nct_id in seen_ncts:
+                continue
+
+            # 2) Conditions(암) 2차 게이트
+            conditions = (proto.get("conditionsModule", {}) or {}).get("conditions", []) or []
+            if not is_oncology_condition(conditions):
+                continue
+
+            # 3) Interventions 전체 수집 후 ADC-like/Antibody-like 우선 선택
+            interventions = (proto.get("armsInterventionsModule", {}) or {}).get("interventions", []) or []
+            drug_names = []
             for intr in interventions:
-                if intr.get("type") == "DRUG":
-                    drug_name = intr.get("name")
-                    break # Take first drug for now
-            
-            status = proto.get("statusModule", {}).get("overallStatus", "Unknown")
-            phases = proto.get("statusModule", {}).get("phases", ["Unknown"])
-            
-            refs = []
-            # ... (Extract refs)
-            refs.append(nct_id)
-            
+                if intr.get("type") == "DRUG" and intr.get("name"):
+                    drug_names.append(intr["name"])
+
+            # 후보 pick 우선순위: ADC-like > antibody-like > (없으면 스킵)
+            adc_like = [n for n in drug_names if is_adc_like(n)]
+            ab_like = [n for n in drug_names if is_antibody_like(n)]
+            picked = None
+            picked_kind = None
+
+            if adc_like:
+                picked = adc_like[0]
+                picked_kind = "adc_like"
+            elif ab_like:
+                picked = ab_like[0]
+                picked_kind = "antibody_like"
+            else:
+                # 항체/ADC 신호 없는 DRUG만 있는 trial은 후보화 자체를 하지 않음
+                continue
+
+            status = (proto.get("statusModule", {}) or {}).get("overallStatus", "Unknown")
+            phases = (proto.get("statusModule", {}) or {}).get("phases", ["Unknown"]) or ["Unknown"]
+
+            # evidence_refs: 최소 NCT는 포함, referencesModule에서 PMID 있으면 추가(가능 범위)
+            refs = [nct_id]
+
             item = {
                 "nct_id": nct_id,
-                "intervention": f"Drug: {drug_name}",
+                "intervention": f"Drug: {picked}",
+                "intervention_kind": picked_kind,   # 디버깅/품질 확인용
+                "all_drugs": drug_names,            # raw_payload에 남겨두면 추후 추출 개선에 도움
+                "conditions": conditions,           # raw_payload에 남기면 온콜로지 검증/보고서에 도움
                 "title": ident.get("officialTitle"),
                 "status": status,
                 "phase": "Phase " + "/".join(phases),
                 "evidence_refs": refs
             }
+
             seen_ncts.add(nct_id)
             results.append(item)
-            if len(results) >= target_count: break
-            
+            if len(results) >= target_count:
+                break
+
     except Exception as e:
         print(f"[GoldenSeed] Error fetching: {e}")
-            
+
     return results
