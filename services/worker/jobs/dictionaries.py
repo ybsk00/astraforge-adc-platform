@@ -88,6 +88,28 @@ TARGET_DICTIONARY = {
     "her1": "EGFR",
 }
 
+# 6. IO Blocklist (Exclude these from Target-Centric Collection)
+IO_BLOCKLIST = [
+    "pembrolizumab", "keytruda",
+    "nivolumab", "opdivo",
+    "atezolizumab", "tecentriq",
+    "durvalumab", "imfinzi",
+    "avelumab", "bavencio",
+    "cemiplimab", "libtayo",
+    "dostarlimab", "jemperli",
+    "ipilimumab", "yervoy",
+    "tremelimumab", "imjudo",
+    "spartalizumab",
+    "tislelizumab",
+    "toripalimab",
+    "sintilimab",
+    "camrelizumab",
+    "pd-1", "pd-l1", "ctla-4",
+    "pd1", "pdl1", "ctla4",
+    "programmed cell death",
+    "checkpoint inhibitor"
+]
+
 # 4. Target Lists (Solid / Heme)
 TARGET_LIST_SOLID = [
     "HER2", "HER3", "TROP2", "NECTIN4", "FOLR1", "SLC39A6", "CD276", "MSLN", "MET", "EGFR", 

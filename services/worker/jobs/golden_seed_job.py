@@ -4,7 +4,8 @@ import random
 import re
 from datetime import datetime
 from supabase import Client
-from .dictionaries import PAYLOAD_DICTIONARY, LINKER_DICTIONARY, TARGET_DICTIONARY, TARGET_LIST_SOLID, TARGET_LIST_HEME, TARGET_SYNONYMS
+from supabase import Client
+from .dictionaries import PAYLOAD_DICTIONARY, LINKER_DICTIONARY, TARGET_DICTIONARY, TARGET_LIST_SOLID, TARGET_LIST_HEME, TARGET_SYNONYMS, IO_BLOCKLIST
 from .resolve_ids_job import resolve_text, QUERY_PROFILES
 import httpx
 import asyncio
@@ -334,6 +335,15 @@ def is_antibody_like(name: str) -> bool:
         return True
     return False
 
+def is_io_drug(name: str) -> bool:
+    if not name:
+        return False
+    n = name.lower()
+    for term in IO_BLOCKLIST:
+        if term in n:
+            return True
+    return False
+
 def is_adc_like(name: str) -> bool:
     if not name:
         return False
@@ -469,7 +479,11 @@ async def _fetch_real_candidates(target_count, config, profile, target_name=None
                 drug_names = []
                 for intr in interventions:
                     if intr.get("type") == "DRUG" and intr.get("name"):
-                        drug_names.append(intr["name"])
+                        d_name = intr["name"]
+                        # IO Filter: Skip if known IO drug
+                        if is_io_drug(d_name):
+                            continue
+                        drug_names.append(d_name)
 
                 # 후보 pick 우선순위: ADC-like > antibody-like > (없으면 스킵)
                 adc_like = [n for n in drug_names if is_adc_like(n)]
