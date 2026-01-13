@@ -4,7 +4,7 @@ import random
 import re
 from datetime import datetime
 from supabase import Client
-from .dictionaries import PAYLOAD_DICTIONARY, LINKER_DICTIONARY, TARGET_DICTIONARY
+from .dictionaries import PAYLOAD_DICTIONARY, LINKER_DICTIONARY, TARGET_DICTIONARY, TARGET_LIST_SOLID, TARGET_LIST_HEME, TARGET_SYNONYMS
 from .resolve_ids_job import resolve_text, QUERY_PROFILES
 import httpx
 import asyncio
@@ -72,72 +72,99 @@ async def execute_golden_seed(ctx, run_id: str, config: dict):
         profile = QUERY_PROFILES[profile_name]
         print(f"[GoldenSeed] Running Profile: {profile_name} ({profile['description']})")
         
-        # 2.1 Fetch Real Candidates with Profile
-        raw_candidates = await _fetch_real_candidates(target_count, config, profile)
-        print(f"[GoldenSeed]   Fetched {len(raw_candidates)} candidates for {profile_name}")
-        total_fetched += len(raw_candidates)
-        
-        for raw in raw_candidates:
-            try:
-                # 2.2 Save RAW Data
-                raw_data_id = await _save_raw_data(db, raw, profile_name, PARSER_VERSION, seed_version)
+        # Check for Target-Only Mode
+        if profile.get("mode") == "target_only":
+            # Target-Centric Logic
+            targets = config.get("targets", [])
+            if not targets:
+                # Default to first 10 solid targets if not specified (Batching)
+                targets = TARGET_LIST_SOLID[:10]
+                print(f"[GoldenSeed] No targets specified. Defaulting to first 10 Solid targets: {targets}")
+            
+            per_target_limit = config.get("per_target_limit", 30)
+            
+            for target in targets:
+                print(f"[GoldenSeed]   Fetching for Target: {target}")
                 
-                # 2.3 Extract & Resolve
-                item = await _extract_and_resolve(db, raw)
+                # Fetch with specific target
+                raw_candidates = await _fetch_real_candidates(per_target_limit, config, profile, target_name=target)
+                print(f"[GoldenSeed]     Fetched {len(raw_candidates)} for {target}")
+                total_fetched += len(raw_candidates)
                 
-                # 2.4 Calculate Scores
-                score, reasons = _calculate_confidence_score(item, min_evidence)
-                item["confidence_score"] = score
-                evidence_data = {"reasons": reasons}
-                
-                # 2.5 Promotion Logic (FINAL vs RAW)
-                # Condition: Mapping Confidence >= Threshold AND Evidence Exists
-                mapping_conf = item["mapping_confidence"]
-                is_final = False
-                if mapping_conf >= 0.8 and len(item["evidence_refs"]) >= min_evidence:
-                    is_final = True
-                
-                # Generate Program Key
-                program_key = make_program_key(item)
-                
-                # 2.6 Upsert Candidate
-                data = {
-                    "golden_set_id": golden_set_id,
-                    "drug_name": item["drug_name"],
-                    "target": item["target"],
-                    "antibody": item["antibody"],
-                    "linker": item["linker"],
-                    "payload": item["payload"],
-                    "program_key": program_key,
-                    "approval_status": item["approval_status"],
-                    "source_ref": item["evidence_refs"][0] if item["evidence_refs"] else None,
-                    "confidence_score": item["confidence_score"],
-                    "mapping_confidence": mapping_conf,
-                    "is_final": is_final,
-                    "raw_data_id": raw_data_id,
-                    "dataset_version": seed_version,
-                    "evidence_json": evidence_data,
-                    "evidence_refs": [{"type": "clinical", "id": ref} for ref in item["evidence_refs"]], # JSONB format
-                    "updated_at": datetime.utcnow().isoformat()
-                }
+                for raw in raw_candidates:
+                    try:
+                        # Save RAW Data (Essential)
+                        raw_data_id = await _save_raw_data(db, raw, profile_name, PARSER_VERSION, seed_version)
+                        
+                        # Skip Golden Candidate Upsert (Option A: RAW Only)
+                        # Admin will promote manually.
+                        
+                    except Exception as e:
+                        msg = f"Error processing {raw.get('nct_id')}: {str(e)}"
+                        print(f"[GoldenSeed] {msg}")
+                        summary["errors"].append(msg)
+                        
+        else:
+            # Original Logic (Keyword-based)
+            raw_candidates = await _fetch_real_candidates(target_count, config, profile)
+            print(f"[GoldenSeed]   Fetched {len(raw_candidates)} candidates for {profile_name}")
+            total_fetched += len(raw_candidates)
+            
+            for raw in raw_candidates:
+                try:
+                    # 2.2 Save RAW Data
+                    raw_data_id = await _save_raw_data(db, raw, profile_name, PARSER_VERSION, seed_version)
+                    
+                    # 2.3 Extract & Resolve
+                    item = await _extract_and_resolve(db, raw)
+                    
+                    # 2.4 Calculate Scores
+                    score, reasons = _calculate_confidence_score(item, min_evidence)
+                    item["confidence_score"] = score
+                    evidence_data = {"reasons": reasons}
+                    
+                    # 2.5 Promotion Logic (FINAL vs RAW)
+                    mapping_conf = item["mapping_confidence"]
+                    is_final = False
+                    if mapping_conf >= 0.8 and len(item["evidence_refs"]) >= min_evidence:
+                        is_final = True
+                    
+                    # Generate Program Key
+                    program_key = make_program_key(item)
+                    
+                    # 2.6 Upsert Candidate
+                    data = {
+                        "golden_set_id": golden_set_id,
+                        "drug_name": item["drug_name"],
+                        "target": item["target"],
+                        "antibody": item["antibody"],
+                        "linker": item["linker"],
+                        "payload": item["payload"],
+                        "program_key": program_key,
+                        "approval_status": item["approval_status"],
+                        "source_ref": item["evidence_refs"][0] if item["evidence_refs"] else None,
+                        "confidence_score": item["confidence_score"],
+                        "mapping_confidence": mapping_conf,
+                        "is_final": is_final,
+                        "raw_data_id": raw_data_id,
+                        "dataset_version": seed_version,
+                        "evidence_json": evidence_data,
+                        "evidence_refs": [{"type": "clinical", "id": ref} for ref in item["evidence_refs"]],
+                        "updated_at": datetime.utcnow().isoformat()
+                    }
 
-                # Upsert
-                res = db.table("golden_candidates").upsert(
-                    data, 
-                    on_conflict="golden_set_id,program_key"
-                ).execute()
-                
-                if res.data:
-                    candidate_id = res.data[0]['id']
-                    # Insert Evidence Table (Optional, but good for search)
-                    # ... (Skipping for brevity, relying on evidence_refs column for now)
-                
-                total_upserted += 1
-                
-            except Exception as e:
-                msg = f"Error processing {raw.get('nct_id')}: {str(e)}"
-                print(f"[GoldenSeed] {msg}")
-                summary["errors"].append(msg)
+                    # Upsert
+                    res = db.table("golden_candidates").upsert(
+                        data, 
+                        on_conflict="golden_set_id,program_key"
+                    ).execute()
+                    
+                    total_upserted += 1
+                    
+                except Exception as e:
+                    msg = f"Error processing {raw.get('nct_id')}: {str(e)}"
+                    print(f"[GoldenSeed] {msg}")
+                    summary["errors"].append(msg)
 
     summary["fetched"] = total_fetched
     summary["upserted"] = total_upserted
@@ -326,38 +353,62 @@ def is_adc_like(name: str) -> bool:
         return True
     return False
 
-async def _fetch_real_candidates(target_count, config, profile):
+async def _fetch_real_candidates(target_count, config, profile, target_name=None):
     base_url = "https://clinicaltrials.gov/api/v2/studies"
     results = []
     seen_ncts = set()
 
-    # 1) Query.term: ADC/항체/이중항체 범주 + 온콜로지 AND
-    adc_terms = [
-        '"antibody-drug conjugate"',
-        '"antibody drug conjugate"',
-        '"immunoconjugate"',
-        '"antibody conjugate"',
-        'ADC',
-    ]
-    antibody_terms = [
-        '"monoclonal antibody"', 'monoclonal', 'antibody', 'mAb',
-        '"therapeutic antibody"', '"antibody therapy"',
-        'bispecific', '"bispecific antibody"', 'BiTE', '"T-cell engager"'
-    ]
     oncology_gate = '(cancer OR tumor OR carcinoma OR neoplasm OR metastatic OR lymphoma OR leukemia OR myeloma OR sarcoma OR malignan*)'
 
-    # profile 키워드가 있으면 추가로 OR에 넣되, 전체는 oncology_gate로 제한
-    profile_terms = profile.get("keywords", [])
-    term_bucket = adc_terms + antibody_terms + profile_terms
-    # 공백 포함 키워드는 따옴표
-    def _q(t: str) -> str:
-        t = t.strip()
-        if " " in t and not (t.startswith('"') and t.endswith('"')):
-            return f'"{t}"'
-        return t
+    if target_name:
+        # Target-Centric Query Construction
+        synonyms = TARGET_SYNONYMS.get(target_name, [])
+        terms = [target_name] + synonyms
+        
+        # Quote terms with spaces
+        def _q(t: str) -> str:
+            t = t.strip()
+            if " " in t and not (t.startswith('"') and t.endswith('"')):
+                return f'"{t}"'
+            return t
+            
+        target_or = " OR ".join(_q(t) for t in terms)
+        query_term = f"({target_or}) AND {oncology_gate}"
+        
+        # Metadata for RAW
+        query_metadata = {
+            "query_target": target_name,
+            "query_terms": target_or
+        }
+    else:
+        # Original Logic
+        # 1) Query.term: ADC/항체/이중항체 범주 + 온콜로지 AND
+        adc_terms = [
+            '"antibody-drug conjugate"',
+            '"antibody drug conjugate"',
+            '"immunoconjugate"',
+            '"antibody conjugate"',
+            'ADC',
+        ]
+        antibody_terms = [
+            '"monoclonal antibody"', 'monoclonal', 'antibody', 'mAb',
+            '"therapeutic antibody"', '"antibody therapy"',
+            'bispecific', '"bispecific antibody"', 'BiTE', '"T-cell engager"'
+        ]
+        
+        # profile 키워드가 있으면 추가로 OR에 넣되, 전체는 oncology_gate로 제한
+        profile_terms = profile.get("keywords", [])
+        term_bucket = adc_terms + antibody_terms + profile_terms
+        # 공백 포함 키워드는 따옴표
+        def _q(t: str) -> str:
+            t = t.strip()
+            if " " in t and not (t.startswith('"') and t.endswith('"')):
+                return f'"{t}"'
+            return t
 
-    concept_or = " OR ".join(_q(t) for t in term_bucket if t)
-    query_term = f"({concept_or}) AND {oncology_gate}"
+        concept_or = " OR ".join(_q(t) for t in term_bucket if t)
+        query_term = f"({concept_or}) AND {oncology_gate}"
+        query_metadata = {}
 
     params = {
         "pageSize": 50,
@@ -453,6 +504,10 @@ async def _fetch_real_candidates(target_count, config, profile):
                     "phase": "Phase " + "/".join(phases),
                     "evidence_refs": refs
                 }
+                
+                # Add Metadata
+                if query_metadata:
+                    item.update(query_metadata)
 
                 seen_ncts.add(nct_id)
                 results.append(item)

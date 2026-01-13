@@ -37,6 +37,10 @@ QUERY_PROFILES = {
             "monoclonal antibody",
             "t-cell engager"
         ]
+    },
+    "target_only_precision": {
+        "description": "표적 기반(50개) oncology trial RAW 수집. 승격은 관리자 수동.",
+        "mode": "target_only"
     }
 }
 
