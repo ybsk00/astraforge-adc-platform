@@ -285,7 +285,12 @@ async def _fetch_real_candidates(target_count, config, profile):
     
     print(f"[GoldenSeed] Fetching with query: {query_term}")
     
-    async with httpx.AsyncClient() as client:
+    headers = {
+        "User-Agent": "ADC-Platform-Bot/1.0 (contact@astraforge.com)",
+        "Accept": "application/json"
+    }
+    
+    async with httpx.AsyncClient(headers=headers) as client:
         try:
             resp = await client.get(base_url, params=params, timeout=30.0)
             resp.raise_for_status()
