@@ -379,74 +379,94 @@ async def _fetch_real_candidates(target_count, config, profile):
         "Accept": "application/json"
     }
 
-    def fetch_sync():
-        return requests.get(base_url, params=params, headers=headers, timeout=30.0)
+    next_page_token = None
+    
+    while len(results) < target_count:
+        current_params = params.copy()
+        if next_page_token:
+            current_params["pageToken"] = next_page_token
+            
+        print(f"[GoldenSeed] Fetching page... (Current count: {len(results)})")
+        
+        def fetch_sync():
+            return requests.get(base_url, params=current_params, headers=headers, timeout=30.0)
 
-    try:
-        resp = await asyncio.to_thread(fetch_sync)
-        resp.raise_for_status()
-        data = resp.json()
-        studies = data.get("studies", [])
-
-        for study in studies:
-            proto = study.get("protocolSection", {}) or {}
-            ident = proto.get("identificationModule", {}) or {}
-            nct_id = ident.get("nctId")
-            if not nct_id or nct_id in seen_ncts:
-                continue
-
-            # 2) Conditions(암) 2차 게이트
-            conditions = (proto.get("conditionsModule", {}) or {}).get("conditions", []) or []
-            if not is_oncology_condition(conditions):
-                continue
-
-            # 3) Interventions 전체 수집 후 ADC-like/Antibody-like 우선 선택
-            interventions = (proto.get("armsInterventionsModule", {}) or {}).get("interventions", []) or []
-            drug_names = []
-            for intr in interventions:
-                if intr.get("type") == "DRUG" and intr.get("name"):
-                    drug_names.append(intr["name"])
-
-            # 후보 pick 우선순위: ADC-like > antibody-like > (없으면 스킵)
-            adc_like = [n for n in drug_names if is_adc_like(n)]
-            ab_like = [n for n in drug_names if is_antibody_like(n)]
-            picked = None
-            picked_kind = None
-
-            if adc_like:
-                picked = adc_like[0]
-                picked_kind = "adc_like"
-            elif ab_like:
-                picked = ab_like[0]
-                picked_kind = "antibody_like"
-            else:
-                # 항체/ADC 신호 없는 DRUG만 있는 trial은 후보화 자체를 하지 않음
-                continue
-
-            status = (proto.get("statusModule", {}) or {}).get("overallStatus", "Unknown")
-            phases = (proto.get("statusModule", {}) or {}).get("phases", ["Unknown"]) or ["Unknown"]
-
-            # evidence_refs: 최소 NCT는 포함, referencesModule에서 PMID 있으면 추가(가능 범위)
-            refs = [nct_id]
-
-            item = {
-                "nct_id": nct_id,
-                "intervention": f"Drug: {picked}",
-                "intervention_kind": picked_kind,   # 디버깅/품질 확인용
-                "all_drugs": drug_names,            # raw_payload에 남겨두면 추후 추출 개선에 도움
-                "conditions": conditions,           # raw_payload에 남기면 온콜로지 검증/보고서에 도움
-                "title": ident.get("officialTitle"),
-                "status": status,
-                "phase": "Phase " + "/".join(phases),
-                "evidence_refs": refs
-            }
-
-            seen_ncts.add(nct_id)
-            results.append(item)
-            if len(results) >= target_count:
+        try:
+            resp = await asyncio.to_thread(fetch_sync)
+            resp.raise_for_status()
+            data = resp.json()
+            studies = data.get("studies", [])
+            
+            if not studies:
+                print("[GoldenSeed] No more studies found.")
                 break
+            
+            for study in studies:
+                proto = study.get("protocolSection", {}) or {}
+                ident = proto.get("identificationModule", {}) or {}
+                nct_id = ident.get("nctId")
+                if not nct_id or nct_id in seen_ncts:
+                    continue
 
-    except Exception as e:
-        print(f"[GoldenSeed] Error fetching: {e}")
+                # 2) Conditions(암) 2차 게이트
+                conditions = (proto.get("conditionsModule", {}) or {}).get("conditions", []) or []
+                if not is_oncology_condition(conditions):
+                    continue
 
+                # 3) Interventions 전체 수집 후 ADC-like/Antibody-like 우선 선택
+                interventions = (proto.get("armsInterventionsModule", {}) or {}).get("interventions", []) or []
+                drug_names = []
+                for intr in interventions:
+                    if intr.get("type") == "DRUG" and intr.get("name"):
+                        drug_names.append(intr["name"])
+
+                # 후보 pick 우선순위: ADC-like > antibody-like > (없으면 스킵)
+                adc_like = [n for n in drug_names if is_adc_like(n)]
+                ab_like = [n for n in drug_names if is_antibody_like(n)]
+                picked = None
+                picked_kind = None
+
+                if adc_like:
+                    picked = adc_like[0]
+                    picked_kind = "adc_like"
+                elif ab_like:
+                    picked = ab_like[0]
+                    picked_kind = "antibody_like"
+                else:
+                    # 항체/ADC 신호 없는 DRUG만 있는 trial은 후보화 자체를 하지 않음
+                    continue
+
+                status = (proto.get("statusModule", {}) or {}).get("overallStatus", "Unknown")
+                phases = (proto.get("statusModule", {}) or {}).get("phases", ["Unknown"]) or ["Unknown"]
+
+                # evidence_refs: 최소 NCT는 포함, referencesModule에서 PMID 있으면 추가(가능 범위)
+                refs = [nct_id]
+
+                item = {
+                    "nct_id": nct_id,
+                    "intervention": f"Drug: {picked}",
+                    "intervention_kind": picked_kind,   # 디버깅/품질 확인용
+                    "all_drugs": drug_names,            # raw_payload에 남겨두면 추후 추출 개선에 도움
+                    "conditions": conditions,           # raw_payload에 남기면 온콜로지 검증/보고서에 도움
+                    "title": ident.get("officialTitle"),
+                    "status": status,
+                    "phase": "Phase " + "/".join(phases),
+                    "evidence_refs": refs
+                }
+
+                seen_ncts.add(nct_id)
+                results.append(item)
+                if len(results) >= target_count:
+                    break
+            
+            # Check for next page
+            next_page_token = data.get("nextPageToken")
+            if not next_page_token:
+                print("[GoldenSeed] No next page token. Finished fetching.")
+                break
+                
+        except Exception as e:
+            print(f"[GoldenSeed] Error fetching: {e}")
+            break
+            
     return results
