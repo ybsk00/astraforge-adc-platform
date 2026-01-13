@@ -174,7 +174,8 @@
             "seeds": "Seed 관리",
             "observability": "관측성",
             "review": "검수 큐",
-            "alerts": "알림"
+            "alerts": "알림",
+            "settings": "설정"
         }
     },
     "Admin": {
@@ -547,4 +548,5 @@
                 }
             }
         }
-    }}
+    }
+}

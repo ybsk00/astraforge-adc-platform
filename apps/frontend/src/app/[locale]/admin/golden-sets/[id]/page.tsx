@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     getGoldenSetById,
@@ -27,12 +27,14 @@ import {
 import { clsx } from 'clsx';
 import { createClient } from '@/lib/supabase/client';
 
-export default function GoldenSetDetailPage({ params }: { params: { id: string } }) {
+export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const resolvedParams = use(params);
     const router = useRouter();
     const [setInfo, setSetInfo] = useState<any>(null);
     const [candidates, setCandidates] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [promoting, setPromoting] = useState(false);
+
 
     // Manual Upload State
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -53,7 +55,7 @@ export default function GoldenSetDetailPage({ params }: { params: { id: string }
 
     const fetchData = async () => {
         try {
-            const data = await getGoldenSetById(params.id);
+            const data = await getGoldenSetById(resolvedParams.id);
             if (data) {
                 setSetInfo(data);
                 setCandidates(data.candidates || []);
@@ -71,14 +73,14 @@ export default function GoldenSetDetailPage({ params }: { params: { id: string }
 
     useEffect(() => {
         fetchData();
-    }, [params.id]);
+    }, [resolvedParams.id]);
 
     const handlePromote = async () => {
         if (!confirm('이 골든 셋을 최종 승격하시겠습니까? 승격 시 시드 데이터로 활용됩니다.')) return;
 
         setPromoting(true);
         try {
-            await promoteGoldenSet(params.id, `${setInfo.name}_v${setInfo.version}`);
+            await promoteGoldenSet(resolvedParams.id, `${setInfo.name}_v${setInfo.version}`);
             alert('성공적으로 승격되었습니다.');
             router.push('/admin/golden-sets');
         } catch (error) {
@@ -95,7 +97,7 @@ export default function GoldenSetDetailPage({ params }: { params: { id: string }
 
         try {
             const { error } = await supabase.from('golden_candidates').insert({
-                golden_set_id: params.id,
+                golden_set_id: resolvedParams.id,
                 target: newCandidate.target,
                 antibody: newCandidate.antibody,
                 linker: newCandidate.linker,
@@ -144,7 +146,7 @@ export default function GoldenSetDetailPage({ params }: { params: { id: string }
 
         try {
             const candidateData = {
-                golden_set_id: params.id,
+                golden_set_id: resolvedParams.id,
                 target: item.type === 'target' ? item.name : '',
                 antibody: item.type === 'antibody' ? item.name : '',
                 linker: item.type === 'linker' ? item.name : '',
@@ -169,7 +171,7 @@ export default function GoldenSetDetailPage({ params }: { params: { id: string }
         if (!confirm('정말로 이 골든 셋을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
 
         try {
-            await deleteGoldenSet(params.id);
+            await deleteGoldenSet(resolvedParams.id);
             alert('삭제되었습니다.');
             router.push('/admin/golden-sets');
         } catch (error) {
