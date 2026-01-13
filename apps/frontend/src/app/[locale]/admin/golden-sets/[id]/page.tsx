@@ -59,7 +59,7 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
 
     // Edit Candidate State
     const [editingCandidate, setEditingCandidate] = useState<any>(null);
-    const [editForm, setEditForm] = useState({ target: '', antibody: '', linker: '', payload: '' });
+    const [editForm, setEditForm] = useState({ drug_name: '', target: '', antibody: '', linker: '', payload: '' });
     const [saving, setSaving] = useState(false);
     const [fieldSearchType, setFieldSearchType] = useState<'target' | 'antibody' | 'linker' | 'payload' | null>(null);
     const [fieldSearchQuery, setFieldSearchQuery] = useState('');
@@ -202,6 +202,7 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
     const handleEditCandidate = (candidate: any) => {
         setEditingCandidate(candidate);
         setEditForm({
+            drug_name: candidate.drug_name || '',
             target: candidate.target || '',
             antibody: candidate.antibody || '',
             linker: candidate.linker || '',
@@ -569,6 +570,19 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
                             <p className="text-sm text-slate-400 mb-6">{editingCandidate.drug_name}</p>
 
                             <div className="space-y-4">
+                                {/* Drug Name Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-400 mb-1">Drug Name</label>
+                                    <input
+                                        type="text"
+                                        value={editForm.drug_name}
+                                        onChange={e => setEditForm(prev => ({ ...prev, drug_name: e.target.value }))}
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                                        placeholder="Enter drug name..."
+                                    />
+                                </div>
+
+                                {/* Component Fields */}
                                 {(['target', 'antibody', 'linker', 'payload'] as const).map((field) => (
                                     <div key={field}>
                                         <label className="block text-sm font-medium text-slate-400 mb-1 capitalize">{field}</label>
