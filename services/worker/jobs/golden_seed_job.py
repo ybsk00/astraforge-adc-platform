@@ -123,7 +123,7 @@ async def execute_golden_seed(ctx, run_id: str, config: dict):
                 # Upsert
                 res = db.table("golden_candidates").upsert(
                     data, 
-                    on_conflict="golden_set_id,source_ref"
+                    on_conflict="golden_set_id,program_key"
                 ).execute()
                 
                 if res.data:
@@ -162,9 +162,19 @@ async def _save_raw_data(db, raw_item, profile_name, parser_version, dataset_ver
     
     # Check if exists (optional, or just insert)
     # For lineage, we might want to insert every time or only if hash changes.
-    # Let's insert and return ID.
-    res = db.table("golden_seed_raw").insert(data).execute()
-    return res.data[0]["id"]
+    # Use Upsert to handle duplicates (Phase 2)
+    res = db.table("golden_seed_raw").upsert(
+        data, 
+        on_conflict="source, source_hash"
+    ).execute()
+    
+    # If upsert returns data, use it. If not (e.g. ignore), we might need to fetch.
+    # But Supabase upsert returns data by default.
+    if res.data:
+        return res.data[0]["id"]
+    
+    # Fallback if no data returned (shouldn't happen with default return=representation)
+    return None
 
 async def _extract_and_resolve(db, raw):
     """
