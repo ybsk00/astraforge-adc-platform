@@ -92,3 +92,33 @@ async def enqueue_pubmed_ingest(workspace_id: str, query: str, cursor: dict = No
                       function="pubmed_ingest_job",
                       error=str(e))
         return None
+        return None
+
+
+async def enqueue_golden_seed_run(run_id: str, config: dict):
+    """
+    Golden Seed 수집 Job enqueue
+    
+    Args:
+        run_id: Run UUID
+        config: 실행 설정 (targets, limit 등)
+    """
+    try:
+        pool = await get_redis_pool()
+        job = await pool.enqueue_job(
+            "execute_golden_seed",
+            run_id,
+            config
+        )
+        logger.info("job_enqueued",
+                   job_id=job.job_id,
+                   function="execute_golden_seed",
+                   run_id=run_id,
+                   config_targets=config.get("targets"))
+        return job.job_id
+    except Exception as e:
+        logger.warning("job_enqueue_failed",
+                      function="execute_golden_seed",
+                      run_id=run_id,
+                      error=str(e))
+        return None
