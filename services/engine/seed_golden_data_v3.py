@@ -23,9 +23,34 @@ CLINICAL_DATA = [
 async def seed_v3(db):
     print(f"Seeding {len(CLINICAL_DATA)} clinical candidates...")
     
-    # 1. Insert Candidates
+    # 1. Fetch Component Catalog for Canonical Mapping
+    print("Fetching component catalog...")
+    catalog_res = await db.table("component_catalog").select("id, type, name, canonical_name").execute()
+    catalog_map = {} # {(type, name): id}
+    
+    for item in catalog_res.data:
+        key = (item["type"], item["name"].lower())
+        catalog_map[key] = item["id"]
+        if item.get("canonical_name"):
+            key_canon = (item["type"], item["canonical_name"].lower())
+            catalog_map[key_canon] = item["id"]
+
+    # 2. Insert Candidates
     cand_inserts = []
+    unmapped_log = []
+    
     for d in CLINICAL_DATA:
+        # Resolve IDs
+        target_id = catalog_map.get(("target", d["target"].lower()))
+        antibody_id = catalog_map.get(("antibody", d["antibody"].lower()))
+        linker_id = catalog_map.get(("linker", d["linker"].lower()))
+        payload_id = catalog_map.get(("payload", d["payload"].lower()))
+        
+        if not target_id: unmapped_log.append(f"Target: {d['target']}")
+        if not antibody_id: unmapped_log.append(f"Antibody: {d['antibody']}")
+        if not linker_id: unmapped_log.append(f"Linker: {d['linker']}")
+        if not payload_id: unmapped_log.append(f"Payload: {d['payload']}")
+
         cand_inserts.append({
             "id": str(uuid.uuid4()),
             "drug_name": d["name"],
@@ -34,15 +59,26 @@ async def seed_v3(db):
             "linker": d["linker"],
             "payload": d["payload"],
             "dar_nominal": d["dar"],
-            "approval_status": d["status"]
+            "approval_status": d["status"],
+            "is_final": True, # Clinical data is considered final for seeding
+            "confidence_score": 0.8, # Slightly lower than approved
+            "mapping_confidence": 1.0 if (target_id and antibody_id and linker_id and payload_id) else 0.5,
+            "evidence_refs": [{"type": "clinical", "source": "ClinicalTrials.gov", "url": "https://clinicaltrials.gov"}],
+            "dataset_version": "v3.0"
         })
     
+    if unmapped_log:
+        print("WARNING: Unmapped entities found in v3:")
+        for log in set(unmapped_log):
+            print(f" - {log}")
+
     res = await db.table("golden_candidates").insert(cand_inserts).execute()
     inserted_cands = {c["drug_name"]: c["id"] for c in res.data}
     
-    # 2. Insert Measurements
+    # 3. Insert Measurements
     meas_inserts = []
     for d in CLINICAL_DATA:
+        if d["name"] not in inserted_cands: continue
         cid = inserted_cands[d["name"]]
         # IC50
         meas_inserts.append({

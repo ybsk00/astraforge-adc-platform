@@ -166,12 +166,13 @@ class GoldenSetValidator:
         return score_map
 
     def _calculate_axis_metrics(self, axis: str, y_true_map: Dict, y_pred_map: Dict) -> List[ValidationMetric]:
-        """축별 오차 및 상관계수 산출"""
-        y_true, y_pred = [], []
+        """축별 오차 및 상관계수 산출 (Outliers 포함)"""
+        y_true, y_pred, ids = [], [], []
         for cid in y_true_map:
             if cid in y_pred_map and axis in y_true_map[cid]:
                 y_true.append(y_true_map[cid][axis])
                 y_pred.append(y_pred_map[cid][axis])
+                ids.append(cid)
         
         if not y_true: return []
         
@@ -181,17 +182,29 @@ class GoldenSetValidator:
         mae = np.mean(np.abs(y_true - y_pred))
         rmse = np.sqrt(np.mean((y_true - y_pred)**2))
         
+        # Identify Outliers (Top 3 errors)
+        errors = np.abs(y_true - y_pred)
+        top_error_indices = np.argsort(errors)[-3:][::-1]
+        outliers = []
+        for idx in top_error_indices:
+            outliers.append({
+                "id": ids[idx],
+                "true": float(y_true[idx]),
+                "pred": float(y_pred[idx]),
+                "error": float(errors[idx])
+            })
+
         # Spearman Rank Correlation
         corr, _ = spearmanr(y_true, y_pred)
         
         metrics = [
-            ValidationMetric(axis, "MAE", mae, 15.0, mae <= 15.0),
+            ValidationMetric(axis, "MAE", mae, 15.0, mae <= 15.0, details={"outliers": outliers}),
             ValidationMetric(axis, "Spearman", corr, 0.7, corr >= 0.7 if not np.isnan(corr) else False)
         ]
         return metrics
 
     def _calculate_ranking_metrics(self, y_true_map: Dict, y_pred_map: Dict) -> List[ValidationMetric]:
-        """전체 랭킹 안정성 및 Top-K Overlap 산출"""
+        """전체 랭킹 안정성 및 Top-K Overlap 산출 (Details 포함)"""
         # 총점 기반 랭킹 비교
         true_totals = {cid: sum(axes.values()) for cid, axes in y_true_map.items()}
         pred_totals = {cid: sum(axes.values()) for cid, axes in y_pred_map.items() if cid in y_true_map}
@@ -205,7 +218,15 @@ class GoldenSetValidator:
         k = min(5, len(sorted_true))
         top_true = set(sorted_true[:k])
         top_pred = set(sorted_pred[:k])
-        overlap = len(top_true.intersection(top_pred)) / k
+        intersection = top_true.intersection(top_pred)
+        overlap = len(intersection) / k
+        
+        details = {
+            "k": k,
+            "top_true": list(top_true),
+            "top_pred": list(top_pred),
+            "intersection": list(intersection)
+        }
         
         # Kendall Tau
         tau, _ = kendalltau(
@@ -214,7 +235,7 @@ class GoldenSetValidator:
         )
         
         return [
-            ValidationMetric("overall", "TopKOverlap", overlap, 0.6, overlap >= 0.6),
+            ValidationMetric("overall", "TopKOverlap", overlap, 0.6, overlap >= 0.6, details=details),
             ValidationMetric("overall", "KendallTau", tau, 0.5, tau >= 0.5 if not np.isnan(tau) else False)
         ]
 

@@ -33,30 +33,68 @@ GOLDEN_DATA = [
 async def seed_v2(db):
     print(f"Seeding {len(GOLDEN_DATA)} golden candidates...")
     
-    # 1. Clear existing (optional)
-    # await db.table("golden_measurements").delete().neq("id", uuid.uuid4()).execute()
-    # await db.table("golden_candidates").delete().neq("id", uuid.uuid4()).execute()
+    # 1. Fetch Component Catalog for Canonical Mapping
+    print("Fetching component catalog...")
+    catalog_res = await db.table("component_catalog").select("id, type, name, canonical_name").execute()
+    catalog_map = {} # {(type, name): id}
+    
+    for item in catalog_res.data:
+        key = (item["type"], item["name"].lower())
+        catalog_map[key] = item["id"]
+        if item.get("canonical_name"):
+            key_canon = (item["type"], item["canonical_name"].lower())
+            catalog_map[key_canon] = item["id"]
 
     # 2. Insert Candidates
     cand_inserts = []
+    unmapped_log = []
+    
     for d in GOLDEN_DATA:
+        # Resolve IDs
+        target_id = catalog_map.get(("target", d["target"].lower()))
+        antibody_id = catalog_map.get(("antibody", d["antibody"].lower()))
+        linker_id = catalog_map.get(("linker", d["linker"].lower()))
+        payload_id = catalog_map.get(("payload", d["payload"].lower()))
+        
+        # Log unmapped (but still insert with text for now if needed, or skip? 
+        # Requirement: "If entity not found, log error or create as 'Unmapped'")
+        # We will insert, but maybe mark as low confidence or just log.
+        # Since this is "Approved" data, we expect them to be in catalog.
+        # If not, we'll try to use the text, but ideally we should update catalog.
+        
+        if not target_id: unmapped_log.append(f"Target: {d['target']}")
+        if not antibody_id: unmapped_log.append(f"Antibody: {d['antibody']}")
+        if not linker_id: unmapped_log.append(f"Linker: {d['linker']}")
+        if not payload_id: unmapped_log.append(f"Payload: {d['payload']}")
+
         cand_inserts.append({
             "id": str(uuid.uuid4()),
             "drug_name": d["name"],
-            "target": d["target"],
+            "target": d["target"], # Keep text for display
             "antibody": d["antibody"],
             "linker": d["linker"],
             "payload": d["payload"],
             "dar_nominal": d["dar"],
-            "approval_status": d["status"]
+            "approval_status": d["status"],
+            "is_final": True, # Approved drugs are final
+            "confidence_score": 1.0, # High confidence
+            "mapping_confidence": 1.0 if (target_id and antibody_id and linker_id and payload_id) else 0.5,
+            "evidence_refs": [{"type": "regulatory", "source": "FDA", "url": "https://www.accessdata.fda.gov/scripts/cder/daf/"}],
+            "dataset_version": "v2.0"
         })
     
+    if unmapped_log:
+        print("WARNING: Unmapped entities found:")
+        for log in set(unmapped_log):
+            print(f" - {log}")
+
     res = await db.table("golden_candidates").insert(cand_inserts).execute()
     inserted_cands = {c["drug_name"]: c["id"] for c in res.data}
     
     # 3. Insert Measurements
     meas_inserts = []
     for d in GOLDEN_DATA:
+        if d["name"] not in inserted_cands: continue
         cid = inserted_cands[d["name"]]
         # IC50
         meas_inserts.append({

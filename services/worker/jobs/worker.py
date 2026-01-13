@@ -10,6 +10,13 @@ from dotenv import load_dotenv
 import structlog
 from supabase import create_client, Client
 from pathlib import Path
+import sys
+
+# Add project root to sys.path to allow importing 'app'
+# services/worker/jobs/worker.py -> services/worker/jobs -> services/worker -> services -> root
+root_dir = Path(__file__).resolve().parent.parent.parent.parent
+if str(root_dir) not in sys.path:
+    sys.path.insert(0, str(root_dir))
 
 # .env 파일 로드
 def find_env():
@@ -257,6 +264,11 @@ class WorkerSettings:
     from .resolve_job import resolve_fetch_job
     from .golden_seed_job import execute_golden_seed
     from .rag_seed_job import rag_seed_query_job
+    from .resolve_ids_job import resolve_batch_job
+    from .data_quality_job import data_quality_check_job
+    from .rdkit_features_job import rdkit_batch_job
+    from .recommendation_job import recommendation_job
+    from .report_job import report_job
     
     functions = [
         compute_component_descriptors,
@@ -287,6 +299,12 @@ class WorkerSettings:
         seed_fetch_job,
         resolve_fetch_job,
         rag_seed_query_job,
+        execute_golden_seed,
+        resolve_batch_job,
+        data_quality_check_job,
+        rdkit_batch_job,
+        recommendation_job,
+        report_job,
     ]
     
     on_startup = startup

@@ -41,19 +41,19 @@ GOLD_TARGETS = [
 ]
 
 GOLD_PAYLOADS = [
-    {"name": "MMAE", "inchikey": "FBOQWJKAQSDJHD-UHFFFAOYSA-N", "pubchem_cid": "11542250"}, # Monomethyl auristatin E
-    {"name": "MMAF", "inchikey": "XDTMQSROBMDMFD-UHFFFAOYSA-N", "pubchem_cid": "9853053"}, # Monomethyl auristatin F
-    {"name": "DXd", "inchikey": "YGYAWVDWJNRERW-UHFFFAOYSA-N", "pubchem_cid": "137346536"}, # Deruxtecan payload
-    {"name": "SN-38", "inchikey": "UFLHZZXDIJEZRE-UHFFFAOYSA-N", "pubchem_cid": "104842"},
-    {"name": "DM1", "inchikey": "OVSQDLIZRRETGV-UHFFFAOYSA-N", "pubchem_cid": "5352062"}, # Mertansine
-    {"name": "PBD dimer", "inchikey": None, "pubchem_cid": None}, # Generic PBD
+    {"name": "MMAE", "inchikey": "FBOQWJKAQSDJHD-UHFFFAOYSA-N", "pubchem_cid": "11542250", "smiles": "CC[C@H](C)[C@@H]([C@@H](CC(=O)N1CCC[C@H]1[C@@H]([C@@H](C)C(=O)N[C@H](C)[C@H](C2=CC=CC=C2)O)OC)OC)N(C)C(=O)[C@H](C(C)C)NC(=O)[C@H](C(C)C)NC"}, # Monomethyl auristatin E
+    {"name": "MMAF", "inchikey": "XDTMQSROBMDMFD-UHFFFAOYSA-N", "pubchem_cid": "9853053", "smiles": "O=C([C@H](CC1=CC=CC=C1)NC([C@H](C)[C@H]([C@@H]2CCCN2C(C[C@@H](OC)C(N(C)C([C@@H](NC([C@H](C(C)C)NC)=O)C(C)C)=O)[C@@H](C)CC)=O)OC)=O)O"}, # Monomethyl auristatin F
+    {"name": "DXd", "inchikey": "YGYAWVDWJNRERW-UHFFFAOYSA-N", "pubchem_cid": "137346536", "smiles": "O=C1[C@](O)(CC)C2=C(CO1)C(N3CC4=C5C6=C(CC[C@@H]5NC(CO)=O)C(C)=C(F)C=C6N=C4C3=C2)=O"}, # Deruxtecan payload
+    {"name": "SN-38", "inchikey": "UFLHZZXDIJEZRE-UHFFFAOYSA-N", "pubchem_cid": "104842", "smiles": "CCC1=C2CN3C(=CC4=C(C3=O)COC(=O)[C@@]4(CC)O)C2=NC5=C1C=C(C=C5)O"},
+    {"name": "DM1", "inchikey": "OVSQDLIZRRETGV-UHFFFAOYSA-N", "pubchem_cid": "5352062", "smiles": "C[C@@H]1[C@@H]2C[C@]([C@@H](/C=C\C=C(\CC3=CC(=C(C(=C3)OC)Cl)N(C(=O)C[C@H]([C@]4(C1O4)C)OC(=O)[C@H](C)N(C)C(=O)CCS)C)/C)OC)(NC(=O)O2)O"}, # Mertansine
+    {"name": "PBD dimer", "inchikey": None, "pubchem_cid": None, "smiles": None}, # Generic PBD
 ]
 
 GOLD_LINKERS = [
-    {"name": "Val-Cit", "inchikey": None, "pubchem_cid": None},
-    {"name": "GGFG", "inchikey": None, "pubchem_cid": None},
-    {"name": "SMCC", "inchikey": "ISWJOCWSPKFRBO-UHFFFAOYSA-N", "pubchem_cid": "6364619"},
-    {"name": "SPDB", "inchikey": None, "pubchem_cid": None},
+    {"name": "Val-Cit", "inchikey": None, "pubchem_cid": None, "linker_type": "cleavable", "trigger": "cathepsin-b"},
+    {"name": "GGFG", "inchikey": None, "pubchem_cid": None, "linker_type": "cleavable", "trigger": "cathepsin-b"},
+    {"name": "SMCC", "inchikey": "ISWJOCWSPKFRBO-UHFFFAOYSA-N", "pubchem_cid": "6364619", "linker_type": "non-cleavable", "trigger": "none"},
+    {"name": "SPDB", "inchikey": None, "pubchem_cid": None, "linker_type": "cleavable", "trigger": "disulfide"},
 ]
 
 GOLD_ANTIBODIES = [
@@ -114,6 +114,8 @@ async def seed_fetch_job(ctx, seed: Dict[str, Any] = None):
             data = {
                 "type": "target",
                 "name": item["name"],
+                "canonical_name": item.get("canonical_name", item["name"]),
+                "synonyms": item.get("synonyms", []),
                 "gene_symbol": item.get("gene_symbol"),
                 "uniprot_accession": item.get("uniprot_accession"),
                 "ensembl_gene_id": item.get("ensembl_gene_id"),
@@ -145,6 +147,8 @@ async def seed_fetch_job(ctx, seed: Dict[str, Any] = None):
             data = {
                 "type": "antibody",
                 "name": item["name"],
+                "canonical_name": item.get("canonical_name", item["name"]),
+                "synonyms": item.get("synonyms", []),
                 "properties": {"target": item["target"]},
                 "is_gold": True,
                 "is_active": True,
@@ -163,6 +167,10 @@ async def seed_fetch_job(ctx, seed: Dict[str, Any] = None):
             data = {
                 "type": "linker",
                 "name": item["name"],
+                "canonical_name": item.get("canonical_name", item["name"]),
+                "synonyms": item.get("synonyms", []),
+                "linker_type": item.get("linker_type"),
+                "trigger": item.get("trigger"),
                 "inchikey": item["inchikey"],
                 "pubchem_cid": item["pubchem_cid"],
                 "is_gold": True,
@@ -181,6 +189,9 @@ async def seed_fetch_job(ctx, seed: Dict[str, Any] = None):
             data = {
                 "type": "payload",
                 "name": item["name"],
+                "canonical_name": item.get("canonical_name", item["name"]),
+                "synonyms": item.get("synonyms", []),
+                "smiles": item.get("smiles"),
                 "inchikey": item["inchikey"],
                 "pubchem_cid": item["pubchem_cid"],
                 "is_gold": True,

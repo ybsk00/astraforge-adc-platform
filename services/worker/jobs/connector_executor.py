@@ -39,6 +39,30 @@ async def execute_connector_run(ctx: Dict[str, Any], run_id: str):
             "attempt": run_data.get("attempt", 0) + 1
         }).eq("id", run_id).execute()
 
+        # Circuit Breaker Check
+        # Check last 5 runs for this connector
+        connector_id = run_data.get("connector_id")
+        if connector_id:
+            last_runs = db.table("connector_runs").select("status")\
+                .eq("connector_id", connector_id)\
+                .order("created_at", desc=True)\
+                .limit(5)\
+                .execute()
+            
+            if last_runs.data and len(last_runs.data) >= 5:
+                failures = [r for r in last_runs.data if r["status"] == "failed"]
+                if len(failures) >= 5:
+                    logger.error("circuit_breaker_open", connector_id=connector_id)
+                    # Fail immediately without retry
+                    db.table("connector_runs").update({
+                        "status": "failed",
+                        "ended_at": datetime.utcnow().isoformat(),
+                        "error_json": {"error": "Circuit Breaker Open: Too many consecutive failures"},
+                        "locked_by": None,
+                        "locked_at": None
+                    }).eq("id", run_id).execute()
+                    return
+
         # 3. 커넥터 타입 및 시드 정보 확인
         connector_type = connector.get("type")
         seed_set_id = run_data.get("seed_set_id")
