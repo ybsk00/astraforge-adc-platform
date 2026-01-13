@@ -126,6 +126,25 @@ async def resolve_text(db: Client, text: str, entity_type: str) -> Dict[str, Any
     except Exception as e:
         logger.error("mapping_cache_upsert_failed", error=str(e))
 
+    # 4. If No Match, Add to Unmapped Queue (Phase 1.5)
+    if not match_id and confidence == 0.0:
+        try:
+            # Check if already exists in queue to avoid spamming (optional, but good practice)
+            # For simplicity, we just insert and let the queue grow or handle duplicates later.
+            # Or better, check if we recently added it. 
+            # Let's just insert with status='pending'.
+            queue_entry = {
+                "source_text": text,
+                "entity_type": entity_type,
+                "context_source_id": "unknown", # Context might be passed in future
+                "status": "pending",
+                "created_at": datetime.utcnow().isoformat()
+            }
+            db.table("unmapped_queue").insert(queue_entry).execute()
+        except Exception as e:
+            # Queue insertion shouldn't fail the job
+            logger.warning("unmapped_queue_insert_failed", error=str(e))
+
     return {
         "id": match_id,
         "confidence": confidence,
