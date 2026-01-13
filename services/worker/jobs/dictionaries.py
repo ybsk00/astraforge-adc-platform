@@ -110,6 +110,21 @@ IO_BLOCKLIST = [
     "checkpoint inhibitor"
 ]
 
+# 7. Chemo & Placebo Blocklist (Exclude these from Target-Centric Collection)
+CHEMO_BLOCKLIST = [
+    "docetaxel", "paclitaxel", "nab-paclitaxel",
+    "carboplatin", "cisplatin", "oxaliplatin",
+    "doxorubicin", "capecitabine", "gemcitabine",
+    "vinorelbine", "eribulin", "cyclophosphamide",
+    "fluorouracil", "5-fu", "pemetrexed",
+    "irinotecan", "topotecan", "etoposide"
+]
+
+PLACEBO_BLOCKLIST = [
+    "placebo", "standard of care", "best supportive care",
+    "investigator's choice", "chemotherapy", "vehicle"
+]
+
 # 4. Target Lists (Solid / Heme)
 TARGET_LIST_SOLID = [
     "HER2", "HER3", "TROP2", "NECTIN4", "FOLR1", "SLC39A6", "CD276", "MSLN", "MET", "EGFR", 

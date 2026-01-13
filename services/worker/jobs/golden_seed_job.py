@@ -5,7 +5,11 @@ import re
 from datetime import datetime
 from supabase import Client
 from supabase import Client
-from .dictionaries import PAYLOAD_DICTIONARY, LINKER_DICTIONARY, TARGET_DICTIONARY, TARGET_LIST_SOLID, TARGET_LIST_HEME, TARGET_SYNONYMS, IO_BLOCKLIST
+from .dictionaries import (
+    PAYLOAD_DICTIONARY, LINKER_DICTIONARY, TARGET_DICTIONARY, 
+    TARGET_LIST_SOLID, TARGET_LIST_HEME, TARGET_SYNONYMS, 
+    IO_BLOCKLIST, CHEMO_BLOCKLIST, PLACEBO_BLOCKLIST
+)
 from .resolve_ids_job import resolve_text, QUERY_PROFILES
 import httpx
 import asyncio
@@ -335,13 +339,16 @@ def is_antibody_like(name: str) -> bool:
         return True
     return False
 
-def is_io_drug(name: str) -> bool:
+def is_blocked_drug(name: str) -> bool:
     if not name:
         return False
     n = name.lower()
-    for term in IO_BLOCKLIST:
+    
+    # Check all blocklists
+    for term in IO_BLOCKLIST + CHEMO_BLOCKLIST + PLACEBO_BLOCKLIST:
         if term in n:
             return True
+            
     return False
 
 def is_adc_like(name: str) -> bool:
@@ -480,14 +487,15 @@ async def _fetch_real_candidates(target_count, config, profile, target_name=None
                 for intr in interventions:
                     if intr.get("type") == "DRUG" and intr.get("name"):
                         d_name = intr["name"]
-                        # IO Filter: Skip if known IO drug
-                        if is_io_drug(d_name):
+                        # Blocklist Filter (IO, Chemo, Placebo)
+                        if is_blocked_drug(d_name):
                             continue
                         drug_names.append(d_name)
 
-                # 후보 pick 우선순위: ADC-like > antibody-like > (없으면 스킵)
+                # 후보 pick 우선순위: ADC-like > antibody-like > (Target-Only Mode: Any Non-Blocked)
                 adc_like = [n for n in drug_names if is_adc_like(n)]
                 ab_like = [n for n in drug_names if is_antibody_like(n)]
+                
                 picked = None
                 picked_kind = None
 
@@ -497,8 +505,12 @@ async def _fetch_real_candidates(target_count, config, profile, target_name=None
                 elif ab_like:
                     picked = ab_like[0]
                     picked_kind = "antibody_like"
+                elif target_name and drug_names:
+                    # Target-Centric Mode: If no ADC/Antibody found, pick the first valid drug (e.g., MK-2870)
+                    picked = drug_names[0]
+                    picked_kind = "potential_candidate"
                 else:
-                    # 항체/ADC 신호 없는 DRUG만 있는 trial은 후보화 자체를 하지 않음
+                    # 항체/ADC 신호 없는 DRUG만 있는 trial은 후보화 자체를 하지 않음 (일반 모드)
                     continue
 
                 status = (proto.get("statusModule", {}) or {}).get("overallStatus", "Unknown")
