@@ -163,7 +163,7 @@ async def _save_raw_data(db, raw_item, profile_name, parser_version, dataset_ver
     # Check if exists (optional, or just insert)
     # For lineage, we might want to insert every time or only if hash changes.
     # Let's insert and return ID.
-    res = await db.table("golden_seed_raw").insert(data).execute()
+    res = db.table("golden_seed_raw").insert(data).execute()
     return res.data[0]["id"]
 
 async def _extract_and_resolve(db, raw):

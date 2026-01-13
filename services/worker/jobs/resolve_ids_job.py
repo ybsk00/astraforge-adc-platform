@@ -44,7 +44,7 @@ async def resolve_text(db: Client, text: str, entity_type: str) -> Dict[str, Any
     normalized_key = text.strip().lower()
     
     # 1. Check Cache
-    cache_res = await db.table("mapping_table").select("*").eq("normalized_key", normalized_key).eq("entity_type", entity_type).execute()
+    cache_res = db.table("mapping_table").select("*").eq("normalized_key", normalized_key).eq("entity_type", entity_type).execute()
     if cache_res.data:
         entry = cache_res.data[0]
         return {
@@ -60,7 +60,7 @@ async def resolve_text(db: Client, text: str, entity_type: str) -> Dict[str, Any
     # For now, exact match on name/canonical_name/synonyms.
     
     # Try Exact Match on Name/Canonical Name
-    catalog_res = await db.table("component_catalog").select("id, name, canonical_name, synonyms").eq("type", entity_type).execute()
+    catalog_res = db.table("component_catalog").select("id, name, canonical_name, synonyms").eq("type", entity_type).execute()
     
     match_id = None
     confidence = 0.0
@@ -122,7 +122,7 @@ async def resolve_text(db: Client, text: str, entity_type: str) -> Dict[str, Any
     }
     
     try:
-        await db.table("mapping_table").upsert(mapping_entry, on_conflict="normalized_key, entity_type").execute()
+        db.table("mapping_table").upsert(mapping_entry, on_conflict="normalized_key, entity_type").execute()
     except Exception as e:
         logger.error("mapping_cache_upsert_failed", error=str(e))
 
