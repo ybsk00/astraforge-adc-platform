@@ -262,6 +262,10 @@ def _ensure_golden_set_version(db, name, version, config):
         print(f"[GoldenSeed] Warning: Failed to ensure golden_set version: {e}")
         return None
 
+import requests
+
+# ... (imports)
+
 async def _fetch_real_candidates(target_count, config, profile):
     """
     Fetch real candidates using QueryProfile
@@ -273,7 +277,6 @@ async def _fetch_real_candidates(target_count, config, profile):
     # Use keywords from profile
     keywords = profile.get("keywords", [])
     # Construct query from keywords
-    # e.g. "ADC payload" OR "cytotoxic"
     query_term = " OR ".join([f'"{k}"' if " " in k else k for k in keywords])
     
     params = {
@@ -290,49 +293,52 @@ async def _fetch_real_candidates(target_count, config, profile):
         "Accept": "application/json"
     }
     
-    async with httpx.AsyncClient(headers=headers) as client:
-        try:
-            resp = await client.get(base_url, params=params, timeout=30.0)
-            resp.raise_for_status()
-            data = resp.json()
-            studies = data.get("studies", [])
+    def fetch_sync():
+        return requests.get(base_url, params=params, headers=headers, timeout=30.0)
+
+    try:
+        # Run synchronous requests in a thread to avoid blocking the event loop
+        resp = await asyncio.to_thread(fetch_sync)
+        resp.raise_for_status()
+        data = resp.json()
+        studies = data.get("studies", [])
+        
+        for study in studies:
+            # ... (Same extraction logic as before, but simplified)
+            proto = study.get("protocolSection", {})
+            ident = proto.get("identificationModule", {})
+            nct_id = ident.get("nctId")
             
-            for study in studies:
-                # ... (Same extraction logic as before, but simplified)
-                proto = study.get("protocolSection", {})
-                ident = proto.get("identificationModule", {})
-                nct_id = ident.get("nctId")
-                
-                if not nct_id or nct_id in seen_ncts: continue
-                
-                # Extract Intervention
-                interventions = proto.get("armsInterventionsModule", {}).get("interventions", [])
-                drug_name = "Unknown"
-                for intr in interventions:
-                    if intr.get("type") == "DRUG":
-                        drug_name = intr.get("name")
-                        break # Take first drug for now
-                
-                status = proto.get("statusModule", {}).get("overallStatus", "Unknown")
-                phases = proto.get("statusModule", {}).get("phases", ["Unknown"])
-                
-                refs = []
-                # ... (Extract refs)
-                refs.append(nct_id)
-                
-                item = {
-                    "nct_id": nct_id,
-                    "intervention": f"Drug: {drug_name}",
-                    "title": ident.get("officialTitle"),
-                    "status": status,
-                    "phase": "Phase " + "/".join(phases),
-                    "evidence_refs": refs
-                }
-                seen_ncts.add(nct_id)
-                results.append(item)
-                if len(results) >= target_count: break
-                
-        except Exception as e:
-            print(f"[GoldenSeed] Error fetching: {e}")
+            if not nct_id or nct_id in seen_ncts: continue
+            
+            # Extract Intervention
+            interventions = proto.get("armsInterventionsModule", {}).get("interventions", [])
+            drug_name = "Unknown"
+            for intr in interventions:
+                if intr.get("type") == "DRUG":
+                    drug_name = intr.get("name")
+                    break # Take first drug for now
+            
+            status = proto.get("statusModule", {}).get("overallStatus", "Unknown")
+            phases = proto.get("statusModule", {}).get("phases", ["Unknown"])
+            
+            refs = []
+            # ... (Extract refs)
+            refs.append(nct_id)
+            
+            item = {
+                "nct_id": nct_id,
+                "intervention": f"Drug: {drug_name}",
+                "title": ident.get("officialTitle"),
+                "status": status,
+                "phase": "Phase " + "/".join(phases),
+                "evidence_refs": refs
+            }
+            seen_ncts.add(nct_id)
+            results.append(item)
+            if len(results) >= target_count: break
+            
+    except Exception as e:
+        print(f"[GoldenSeed] Error fetching: {e}")
             
     return results
