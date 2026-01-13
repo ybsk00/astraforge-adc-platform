@@ -340,11 +340,11 @@ async def _fetch_real_candidates(target_count, config, profile):
         'ADC',
     ]
     antibody_terms = [
-        '"monoclonal antibody"', 'monoclonal antibody', 'mAb',
-        '"therapeutic antibody"', 'antibody therapy', 'antibody',
-        'bispecific', '"bispecific antibody"', 'BiTE', '"T-cell engager"', '"T cell engager"'
+        '"monoclonal antibody"', 'monoclonal', 'antibody', 'mAb',
+        '"therapeutic antibody"', '"antibody therapy"',
+        'bispecific', '"bispecific antibody"', 'BiTE', '"T-cell engager"'
     ]
-    oncology_gate = '(cancer OR tumor OR carcinoma OR neoplasm OR metastatic OR lymphoma OR leukemia OR myeloma OR sarcoma OR malignancy)'
+    oncology_gate = '(cancer OR tumor OR carcinoma OR neoplasm OR metastatic OR lymphoma OR leukemia OR myeloma OR sarcoma OR malignan*)'
 
     # profile 키워드가 있으면 추가로 OR에 넣되, 전체는 oncology_gate로 제한
     profile_terms = profile.get("keywords", [])
