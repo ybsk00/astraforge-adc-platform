@@ -16,7 +16,7 @@ services:
       - ./services/engine:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -24,14 +24,15 @@ services:
   # Arq Worker Service
   worker:
     build:
-      context: ./services/worker
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/worker/Dockerfile
     env_file:
       - .env
     depends_on:
       - redis
     volumes:
       - ./services/worker:/app
+      - ./services/engine/app:/app/app
     command: arq jobs.worker.WorkerSettings
 
   # Redis for Arq Queue
@@ -42,7 +43,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5

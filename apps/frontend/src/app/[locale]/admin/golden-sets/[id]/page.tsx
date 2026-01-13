@@ -6,7 +6,8 @@ import {
     getGoldenSetById,
     updateCandidateReviewStatus,
     promoteGoldenSet,
-    getGoldenCandidateEvidence
+    getGoldenCandidateEvidence,
+    deleteGoldenSet
 } from '@/lib/actions/golden-set';
 import {
     ArrowLeft,
@@ -93,9 +94,9 @@ export default function GoldenSetDetailPage({ params }: { params: { id: string }
                 antibody: newCandidate.antibody,
                 linker: newCandidate.linker,
                 payload: newCandidate.payload,
-                disease: newCandidate.disease, // Note: Schema might need adjustment if disease is not in candidate table directly or handled differently
+                disease: newCandidate.disease,
                 score: newCandidate.score || 0,
-                review_status: 'approved', // Auto-approve manual uploads
+                review_status: 'approved',
                 drug_name: `${newCandidate.antibody}-${newCandidate.linker}-${newCandidate.payload}`
             });
 
@@ -136,8 +137,6 @@ export default function GoldenSetDetailPage({ params }: { params: { id: string }
         const supabase = createClient();
 
         try {
-            // Map catalog item to candidate structure
-            // This logic depends on what 'item' is. Assuming generic mapping for now.
             const candidateData = {
                 golden_set_id: params.id,
                 target: item.type === 'target' ? item.name : '',
@@ -160,10 +159,36 @@ export default function GoldenSetDetailPage({ params }: { params: { id: string }
         }
     };
 
+    const handleDelete = async () => {
+        if (!confirm('정말로 이 골든 셋을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+
+        try {
+            await deleteGoldenSet(params.id);
+            alert('삭제되었습니다.');
+            router.push('/admin/golden-sets');
+        } catch (error) {
+            console.error('Delete failed:', error);
+            alert('삭제 실패');
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+            </div>
+        );
+    }
+
+    if (!setInfo) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400">
+                <AlertCircle className="w-12 h-12 mb-4 text-red-400" />
+                <h2 className="text-xl font-bold text-white mb-2">골든 셋을 찾을 수 없습니다.</h2>
+                <p>ID가 올바르지 않거나 삭제되었을 수 있습니다.</p>
+                <button onClick={() => router.back()} className="mt-6 px-4 py-2 bg-slate-800 rounded-lg hover:bg-slate-700 text-white">
+                    뒤로 가기
+                </button>
             </div>
         );
     }
@@ -178,21 +203,28 @@ export default function GoldenSetDetailPage({ params }: { params: { id: string }
                     </button>
                     <div className="flex-1">
                         <div className="flex items-center gap-3 mb-1">
-                            <h1 className="text-2xl font-bold text-white">{setInfo?.name}</h1>
+                            <h1 className="text-2xl font-bold text-white">{setInfo.name}</h1>
                             <span className="px-2 py-0.5 text-xs font-medium bg-slate-800 text-slate-300 rounded border border-slate-700">
-                                {setInfo?.version}
+                                {setInfo.version}
                             </span>
-                            {setInfo?.status === 'promoted' && (
+                            {setInfo.status === 'promoted' && (
                                 <span className="px-2 py-0.5 text-xs font-medium bg-green-900/30 text-green-400 rounded border border-green-800 flex items-center gap-1">
                                     <CheckCircle2 className="w-3 h-3" /> Promoted
                                 </span>
                             )}
                         </div>
                         <p className="text-sm text-slate-400">
-                            Created on {new Date(setInfo?.created_at).toLocaleString()} • {candidates.length} Candidates
+                            Created on {setInfo.created_at ? new Date(setInfo.created_at).toLocaleString() : 'Unknown'} • {candidates.length} Candidates
                         </p>
                     </div>
                     <div className="flex gap-3">
+                        <button
+                            onClick={handleDelete}
+                            className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium rounded-lg flex items-center gap-2 transition-colors border border-red-500/20"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            삭제
+                        </button>
                         <button
                             onClick={() => setIsSearchModalOpen(true)}
                             className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors"
@@ -207,7 +239,7 @@ export default function GoldenSetDetailPage({ params }: { params: { id: string }
                             <Upload className="w-4 h-4" />
                             수동 업로드
                         </button>
-                        {setInfo?.status !== 'promoted' && (
+                        {setInfo.status !== 'promoted' && (
                             <button
                                 onClick={handlePromote}
                                 disabled={promoting}

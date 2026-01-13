@@ -62,122 +62,122 @@ export async function getGoldenSets(page: number = 1, limit: number = 20) {
 export async function getGoldenSetById(id: string) {
     const supabase = await createClient();
 
-    // 1. Fetch Golden Set Info
-    const { data: setInfo, error: setError } = await supabase
-        .from('golden_sets')
-        .select('*')
-        .eq('id', id)
-        .single();
+    try {
+        // 1. Fetch Golden Set Info
+        const { data: setInfo, error: setError } = await supabase
+            .from('golden_sets')
+        /**
+         * Update Candidate Review Status
+         */
+        export async function updateCandidateReviewStatus(
+            candidateId: string,
+            status: 'approved' | 'rejected' | 'pending',
+            notes?: string
+        ) {
+            const supabase = await createClient();
 
-    if (setError) throw setError;
+            const updateData: any = { review_status: status };
+            if (notes !== undefined) updateData.review_notes = notes;
 
-    // 2. Fetch Candidates
-    const { data: candidates, error: candidateError } = await supabase
-        .from('golden_candidates')
-        .select('*')
-        .eq('golden_set_id', id)
-        .order('score', { ascending: false });
+            const { error } = await supabase
+                .from('golden_candidates')
+                .update(updateData)
+                .eq('id', candidateId);
 
-    if (candidateError) throw candidateError;
+            if (error) throw error;
 
-    return {
-        ...(setInfo as GoldenSet),
-        candidates: (candidates || []) as GoldenCandidate[]
-    };
-}
+            revalidatePath('/admin/golden-sets');
+        }
 
-/**
- * Update Candidate Review Status
- */
-export async function updateCandidateReviewStatus(
-    candidateId: string,
-    status: 'approved' | 'rejected' | 'pending',
-    notes?: string
-) {
-    const supabase = await createClient();
+        /**
+         * Promote Golden Set to Seed Set (RPC Call)
+         */
+        export async function promoteGoldenSet(goldenSetId: string, seedSetName: string) {
+            const supabase = await createClient();
 
-    const updateData: any = { review_status: status };
-    if (notes !== undefined) updateData.review_notes = notes;
+            const { data, error } = await supabase
+                .rpc('promote_golden_set', {
+                    p_golden_set_id: goldenSetId,
+                    p_seed_set_name: seedSetName
+                });
 
-    const { error } = await supabase
-        .from('golden_candidates')
-        .update(updateData)
-        .eq('id', candidateId);
+            if (error) {
+                console.error("Promotion failed:", error);
+                throw new Error(error.message);
+            }
 
-    if (error) throw error;
+            revalidatePath('/admin/golden-sets');
+            revalidatePath('/admin/seeds');
 
-    revalidatePath('/admin/golden-sets');
-}
+            return data;
+        }
 
-/**
- * Promote Golden Set to Seed Set (RPC Call)
- */
-export async function promoteGoldenSet(goldenSetId: string, seedSetName: string) {
-    const supabase = await createClient();
+        /**
+         * Fetch Evidence for a Candidate
+         */
+        export async function getGoldenCandidateEvidence(candidateId: string) {
+            const supabase = await createClient();
 
-    const { data, error } = await supabase
-        .rpc('promote_golden_set', {
-            p_golden_set_id: goldenSetId,
-            p_seed_set_name: seedSetName
-        });
+            const { data, error } = await supabase
+                .from('golden_candidate_evidence')
+                .select('*')
+                .eq('candidate_id', candidateId)
+                .order('created_at', { ascending: false });
 
-    if (error) {
-        console.error("Promotion failed:", error);
-        throw new Error(error.message);
-    }
+            if (error) {
+                console.error("Failed to fetch evidence:", error);
+                return [];
+            }
 
-    revalidatePath('/admin/golden-sets');
-    revalidatePath('/admin/seeds');
+            return data;
+        }
 
-    return data;
-}
 
-/**
- * Fetch Evidence for a Candidate
- */
-export async function getGoldenCandidateEvidence(candidateId: string) {
-    const supabase = await createClient();
+        /**
+         * Delete Golden Set
+         */
+        export async function deleteGoldenSet(id: string) {
+            const supabase = await createClient();
 
-    const { data, error } = await supabase
-        .from('golden_candidate_evidence')
-        .select('*')
-        .eq('candidate_id', candidateId)
-        .order('created_at', { ascending: false });
+            const { error } = await supabase
+                .from('golden_sets')
+                .delete()
+                .eq('id', id);
 
-    if (error) {
-        console.error("Failed to fetch evidence:", error);
-        return [];
-    }
+            if (error) {
+                console.error("Failed to delete golden set:", error);
+                throw new Error("Failed to delete golden set");
+            }
 
-    return data;
-}
+            revalidatePath('/admin/golden-sets');
+        }
 
-/**
- * Fetch Promoted Golden Sets (Final)
- */
-export async function getPromotedGoldenSets(limit: number = 10) {
-    const supabase = await createClient();
+        /**
+         * Fetch Promoted Golden Sets (Final)
+         */
+        export async function getPromotedGoldenSets(limit: number = 10) {
+            const supabase = await createClient();
 
-    const { data, error } = await supabase
-        .from('golden_sets')
-        .select(`
+            const { data, error } = await supabase
+                .from('golden_sets')
+                .select(`
             id,
             name,
             version,
             created_at,
             candidates:golden_candidates(count)
         `)
-        .eq('status', 'promoted')
-        .order('created_at', { ascending: false })
-        .limit(limit);
+                .eq('status', 'promoted')
+                .order('created_at', { ascending: false })
+                .limit(limit);
 
-    if (error) {
-        console.error("Failed to fetch promoted golden sets:", error);
-        return [];
-    }
+            if (error) {
+                console.error("Failed to fetch promoted golden sets:", error);
+                return [];
+            }
 
-    return data.map((item: any) => ({
-        ...item,
-        candidate_count: item.candidates?.[0]?.count || 0
-    }));
-}
+            return data.map((item: any) => ({
+                ...item,
+                candidate_count: item.candidates?.[0]?.count || 0
+            }));
+        }

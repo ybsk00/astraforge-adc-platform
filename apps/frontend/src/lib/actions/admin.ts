@@ -49,27 +49,29 @@ export async function getConnectors() {
         .limit(100);
 
     // 3. 레지스트리와 병합
-    return Object.entries(CONNECTOR_REGISTRY).map(([source, info]) => {
-        const dbConnector = dbConnectors?.find(c => c.name === source);
-        const latestRun = dbConnector
-            ? recentRuns?.find(r => r.connector_id === dbConnector.id)
-            : null;
+    return Object.entries(CONNECTOR_REGISTRY)
+        .filter(([source]) => source !== 'GOLDEN_SEED_ADC_100') // Hide legacy connector
+        .map(([source, info]) => {
+            const dbConnector = dbConnectors?.find(c => c.name === source);
+            const latestRun = dbConnector
+                ? recentRuns?.find(r => r.connector_id === dbConnector.id)
+                : null;
 
-        return {
-            id: source,
-            name: info.name,
-            type: info.category,
-            is_enabled: !!dbConnector,
-            config: dbConnector?.config || {},
-            latest_run: latestRun ? {
-                status: latestRun.status,
-                started_at: latestRun.started_at || latestRun.created_at,
-                ended_at: latestRun.ended_at,
-                result_summary: latestRun.result_summary,
-                error_json: latestRun.error_json
-            } : null
-        };
-    });
+            return {
+                id: source,
+                name: info.name,
+                type: info.category,
+                is_enabled: !!dbConnector,
+                config: dbConnector?.config || {},
+                latest_run: latestRun ? {
+                    status: latestRun.status,
+                    started_at: latestRun.started_at || latestRun.created_at,
+                    ended_at: latestRun.ended_at,
+                    result_summary: latestRun.result_summary,
+                    error_json: latestRun.error_json
+                } : null
+            };
+        });
 }
 
 /**

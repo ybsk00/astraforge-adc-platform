@@ -23,11 +23,15 @@ RUN conda install -c conda-forge rdkit -y && \
     conda clean -afy
 
 # Python 의존성
-COPY requirements.txt .
+# Python 의존성
+COPY services/worker/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 애플리케이션 코드
-COPY . .
+# Shared App Package (Engine)
+COPY services/engine/app /app/app
+
+# Worker Code
+COPY services/worker /app
 
 # 헬스체크 (Redis 연결 확인)
 HEALTHCHECK --interval=60s --timeout=10s --start-period=10s --retries=3 \
