@@ -155,6 +155,25 @@ export default function ConnectorsPage() {
                     </div>
                 </div>
 
+                {/* Golden Seed Collection Section */}
+                <div className="mb-12 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 blur-3xl rounded-full -mr-32 -mt-32 pointer-events-none" />
+
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-3 rounded-xl bg-amber-500/20 border border-amber-500/20 shadow-inner">
+                                <Database className="w-6 h-6 text-amber-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-white">Golden Seed Collection</h2>
+                                <p className="text-slate-400 text-sm">Target-Centric Data Collection Trigger</p>
+                            </div>
+                        </div>
+
+                        <GoldenSeedTrigger />
+                    </div>
+                </div>
+
                 {/* Connector Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {connectors.map((connector) => {
@@ -246,16 +265,6 @@ export default function ConnectorsPage() {
                                             </>
                                         )}
                                     </button>
-
-                                    {status === 'succeeded' && (
-                                        <button
-                                            onClick={() => router.push('/admin/seeds')}
-                                            className="w-full px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700"
-                                        >
-                                            Seed 관리로 이동
-                                            <ArrowRight className="w-4 h-4" />
-                                        </button>
-                                    )}
                                 </div>
                             </div>
                         );
@@ -310,5 +319,248 @@ export default function ConnectorsPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+
+function GoldenSeedTrigger() {
+    const [targets, setTargets] = useState<string[]>([]);
+    const [currentTarget, setCurrentTarget] = useState('');
+    const [limit, setLimit] = useState(30);
+    const [loading, setLoading] = useState(false);
+    const [result, setResult] = useState<any>(null);
+    const [error, setError] = useState('');
+
+    // Target List Modal State
+    const [isTargetListOpen, setIsTargetListOpen] = useState(false);
+    const [popularTargets] = useState([
+        "HER2", "TROP2", "EGFR", "CD19", "CD22", "CD30", "CD33", "CD79b", "BCMA", "Nectin-4",
+        "HER3", "MET", "CEACAM5", "CLDN18.2", "B7-H3", "GPC3", "ROR1", "FRα", "PSMA", "TF",
+        "CD123", "CD37", "CD70", "CD138", "CD276", "DLL3", "EFNA4", "ENPP3", "FGFR2", "FLT3",
+        "FOLR1", "GCC", "HAVCR1", "LIV-1", "LRRC15", "LY6E", "MUC1", "MUC16", "NaPi2b", "PTK7",
+        "SLC34A2", "STEAP1", "TACSTD2", "TNFRSF17", "TPBG", "5T4", "AGS-16", "AXL", "B7-H4", "CA6"
+    ]);
+
+    const handleAddTarget = () => {
+        if (!currentTarget.trim()) return;
+        if (targets.includes(currentTarget.trim().toUpperCase())) return;
+        setTargets([...targets, currentTarget.trim().toUpperCase()]);
+        setCurrentTarget('');
+    };
+
+    const handleSelectTarget = (target: string) => {
+        if (!targets.includes(target)) {
+            setTargets([...targets, target]);
+        }
+        setIsTargetListOpen(false);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAddTarget();
+        }
+    };
+
+    const removeTarget = (target: string) => {
+        setTargets(targets.filter(t => t !== target));
+    };
+
+    const handleStartCollection = async () => {
+        if (targets.length === 0) return;
+
+        setLoading(true);
+        setError('');
+        setResult(null);
+
+        try {
+            const response = await fetch('/api/admin/golden/seed', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    targets: targets,
+                    limit: limit
+                }),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.detail || 'Failed to start collection');
+            }
+
+            const data = await response.json();
+            setResult(data);
+            setTargets([]); // Clear after success
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Inputs */}
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-400 mb-2">
+                            Target List <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex gap-2 mb-3">
+                            <input
+                                type="text"
+                                value={currentTarget}
+                                onChange={(e) => setCurrentTarget(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Enter target (e.g. HER2, TROP2)"
+                                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 transition-all"
+                            />
+                            <button
+                                onClick={() => setIsTargetListOpen(true)}
+                                className="px-4 bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-blue-300 rounded-xl transition-colors flex items-center gap-2 border border-slate-700"
+                                title="View Popular Targets"
+                            >
+                                <Database className="w-5 h-5" />
+                                <span className="hidden sm:inline">주요 표적 (50)</span>
+                            </button>
+                            <button
+                                onClick={handleAddTarget}
+                                disabled={!currentTarget.trim()}
+                                className="px-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl transition-colors shadow-lg shadow-blue-600/20"
+                            >
+                                <Plus className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2 min-h-[40px] p-3 bg-slate-950/50 rounded-xl border border-slate-800/50">
+                            {targets.length === 0 && (
+                                <span className="text-slate-600 text-sm italic">No targets added yet.</span>
+                            )}
+                            {targets.map((target) => (
+                                <span key={target} className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-400 text-sm font-medium rounded-lg border border-amber-500/20 animate-in zoom-in duration-200">
+                                    {target}
+                                    <button onClick={() => removeTarget(target)} className="hover:text-white transition-colors">
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-400 mb-2">
+                            Collection Limit (Per Target)
+                        </label>
+                        <input
+                            type="number"
+                            value={limit}
+                            onChange={(e) => setLimit(parseInt(e.target.value))}
+                            min={1}
+                            max={100}
+                            className="w-full md:w-32 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-amber-500 transition-all"
+                        />
+                    </div>
+                </div>
+
+                {/* Action & Status */}
+                <div className="flex flex-col justify-end space-y-4">
+                    <button
+                        onClick={handleStartCollection}
+                        disabled={loading || targets.length === 0}
+                        className={clsx(
+                            "w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg",
+                            loading || targets.length === 0
+                                ? "bg-slate-800 text-slate-500 cursor-not-allowed"
+                                : "bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/20"
+                        )}
+                    >
+                        {loading ? (
+                            <>
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                Starting Collection...
+                            </>
+                        ) : (
+                            <>
+                                <Play className="w-5 h-5 fill-current" />
+                                Start Collection Job
+                            </>
+                        )}
+                    </button>
+
+                    {error && (
+                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3 text-red-400 animate-in fade-in slide-in-from-bottom-2">
+                            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                            <div>
+                                <h3 className="font-semibold mb-1">Error</h3>
+                                <p className="text-sm opacity-90">{error}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {result && (
+                        <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl flex items-start gap-3 text-green-400 animate-in fade-in slide-in-from-bottom-2">
+                            <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                            <div>
+                                <h3 className="font-semibold mb-1">Collection Started</h3>
+                                <div className="text-sm opacity-90 space-y-1">
+                                    <p>Run ID: <span className="font-mono text-xs bg-green-500/20 px-1.5 py-0.5 rounded">{result.run_id}</span></p>
+                                    <p>{result.message}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Target List Modal */}
+            {isTargetListOpen && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200 flex flex-col">
+                        <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+                            <div>
+                                <h2 className="text-xl font-bold text-white">주요 ADC 표적 리스트</h2>
+                                <p className="text-sm text-slate-400 mt-1">자주 사용되는 50개의 주요 표적입니다.</p>
+                            </div>
+                            <button onClick={() => setIsTargetListOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {popularTargets.map((target) => (
+                                    <button
+                                        key={target}
+                                        onClick={() => handleSelectTarget(target)}
+                                        disabled={targets.includes(target)}
+                                        className={clsx(
+                                            "px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                                            targets.includes(target)
+                                                ? "bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed"
+                                                : "bg-slate-950 text-slate-300 border-slate-800 hover:border-blue-500 hover:text-blue-400 hover:bg-blue-500/5"
+                                        )}
+                                    >
+                                        {target}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="p-6 border-t border-slate-800 bg-slate-900/50 flex justify-end">
+                            <button
+                                onClick={() => setIsTargetListOpen(false)}
+                                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors"
+                            >
+                                닫기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+            </div >
+        </div >
     );
 }

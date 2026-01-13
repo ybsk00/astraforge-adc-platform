@@ -1,4 +1,5 @@
 import { getAdminStats } from '@/lib/actions/admin';
+import { getPromotedGoldenSets } from '@/lib/actions/golden-set';
 import { getTranslations } from 'next-intl/server';
 import {
     Cable,
@@ -6,16 +7,17 @@ import {
     Activity,
     Clock,
     CheckCircle2,
-    AlertCircle,
     FileText,
-    History,
-    ShieldCheck
+    ShieldCheck,
+    ArrowRight
 } from 'lucide-react';
 import GoldenValidationTrend from '@/components/admin/GoldenValidationTrend';
+import Link from 'next/link';
 
 export default async function AdminDashboardPage() {
     const t = await getTranslations('Admin');
     const stats = await getAdminStats();
+    const promotedSets = await getPromotedGoldenSets();
 
     const kpiCards = [
         {
@@ -78,52 +80,60 @@ export default async function AdminDashboardPage() {
                     <GoldenValidationTrend />
                 </div>
 
-                {/* Recent Activity */}
+                {/* Final Promoted Golden Sets */}
                 <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
                     <div className="p-6 border-b border-slate-800 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <History className="w-5 h-5 text-blue-400" />
-                            <h2 className="text-lg font-semibold text-white">{t('recentActivity')}</h2>
+                            <CheckCircle2 className="w-5 h-5 text-green-400" />
+                            <h2 className="text-lg font-semibold text-white">최종 승격된 Golden Sets</h2>
                         </div>
-                        <button className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-                            {t('viewAll')}
-                        </button>
+                        <Link href="/admin/golden-sets" className="text-sm text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1">
+                            전체 보기 <ArrowRight className="w-4 h-4" />
+                        </Link>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-950/50">
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('table.user')}</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('table.action')}</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('table.entity')}</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('table.date')}</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">이름</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">버전</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">후보 수</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">승격일</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">관리</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800">
-                                {stats.recentLogs.length > 0 ? (
-                                    stats.recentLogs.map((log: any) => (
-                                        <tr key={log.id} className="hover:bg-slate-800/30 transition-colors">
+                                {promotedSets.length > 0 ? (
+                                    promotedSets.map((set: any) => (
+                                        <tr key={set.id} className="hover:bg-slate-800/30 transition-colors">
                                             <td className="px-6 py-4">
-                                                <div className="text-sm font-medium text-white">{log.profiles?.name || 'System'}</div>
-                                                <div className="text-xs text-slate-500">{log.profiles?.email}</div>
+                                                <div className="text-sm font-medium text-white">{set.name}</div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="px-2 py-1 text-xs font-medium rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-                                                    {log.action}
+                                                <span className="px-2 py-1 text-xs font-medium rounded bg-slate-800 text-slate-300 border border-slate-700">
+                                                    {set.version}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-sm text-slate-400">
-                                                {log.entity_type} ({log.entity_id})
+                                                {set.candidate_count}개
                                             </td>
                                             <td className="px-6 py-4 text-sm text-slate-500">
-                                                {new Date(log.created_at).toLocaleString()}
+                                                {new Date(set.created_at).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <Link
+                                                    href={`/admin/golden-sets/${set.id}`}
+                                                    className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                                                >
+                                                    상세 보기
+                                                </Link>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-8 text-center text-slate-500 text-sm">
-                                            {t('table.noActivity')}
+                                        <td colSpan={5} className="px-6 py-8 text-center text-slate-500 text-sm">
+                                            승격된 골든 셋이 없습니다.
                                         </td>
                                     </tr>
                                 )}
