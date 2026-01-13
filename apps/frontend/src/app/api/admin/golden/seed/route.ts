@@ -1,34 +1,53 @@
+import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
+        const targets = body.targets || [];
+        const limit = body.limit || 30;
 
-        const response = await fetch(`${API_BASE_URL}/api/v1/admin/golden/seed`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ detail: 'Unknown backend error' }));
+        if (!targets.length) {
             return NextResponse.json(
-                { detail: errorData.detail || `Backend error: ${response.status}` },
-                { status: response.status }
+                { detail: 'At least one target is required' },
+                { status: 400 }
             );
         }
 
-        const data = await response.json();
-        return NextResponse.json(data);
+        const supabase = await createClient();
+
+        // Insert job into golden_seed_runs table
+        const { data, error } = await supabase
+            .from('golden_seed_runs')
+            .insert({
+                status: 'queued',
+                config: {
+                    targets: targets,
+                    per_target_limit: limit,
+                    mode: 'target_only'
+                }
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Supabase insert error:', error);
+            return NextResponse.json(
+                { detail: error.message },
+                { status: 500 }
+            );
+        }
+
+        return NextResponse.json({
+            status: 'accepted',
+            run_id: data.id,
+            message: `Job queued for ${targets.length} targets. Local worker will process it.`
+        });
 
     } catch (error: any) {
-        console.error('Proxy error:', error);
+        console.error('API error:', error);
         return NextResponse.json(
-            { detail: 'Failed to connect to backend service' },
+            { detail: 'Failed to queue job' },
             { status: 500 }
         );
     }

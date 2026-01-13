@@ -222,6 +222,55 @@ async def poll_db_jobs(ctx):
                 logger.info("design_run_locked", run_id=run["id"])
                 await design_run_execute(ctx, run["id"])
 
+    # 3. Golden Seed Runs 폴링 (새로운 UI 작업 처리)
+    try:
+        seed_query = db.table("golden_seed_runs").select("id, config").eq(
+            "status", "queued"
+        ).order("created_at").limit(1).execute()
+        
+        if seed_query.data:
+            seed_run = seed_query.data[0]
+            run_id = seed_run["id"]
+            config = seed_run.get("config", {})
+            
+            # Lock the run
+            lock_res = db.table("golden_seed_runs").update({
+                "status": "running",
+                "locked_by": worker_id,
+                "locked_at": now,
+                "started_at": now
+            }).eq("id", run_id).eq("status", "queued").execute()
+            
+            if lock_res.data:
+                logger.info("golden_seed_run_picked", run_id=run_id, config=config)
+                
+                try:
+                    # Execute golden seed job
+                    from .golden_seed_job import execute_golden_seed
+                    result = await execute_golden_seed(ctx, run_id, config)
+                    
+                    # Mark as completed
+                    db.table("golden_seed_runs").update({
+                        "status": "completed",
+                        "result": result,
+                        "completed_at": datetime.utcnow().isoformat()
+                    }).eq("id", run_id).execute()
+                    
+                    logger.info("golden_seed_run_completed", run_id=run_id)
+                    
+                except Exception as e:
+                    # Mark as failed
+                    db.table("golden_seed_runs").update({
+                        "status": "failed",
+                        "error_message": str(e),
+                        "completed_at": datetime.utcnow().isoformat()
+                    }).eq("id", run_id).execute()
+                    
+                    logger.error("golden_seed_run_failed", run_id=run_id, error=str(e))
+                    
+    except Exception as e:
+        logger.error("golden_seed_polling_error", error=str(e))
+
     logger.info("polling_db_jobs_completed")
     return {"status": "polled"}
 
