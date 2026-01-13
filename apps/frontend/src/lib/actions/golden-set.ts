@@ -65,6 +65,7 @@ export async function getGoldenSetById(id: string) {
     try {
         // 1. Fetch Golden Set Info
         const { data: setInfo, error: setError } = await supabase
+            .from('golden_sets')
             .select('*')
             .eq('id', id)
             .single();
