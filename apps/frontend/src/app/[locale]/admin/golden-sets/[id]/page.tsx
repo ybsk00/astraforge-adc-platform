@@ -54,10 +54,16 @@ export default function GoldenSetDetailPage({ params }: { params: { id: string }
     const fetchData = async () => {
         try {
             const data = await getGoldenSetById(params.id);
-            setSetInfo(data);
-            setCandidates(data.candidates);
+            if (data) {
+                setSetInfo(data);
+                setCandidates(data.candidates || []);
+            } else {
+                setSetInfo(null);
+                setCandidates([]);
+            }
         } catch (error) {
             console.error('Failed to fetch golden set:', error);
+            setSetInfo(null);
         } finally {
             setLoading(false);
         }

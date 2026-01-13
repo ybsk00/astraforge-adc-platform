@@ -132,7 +132,7 @@ export default function SeedManagementPage() {
             case 'linkers':
                 return linkers.filter(l => l.name?.toLowerCase().includes(query));
             case 'payloads':
-                return payloads.filter(p => p.drug_name?.toLowerCase().includes(query)); // drug_name is aliased from name in admin.ts
+                return payloads.filter(p => p.name?.toLowerCase().includes(query));
             case 'antibodies':
                 return antibodies.filter(a => a.name?.toLowerCase().includes(query));
             case 'sets':
@@ -244,7 +244,7 @@ export default function SeedManagementPage() {
                                                             {activeTab === 'targets' ? item.gene_symbol :
                                                                 activeTab === 'diseases' ? item.disease_name :
                                                                     activeTab === 'linkers' ? item.name :
-                                                                        activeTab === 'payloads' ? item.drug_name :
+                                                                        activeTab === 'payloads' ? item.name :
                                                                             activeTab === 'antibodies' ? item.name :
                                                                                 item.seed_set_name}
                                                         </div>
@@ -395,7 +395,7 @@ export default function SeedManagementPage() {
                                         setSelectedItems={setSelectedPayloads}
                                         searchQuery={modalSearch.payloads}
                                         setSearchQuery={(q: string) => setModalSearch({ ...modalSearch, payloads: q })}
-                                        displayKey="drug_name"
+                                        displayKey="name"
                                         t={t}
                                     />
                                 </div>
