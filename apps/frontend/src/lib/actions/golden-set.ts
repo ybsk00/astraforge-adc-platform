@@ -151,3 +151,33 @@ export async function getGoldenCandidateEvidence(candidateId: string) {
 
     return data;
 }
+
+/**
+ * Fetch Promoted Golden Sets (Final)
+ */
+export async function getPromotedGoldenSets(limit: number = 10) {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from('golden_sets')
+        .select(`
+            id,
+            name,
+            version,
+            created_at,
+            candidates:golden_candidates(count)
+        `)
+        .eq('status', 'promoted')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+    if (error) {
+        console.error("Failed to fetch promoted golden sets:", error);
+        return [];
+    }
+
+    return data.map((item: any) => ({
+        ...item,
+        candidate_count: item.candidates?.[0]?.count || 0
+    }));
+}
