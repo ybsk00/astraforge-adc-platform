@@ -209,3 +209,68 @@ export async function getPromotedGoldenSets(limit: number = 10) {
         candidate_count: item.candidates?.[0]?.count || 0
     }));
 }
+
+/**
+ * Update Golden Candidate fields
+ */
+export async function updateGoldenCandidate(
+    candidateId: string,
+    data: {
+        target?: string;
+        antibody?: string;
+        linker?: string;
+        payload?: string;
+        drug_name?: string;
+    }
+) {
+    const supabase = await createClient();
+
+    const updateData: Record<string, any> = {};
+    if (data.target !== undefined) updateData.target = data.target;
+    if (data.antibody !== undefined) updateData.antibody = data.antibody;
+    if (data.linker !== undefined) updateData.linker = data.linker;
+    if (data.payload !== undefined) updateData.payload = data.payload;
+    if (data.drug_name !== undefined) updateData.drug_name = data.drug_name;
+    updateData.updated_at = new Date().toISOString();
+
+    const { error } = await supabase
+        .from('golden_candidates')
+        .update(updateData)
+        .eq('id', candidateId);
+
+    if (error) {
+        console.error("Failed to update candidate:", error);
+        throw new Error("Failed to update candidate");
+    }
+
+    revalidatePath('/admin/golden-sets');
+}
+
+/**
+ * Search Component Catalog for RAG-like lookup
+ */
+export async function searchComponentCatalog(
+    query: string,
+    type?: 'target' | 'antibody' | 'linker' | 'payload'
+) {
+    const supabase = await createClient();
+
+    let queryBuilder = supabase
+        .from('component_catalog')
+        .select('id, name, type, synonyms')
+        .ilike('name', `%${query}%`)
+        .limit(20);
+
+    if (type) {
+        queryBuilder = queryBuilder.eq('type', type);
+    }
+
+    const { data, error } = await queryBuilder;
+
+    if (error) {
+        console.error("Failed to search catalog:", error);
+        return [];
+    }
+
+    return data || [];
+}

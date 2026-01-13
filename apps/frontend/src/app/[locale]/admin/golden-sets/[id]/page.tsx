@@ -7,7 +7,9 @@ import {
     updateCandidateReviewStatus,
     promoteGoldenSet,
     getGoldenCandidateEvidence,
-    deleteGoldenSet
+    deleteGoldenSet,
+    updateGoldenCandidate,
+    searchComponentCatalog
 } from '@/lib/actions/golden-set';
 import {
     ArrowLeft,
@@ -22,7 +24,10 @@ import {
     Trash2,
     ExternalLink,
     FileText,
-    ShieldCheck
+    ShieldCheck,
+    Edit3,
+    BookOpen,
+    Link2
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { createClient } from '@/lib/supabase/client';
@@ -34,7 +39,6 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
     const [candidates, setCandidates] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [promoting, setPromoting] = useState(false);
-
 
     // Manual Upload State
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -52,6 +56,20 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [searching, setSearching] = useState(false);
+
+    // Edit Candidate State
+    const [editingCandidate, setEditingCandidate] = useState<any>(null);
+    const [editForm, setEditForm] = useState({ target: '', antibody: '', linker: '', payload: '' });
+    const [saving, setSaving] = useState(false);
+    const [fieldSearchType, setFieldSearchType] = useState<'target' | 'antibody' | 'linker' | 'payload' | null>(null);
+    const [fieldSearchQuery, setFieldSearchQuery] = useState('');
+    const [fieldSearchResults, setFieldSearchResults] = useState<any[]>([]);
+    const [fieldSearching, setFieldSearching] = useState(false);
+
+    // Evidence State
+    const [evidenceCandidate, setEvidenceCandidate] = useState<any>(null);
+    const [evidenceList, setEvidenceList] = useState<any[]>([]);
+    const [loadingEvidence, setLoadingEvidence] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -180,6 +198,72 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
         }
     };
 
+    // Edit Candidate Handlers
+    const handleEditCandidate = (candidate: any) => {
+        setEditingCandidate(candidate);
+        setEditForm({
+            target: candidate.target || '',
+            antibody: candidate.antibody || '',
+            linker: candidate.linker || '',
+            payload: candidate.payload || ''
+        });
+    };
+
+    const handleSaveCandidate = async () => {
+        if (!editingCandidate) return;
+        setSaving(true);
+        try {
+            await updateGoldenCandidate(editingCandidate.id, editForm);
+            setEditingCandidate(null);
+            fetchData();
+        } catch (error) {
+            console.error('Save failed:', error);
+            alert('저장 실패');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleFieldSearch = async (type: 'target' | 'antibody' | 'linker' | 'payload') => {
+        setFieldSearchType(type);
+        setFieldSearchQuery('');
+        setFieldSearchResults([]);
+    };
+
+    const handleFieldSearchExecute = async () => {
+        if (!fieldSearchQuery.trim() || !fieldSearchType) return;
+        setFieldSearching(true);
+        try {
+            const results = await searchComponentCatalog(fieldSearchQuery, fieldSearchType);
+            setFieldSearchResults(results);
+        } catch (error) {
+            console.error('Field search failed:', error);
+        } finally {
+            setFieldSearching(false);
+        }
+    };
+
+    const handleFieldSelect = (item: any) => {
+        if (!fieldSearchType) return;
+        setEditForm(prev => ({ ...prev, [fieldSearchType]: item.name }));
+        setFieldSearchType(null);
+    };
+
+    // Evidence Handlers
+    const handleShowEvidence = async (candidate: any) => {
+        setEvidenceCandidate(candidate);
+        setLoadingEvidence(true);
+        try {
+            const evidence = await getGoldenCandidateEvidence(candidate.id);
+            setEvidenceList(evidence || []);
+        } catch (error) {
+            console.error('Failed to fetch evidence:', error);
+            setEvidenceList([]);
+        } finally {
+            setLoadingEvidence(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -270,6 +354,7 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
                                     <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Components</th>
                                     <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Score</th>
                                     <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800">
@@ -319,6 +404,24 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
                                             )}>
                                                 {candidate.review_status}
                                             </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleEditCandidate(candidate)}
+                                                    className="p-2 hover:bg-blue-500/20 text-blue-400 rounded-lg transition-colors"
+                                                    title="편집"
+                                                >
+                                                    <Edit3 className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleShowEvidence(candidate)}
+                                                    className="p-2 hover:bg-purple-500/20 text-purple-400 rounded-lg transition-colors"
+                                                    title="출처 보기"
+                                                >
+                                                    <BookOpen className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -449,6 +552,199 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
                             <div className="flex justify-end mt-4 pt-4 border-t border-slate-800">
                                 <button
                                     onClick={() => setIsSearchModalOpen(false)}
+                                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg"
+                                >
+                                    닫기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Edit Candidate Modal */}
+                {editingCandidate && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+                            <h2 className="text-xl font-bold text-white mb-2">후보 정보 수정</h2>
+                            <p className="text-sm text-slate-400 mb-6">{editingCandidate.drug_name}</p>
+
+                            <div className="space-y-4">
+                                {(['target', 'antibody', 'linker', 'payload'] as const).map((field) => (
+                                    <div key={field}>
+                                        <label className="block text-sm font-medium text-slate-400 mb-1 capitalize">{field}</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={editForm[field]}
+                                                onChange={e => setEditForm(prev => ({ ...prev, [field]: e.target.value }))}
+                                                className={clsx(
+                                                    "flex-1 bg-slate-950 border rounded-lg px-3 py-2 text-white",
+                                                    (!editForm[field] || editForm[field] === 'Unknown')
+                                                        ? "border-amber-500/50 placeholder-amber-400/50"
+                                                        : "border-slate-800"
+                                                )}
+                                                placeholder={`Enter ${field}...`}
+                                            />
+                                            <button
+                                                onClick={() => handleFieldSearch(field)}
+                                                className="p-2 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-lg transition-colors"
+                                                title="카탈로그에서 검색"
+                                            >
+                                                <Search className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="flex justify-end gap-3 mt-6">
+                                <button
+                                    onClick={() => setEditingCandidate(null)}
+                                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg"
+                                >
+                                    취소
+                                </button>
+                                <button
+                                    onClick={handleSaveCandidate}
+                                    disabled={saving}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg flex items-center gap-2"
+                                >
+                                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                    저장
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Field Search Sub-Modal */}
+                {fieldSearchType && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                            <h2 className="text-lg font-bold text-white mb-4 capitalize">{fieldSearchType} 검색</h2>
+                            <div className="flex gap-2 mb-4">
+                                <input
+                                    type="text"
+                                    value={fieldSearchQuery}
+                                    onChange={e => setFieldSearchQuery(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && handleFieldSearchExecute()}
+                                    placeholder={`${fieldSearchType} 이름 검색...`}
+                                    className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                                    autoFocus
+                                />
+                                <button
+                                    onClick={handleFieldSearchExecute}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg"
+                                >
+                                    <Search className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="max-h-[300px] overflow-y-auto space-y-2">
+                                {fieldSearching ? (
+                                    <div className="text-center py-4 text-slate-500">검색 중...</div>
+                                ) : fieldSearchResults.length > 0 ? (
+                                    fieldSearchResults.map(item => (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => handleFieldSelect(item)}
+                                            className="w-full flex items-center justify-between p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-blue-500 hover:bg-blue-500/10 transition-colors text-left"
+                                        >
+                                            <div>
+                                                <div className="font-medium text-white">{item.name}</div>
+                                                {item.synonyms && item.synonyms.length > 0 && (
+                                                    <div className="text-xs text-slate-500 mt-0.5">
+                                                        {item.synonyms.slice(0, 3).join(', ')}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <Plus className="w-4 h-4 text-blue-400" />
+                                        </button>
+                                    ))
+                                ) : fieldSearchQuery ? (
+                                    <div className="text-center py-4 text-slate-500">결과 없음</div>
+                                ) : (
+                                    <div className="text-center py-4 text-slate-500">검색어를 입력하세요</div>
+                                )}
+                            </div>
+
+                            <div className="flex justify-end mt-4 pt-4 border-t border-slate-800">
+                                <button
+                                    onClick={() => setFieldSearchType(null)}
+                                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg"
+                                >
+                                    취소
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Evidence Modal */}
+                {evidenceCandidate && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl p-6 shadow-2xl max-h-[80vh] flex flex-col">
+                            <div className="flex items-center gap-3 mb-2">
+                                <BookOpen className="w-5 h-5 text-purple-400" />
+                                <h2 className="text-xl font-bold text-white">출처 및 근거</h2>
+                            </div>
+                            <p className="text-sm text-slate-400 mb-6">{evidenceCandidate.drug_name}</p>
+
+                            <div className="flex-1 overflow-y-auto space-y-3">
+                                {loadingEvidence ? (
+                                    <div className="text-center py-8">
+                                        <Loader2 className="w-6 h-6 text-blue-400 animate-spin mx-auto" />
+                                        <p className="text-slate-500 mt-2">근거 로딩 중...</p>
+                                    </div>
+                                ) : evidenceList.length > 0 ? (
+                                    evidenceList.map((evidence, idx) => (
+                                        <div key={evidence.id || idx} className="bg-slate-950 border border-slate-800 rounded-lg p-4">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <span className={clsx(
+                                                            "px-2 py-0.5 text-xs font-medium rounded",
+                                                            evidence.source === 'clinicaltrials' ? "bg-green-500/20 text-green-400" :
+                                                                evidence.source === 'pubmed' ? "bg-blue-500/20 text-blue-400" :
+                                                                    "bg-slate-700 text-slate-300"
+                                                        )}>
+                                                            {evidence.source === 'clinicaltrials' ? 'ClinicalTrials' :
+                                                                evidence.source === 'pubmed' ? 'PubMed' : evidence.source}
+                                                        </span>
+                                                        {evidence.ref_id && (
+                                                            <span className="text-xs text-slate-500 font-mono">{evidence.ref_id}</span>
+                                                        )}
+                                                    </div>
+                                                    {evidence.snippet && (
+                                                        <p className="text-sm text-slate-300 line-clamp-3">{evidence.snippet}</p>
+                                                    )}
+                                                </div>
+                                                {evidence.url && (
+                                                    <a
+                                                        href={evidence.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-lg transition-colors flex-shrink-0"
+                                                        title="외부 링크 열기"
+                                                    >
+                                                        <ExternalLink className="w-4 h-4" />
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <AlertCircle className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+                                        <p className="text-slate-400">등록된 근거가 없습니다.</p>
+                                        <p className="text-sm text-slate-500 mt-1">커넥터 실행 시 근거가 자동으로 수집됩니다.</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex justify-end mt-6 pt-4 border-t border-slate-800">
+                                <button
+                                    onClick={() => setEvidenceCandidate(null)}
                                     className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg"
                                 >
                                     닫기
