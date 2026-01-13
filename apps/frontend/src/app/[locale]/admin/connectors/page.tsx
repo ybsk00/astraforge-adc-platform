@@ -560,7 +560,3 @@ function GoldenSeedTrigger() {
         </div>
     );
 }
-            </div >
-        </div >
-    );
-}
