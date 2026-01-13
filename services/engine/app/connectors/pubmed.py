@@ -61,53 +61,72 @@ class PubMedConnector(BaseConnector):
     
     async def build_queries(self, seed: Dict[str, Any]) -> List[QuerySpec]:
         """
-        시드에서 PubMed 쿼리 생성
+        시드에서 PubMed 쿼리 생성 (QueryProfile 지원)
         
         seed 예시:
-            {"seed_set_id": "uuid..."}
-            {"query": "ADC antibody drug conjugate"}
+            {"profile_name": "payload_discovery", "targets": ["HER2"]}
+            {"profile_name": "tox_risk", "payloads": ["MMAE"]}
         """
-        seed_set_id = seed.get("seed_set_id")
+        queries = []
         
-        if seed_set_id and self.db:
-            # Seed Set에 연결된 타겟과 질환 조회
-            targets_res = self.db.table("seed_set_targets").select("entity_targets(gene_symbol)").eq("seed_set_id", seed_set_id).execute()
-            diseases_res = self.db.table("seed_set_diseases").select("entity_diseases(disease_name)").eq("seed_set_id", seed_set_id).execute()
+        # 1. Query Profile 확인
+        profile_name = seed.get("profile_name")
+        if not profile_name:
+            # Fallback to legacy mode
+            query = seed.get("query", "")
+            if query:
+                return [QuerySpec(query=query, params={"retmax": seed.get("retmax", 100)})]
+            return []
             
-            target_symbols = [t["entity_targets"]["gene_symbol"] for t in targets_res.data if t.get("entity_targets")]
-            disease_names = [d["entity_diseases"]["disease_name"] for d in diseases_res.data if d.get("entity_diseases")]
+        # 2. Profile 로드
+        from services.worker.profiles import get_profile
+        profile = get_profile(profile_name)
+        
+        if not profile:
+            self.logger.error("unknown_profile", profile=profile_name)
+            return []
             
-            if not target_symbols or not disease_names:
-                self.logger.warning("empty_seed_set", seed_set_id=seed_set_id)
+        # 3. Parameter 기반 쿼리 생성
+        # Profile Mode에 따라 필요한 파라미터가 다름
+        
+        if profile.get("mode") == "discovery":
+            # Target 기반 Discovery (Payload, Linker)
+            targets = seed.get("targets", [])
+            if not targets:
+                self.logger.warning("no_targets_provided", profile=profile_name)
                 return []
-            
-            queries = []
-            for target in target_symbols:
-                for disease in disease_names:
-                    # 타겟과 질환을 조합한 쿼리 생성
-                    query_text = f'("{target}"[Title/Abstract]) AND ("{disease}"[Title/Abstract])'
-                    params = {
-                        "mindate": seed.get("mindate"),
-                        "maxdate": seed.get("maxdate"),
+                
+            for target in targets:
+                query_str = profile["query_template"].format(target=target)
+                queries.append(QuerySpec(
+                    query=query_str,
+                    params={
                         "retmax": seed.get("retmax", 100),
+                        "target": target
                     }
-                    queries.append(QuerySpec(query=query_text, params={k: v for k, v in params.items() if v}))
+                ))
+                
+        elif profile.get("mode") == "risk":
+            # Payload 기반 Risk Check
+            payloads = seed.get("payloads", [])
+            if not payloads:
+                self.logger.warning("no_payloads_provided", profile=profile_name)
+                return []
+                
+            for payload in payloads:
+                query_str = profile["query_template"].format(payload=payload)
+                queries.append(QuerySpec(
+                    query=query_str,
+                    params={
+                        "retmax": seed.get("retmax", 100),
+                        "payload": payload
+                    }
+                ))
+                
+        else:
+            self.logger.warning("unsupported_profile_mode", mode=profile.get("mode"))
             
-            self.logger.info("seed_set_queries_built", count=len(queries), seed_set_id=seed_set_id)
-            return queries
-            
-        # 기존 로직 (fallback)
-        query = seed.get("query", "")
-        if not query:
-            raise ValueError("query or seed_set_id is required in seed")
-        
-        params = {
-            "mindate": seed.get("mindate"),
-            "maxdate": seed.get("maxdate"),
-            "retmax": seed.get("retmax", 100),
-        }
-        
-        return [QuerySpec(query=query, params={k: v for k, v in params.items() if v})]
+        return queries
     
     async def fetch_page(
         self, 
@@ -116,9 +135,6 @@ class PubMedConnector(BaseConnector):
     ) -> FetchResult:
         """
         PubMed에서 한 페이지 조회
-        
-        1. ESearch로 PMID 목록 조회
-        2. EFetch로 상세 정보 조회
         """
         retstart = cursor.position.get("retstart", 0)
         retmax = query.params.get("retmax", 100)
@@ -347,105 +363,24 @@ class PubMedConnector(BaseConnector):
         }
     
     def normalize(self, record: Dict[str, Any]) -> Optional[NormalizedRecord]:
-        """PubMed 레코드 정규화"""
-        pmid = record.get("pmid")
-        if not pmid:
-            return None
-        
-        data = {
-            "pmid": pmid,
-            "doi": record.get("doi"),
-            "title": record.get("title", ""),
-            "abstract": record.get("abstract", ""),
-            "authors": record.get("authors", []),
-            "journal": record.get("journal", ""),
-            "publication_date": record.get("publication_date"),
-        }
-        
-        checksum = NormalizedRecord.compute_checksum(data)
-        
-        return NormalizedRecord(
-            external_id=pmid,
-            record_type="literature",
-            data=data,
-            checksum=checksum,
-            source="pubmed"
-        )
+        """
+        RAW 저장 중심이므로 정규화는 최소화하거나 Skip.
+        """
+        return None
     
     async def upsert(self, records: List[NormalizedRecord]) -> UpsertResult:
-        """PubMed 레코드를 DB에 저장"""
-        if not self.db:
-            self.logger.warning("no_db_client")
-            return UpsertResult()
-        
-        result = UpsertResult()
-        
-        for record in records:
-            try:
-                # raw 저장
-                await self._save_raw(record)
-                
-                # literature_documents 저장 (upsert)
-                upsert_result = await self._upsert_document(record)
-                
-                if upsert_result == "inserted":
-                    result.inserted += 1
-                    result.ids.append(record.external_id)
-                elif upsert_result == "updated":
-                    result.updated += 1
-                else:
-                    result.unchanged += 1
-                    
-            except Exception as e:
-                result.errors += 1
-                self.logger.warning("upsert_failed", pmid=record.external_id, error=str(e))
-        
-        return result
+        """
+        RAW First 전략이므로 Upsert는 사용하지 않음.
+        """
+        return UpsertResult()
     
     async def _save_raw(self, record: NormalizedRecord):
-        """원본 데이터를 raw_source_records에 저장"""
-        try:
-            self.db.table("raw_source_records").upsert({
-                "source": record.source,
-                "external_id": record.external_id,
-                "payload": record.data,
-                "checksum": record.checksum,
-                "fetched_at": datetime.utcnow().isoformat(),
-            }, on_conflict="source,external_id").execute()
-        except Exception as e:
-            self.logger.warning("raw_save_failed", error=str(e))
+        """Deprecated: BaseConnector.save_raw_data 사용"""
+        pass
     
     async def _upsert_document(self, record: NormalizedRecord) -> str:
-        """literature_documents에 upsert"""
-        data = record.data
-        
-        # 기존 문서 확인
-        existing = self.db.table("literature_documents").select("id, meta").eq("pmid", data["pmid"]).execute()
-        
-        doc_data = {
-            "pmid": data["pmid"],
-            "doi": data.get("doi"),
-            "title": data["title"],
-            "abstract": data.get("abstract"),
-            "authors": data.get("authors", []),
-            "journal": data.get("journal"),
-            "publication_date": data.get("publication_date"),
-            "meta": {"checksum": record.checksum}
-        }
-        
-        if existing.data:
-            # 체크섬 비교
-            old_checksum = existing.data[0].get("meta", {}).get("checksum", "")
-            if old_checksum == record.checksum:
-                return "unchanged"
-            
-            # 업데이트
-            self.db.table("literature_documents").update(doc_data).eq("pmid", data["pmid"]).execute()
-            return "updated"
-        else:
-            # 삽입
-            self.db.table("literature_documents").insert(doc_data).execute()
-            return "inserted"
+        """Deprecated"""
+        pass
 
 
 # ============================================================

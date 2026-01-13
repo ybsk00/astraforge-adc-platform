@@ -46,52 +46,79 @@ class PubChemConnector(BaseConnector):
     
     async def build_queries(self, seed: Dict[str, Any]) -> List[QuerySpec]:
         """
-        시드에서 쿼리 생성
+        시드에서 쿼리 생성 (QueryProfile 지원)
         
         seed 예시:
-            {"cids": [2244, 2519]}  # Aspirin, Caffeine
-            {"inchi_keys": ["DTHNMHAUYICORS-KTKZVXAJSA-N"]}
-            {"smiles": "CC(=O)Nc1ccc(O)cc1"}  # Paracetamol
-            {"names": ["aspirin", "maytansine"]}
+            {"profile_name": "payload_smiles_enrichment", "payloads": ["MMAE", "DXd"]}
         """
         queries = []
         
-        cids = seed.get("cids", [])
-        inchi_keys = seed.get("inchi_keys", [])
-        smiles_list = seed.get("smiles", [])
-        names = seed.get("names", [])
+        # 1. Query Profile 확인
+        profile_name = seed.get("profile_name")
+        if not profile_name:
+            # Fallback to legacy mode
+            cids = seed.get("cids", [])
+            inchi_keys = seed.get("inchi_keys", [])
+            smiles_list = seed.get("smiles", [])
+            names = seed.get("names", [])
+            
+            # Batch CIDs (최대 100개씩)
+            for i in range(0, len(cids), 100):
+                batch = cids[i:i+100]
+                queries.append(QuerySpec(
+                    query=",".join(map(str, batch)),
+                    params={"type": "cid"}
+                ))
+            
+            # InChIKey (개별)
+            for key in inchi_keys:
+                queries.append(QuerySpec(
+                    query=key,
+                    params={"type": "inchikey"}
+                ))
+            
+            # SMILES
+            if isinstance(smiles_list, str):
+                smiles_list = [smiles_list]
+            for smi in smiles_list:
+                queries.append(QuerySpec(
+                    query=smi,
+                    params={"type": "smiles"}
+                ))
+            
+            # Names
+            for name in names:
+                queries.append(QuerySpec(
+                    query=name,
+                    params={"type": "name"}
+                ))
+                
+            return queries
+            
+        # 2. Profile 로드
+        from services.worker.profiles import get_profile
+        profile = get_profile(profile_name)
         
-        # Batch CIDs (최대 100개씩)
-        for i in range(0, len(cids), 100):
-            batch = cids[i:i+100]
-            queries.append(QuerySpec(
-                query=",".join(map(str, batch)),
-                params={"type": "cid"}
-            ))
-        
-        # InChIKey (개별)
-        for key in inchi_keys:
-            queries.append(QuerySpec(
-                query=key,
-                params={"type": "inchikey"}
-            ))
-        
-        # SMILES
-        if isinstance(smiles_list, str):
-            smiles_list = [smiles_list]
-        for smi in smiles_list:
-            queries.append(QuerySpec(
-                query=smi,
-                params={"type": "smiles"}
-            ))
-        
-        # Names
-        for name in names:
-            queries.append(QuerySpec(
-                query=name,
-                params={"type": "name"}
-            ))
-        
+        if not profile:
+            self.logger.error("unknown_profile", profile=profile_name)
+            return []
+            
+        # 3. Profile Mode에 따른 쿼리 생성
+        if profile.get("mode") == "enrichment":
+            # Payload 이름으로 SMILES/물성 조회
+            payloads = seed.get("payloads", [])
+            if not payloads:
+                self.logger.warning("no_payloads_provided", profile=profile_name)
+                return []
+                
+            for payload in payloads:
+                queries.append(QuerySpec(
+                    query=payload,
+                    params={"type": "name"}
+                ))
+        else:
+            self.logger.warning("unsupported_profile_mode", mode=profile.get("mode"))
+            
         return queries
     
     async def fetch_page(
@@ -249,125 +276,21 @@ class PubChemConnector(BaseConnector):
             return []
     
     def normalize(self, record: Dict[str, Any]) -> Optional[NormalizedRecord]:
-        """PubChem 레코드 정규화"""
-        
-        cid = record.get("CID")
-        if not cid:
-            return None
-        
-        data = {
-            "pubchem_cid": str(cid),
-            "molecular_formula": record.get("MolecularFormula"),
-            "molecular_weight": record.get("MolecularWeight"),
-            "canonical_smiles": record.get("CanonicalSMILES"),
-            "isomeric_smiles": record.get("IsomericSMILES"),
-            "inchi": record.get("InChI"),
-            "inchi_key": record.get("InChIKey"),
-            "iupac_name": record.get("IUPACName"),
-            "synonyms": record.get("Synonyms", []),
-            "properties": {
-                "xlogp": record.get("XLogP"),
-                "tpsa": record.get("TPSA"),
-                "complexity": record.get("Complexity"),
-                "hbd": record.get("HBondDonorCount"),
-                "hba": record.get("HBondAcceptorCount"),
-                "rotatable_bonds": record.get("RotatableBondCount"),
-                "heavy_atoms": record.get("HeavyAtomCount"),
-            }
-        }
-        
-        checksum = NormalizedRecord.compute_checksum(data)
-        
-        return NormalizedRecord(
-            external_id=str(cid),
-            record_type="compound",
-            data=data,
-            checksum=checksum,
-            source="pubchem"
-        )
+        """
+        RAW 저장 중심이므로 정규화는 최소화하거나 Skip.
+        """
+        return None
     
     async def upsert(self, records: List[NormalizedRecord]) -> UpsertResult:
-        """PubChem 데이터를 compound_registry에 저장"""
-        if not self.db:
-            return UpsertResult()
-        
-        result = UpsertResult()
-        
-        for record in records:
-            try:
-                await self._save_raw(record)
-                upsert_status = await self._upsert_compound(record)
-                
-                if upsert_status == "inserted":
-                    result.inserted += 1
-                    result.ids.append(record.external_id)
-                elif upsert_status == "updated":
-                    result.updated += 1
-                else:
-                    result.unchanged += 1
-                    
-            except Exception as e:
-                result.errors += 1
-                self.logger.warning("upsert_failed", cid=record.external_id, error=str(e))
-        
-        return result
+        """
+        RAW First 전략이므로 Upsert는 사용하지 않음.
+        """
+        return UpsertResult()
     
     async def _save_raw(self, record: NormalizedRecord):
-        """원본 데이터 저장"""
-        try:
-            self.db.table("raw_source_records").upsert({
-                "source": record.source,
-                "external_id": record.external_id,
-                "payload": record.data,
-                "checksum": record.checksum,
-                "fetched_at": datetime.utcnow().isoformat(),
-            }, on_conflict="source,external_id").execute()
-        except Exception as e:
-            self.logger.warning("raw_save_failed", error=str(e))
+        """Deprecated: BaseConnector.save_raw_data 사용"""
+        pass
     
     async def _upsert_compound(self, record: NormalizedRecord) -> str:
-        """compound_registry에 upsert"""
-        data = record.data
-        inchi_key = data.get("inchi_key")
-        pubchem_cid = data["pubchem_cid"]
-        
-        # 기존 항목 확인 (InChIKey 우선)
-        existing = None
-        if inchi_key:
-            existing = self.db.table("compound_registry").select("id, checksum, pubchem_cid").eq(
-                "inchi_key", inchi_key
-            ).execute()
-        
-        if not existing or not existing.data:
-            existing = self.db.table("compound_registry").select("id, checksum, pubchem_cid").eq(
-                "pubchem_cid", pubchem_cid
-            ).execute()
-        
-        compound_data = {
-            "pubchem_cid": pubchem_cid,
-            "canonical_smiles": data.get("canonical_smiles"),
-            "inchi_key": inchi_key,
-            "synonyms": data.get("synonyms", []),
-            "properties": data.get("properties", {}),
-            "checksum": record.checksum,
-            "updated_at": datetime.utcnow().isoformat()
-        }
-        
-        if existing and existing.data:
-            old_checksum = existing.data[0].get("checksum", "")
-            if old_checksum == record.checksum:
-                return "unchanged"
-            
-            # PubChem CID 병합
-            existing_data = existing.data[0]
-            if not existing_data.get("pubchem_cid"):
-                compound_data["pubchem_cid"] = pubchem_cid
-            
-            self.db.table("compound_registry").update(compound_data).eq(
-                "id", existing.data[0]["id"]
-            ).execute()
-            return "updated"
-        else:
-            compound_data["created_at"] = datetime.utcnow().isoformat()
-            self.db.table("compound_registry").insert(compound_data).execute()
-            return "inserted"
+        """Deprecated"""
+        pass

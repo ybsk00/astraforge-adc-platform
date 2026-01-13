@@ -277,6 +277,74 @@ class BaseConnector(ABC):
         """
         pass
     
+    async def save_raw_data(
+        self, 
+        raw_items: List[Dict[str, Any]], 
+        query_profile: str, 
+        dataset_version: str,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> List[str]:
+        """
+        RAW 데이터 저장 (필수)
+        
+        Args:
+            raw_items: 원본 데이터 목록
+            query_profile: 쿼리 프로파일 이름
+            dataset_version: 데이터셋 버전
+            metadata: 추가 메타데이터 (query_target 등)
+            
+        Returns:
+            저장된 RAW ID 목록
+        """
+        if not raw_items:
+            return []
+            
+        import json
+        
+        # 테이블명 결정 (기본: golden_seed_raw, 문헌: literature_raw)
+        table_name = "golden_seed_raw"
+        if self.source in ["pubmed", "biorxiv"]:
+            table_name = "literature_raw"
+            
+        rows = []
+        for item in raw_items:
+            # Source ID 추출 (기본: id 필드)
+            source_id = str(item.get("id") or item.get("nctId") or item.get("pmid") or "unknown")
+            
+            # Content Hash
+            content_dump = json.dumps(item, sort_keys=True)
+            content_hash = hashlib.sha256(content_dump.encode()).hexdigest()
+            
+            row = {
+                "source": self.source,
+                "source_id": source_id,
+                "source_hash": content_hash,
+                "raw_payload": item,
+                "query_profile": query_profile,
+                "dataset_version": dataset_version,
+                "fetched_at": datetime.utcnow().isoformat()
+            }
+            if metadata:
+                row.update(metadata)
+                
+            rows.append(row)
+            
+        # Bulk Upsert
+        try:
+            # Note: Supabase-py bulk upsert might need chunking for large sets
+            res = self.db.table(table_name).upsert(
+                rows, 
+                on_conflict="source,source_hash",
+                ignore_duplicates=True 
+            ).execute()
+            
+            # Return IDs (if available, otherwise empty)
+            return [r["id"] for r in (res.data or [])]
+            
+        except Exception as e:
+            self.logger.error("save_raw_failed", error=str(e))
+            raise e
+
     async def run(
         self, 
         seed: Dict[str, Any], 
@@ -284,22 +352,25 @@ class BaseConnector(ABC):
         max_pages: int = 100
     ) -> Dict[str, Any]:
         """
-        전체 수집 프로세스 실행
+        전체 수집 프로세스 실행 (Standardized)
         
         Args:
-            seed: 시드 데이터
-            cursor: 시작 커서 (증분 수집용)
+            seed: 시드 데이터 (Must contain 'profile_name' or 'query_profile')
+            cursor: 시작 커서
             max_pages: 최대 페이지 수
         
         Returns:
             실행 결과 통계
         """
         start_time = time.time()
-        stats = {"fetched": 0, "new": 0, "updated": 0, "errors": 0}
+        stats = {"fetched": 0, "new": 0, "updated": 0, "errors": 0, "raw_saved": 0}
+        
+        profile_name = seed.get("profile_name") or seed.get("query_profile")
+        dataset_version = seed.get("dataset_version", "v1")
         
         try:
             queries = await self.build_queries(seed)
-            self.logger.info("queries_built", count=len(queries))
+            self.logger.info("queries_built", count=len(queries), profile=profile_name)
             
             for query in queries:
                 page_count = 0
@@ -309,14 +380,28 @@ class BaseConnector(ABC):
                 )
                 
                 while page_count < max_pages:
-                    # Fetch
+                    # 1. Fetch
                     result = await self.fetch_page(query, current_cursor)
                     stats["fetched"] += len(result.records)
                     
                     if not result.records:
                         break
                     
-                    # Normalize
+                    # 2. Save RAW (Mandatory)
+                    if profile_name:
+                        try:
+                            raw_ids = await self.save_raw_data(
+                                result.records, 
+                                profile_name, 
+                                dataset_version,
+                                metadata={"query": query.query}
+                            )
+                            stats["raw_saved"] += len(raw_ids)
+                        except Exception as e:
+                            self.logger.error("raw_save_error", error=str(e))
+                            # RAW 저장 실패는 치명적이지 않게 처리할지 결정 (여기서는 진행)
+                    
+                    # 3. Normalize
                     normalized = []
                     for record in result.records:
                         try:
@@ -327,7 +412,7 @@ class BaseConnector(ABC):
                             stats["errors"] += 1
                             self.logger.warning("normalize_failed", error=str(e))
                     
-                    # Upsert
+                    # 4. Upsert Candidates (Optional - if normalize implemented)
                     if normalized:
                         upsert_result = await self.upsert(normalized)
                         stats["new"] += upsert_result.inserted

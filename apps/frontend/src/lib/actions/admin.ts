@@ -323,11 +323,15 @@ export async function deleteAlert(alertId: string) {
 /**
  * Seed Targets 목록 조회
  */
+/**
+ * Seed Targets 목록 조회
+ */
 export async function getSeedTargets() {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from('entity_targets')
+        .from('component_catalog')
         .select('*')
+        .eq('type', 'target')
         .order('gene_symbol', { ascending: true });
 
     if (error) throw error;
@@ -340,9 +344,24 @@ export async function getSeedTargets() {
 export async function getSeedDiseases() {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from('entity_diseases')
+        .from('entity_diseases') // Diseases are still in entity_diseases for now
         .select('*')
         .order('disease_name', { ascending: true });
+
+    if (error) throw error;
+    return data;
+}
+
+/**
+ * Seed Antibodies 목록 조회
+ */
+export async function getSeedAntibodies() {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('component_catalog')
+        .select('*')
+        .eq('type', 'antibody')
+        .order('name', { ascending: true });
 
     if (error) throw error;
     return data;
@@ -354,8 +373,9 @@ export async function getSeedDiseases() {
 export async function getSeedLinkers() {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from('entity_linkers')
+        .from('component_catalog')
         .select('*')
+        .eq('type', 'linker')
         .order('name', { ascending: true });
 
     if (error) throw error;
@@ -363,15 +383,15 @@ export async function getSeedLinkers() {
 }
 
 /**
- * Seed Payloads 목록 조회 (entity_drugs 중 drug_role='payload'인 것)
+ * Seed Payloads 목록 조회
  */
 export async function getSeedPayloads() {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from('entity_drugs')
-        .select('*')
-        .eq('drug_role', 'payload')
-        .order('drug_name', { ascending: true });
+        .from('component_catalog')
+        .select('*, drug_name:name') // Alias name to drug_name for frontend compatibility
+        .eq('type', 'payload')
+        .order('name', { ascending: true });
 
     if (error) throw error;
     return data;

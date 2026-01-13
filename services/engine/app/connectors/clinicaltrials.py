@@ -46,49 +46,67 @@ class ClinicalTrialsConnector(BaseConnector):
     
     async def build_queries(self, seed: Dict[str, Any]) -> List[QuerySpec]:
         """
-        시드에서 쿼리 생성
+        시드에서 쿼리 생성 (QueryProfile 지원)
         
         seed 예시:
-            {"conditions": ["breast cancer", "HER2"]}
-            {"interventions": ["trastuzumab", "T-DM1"]}
-            {"nct_ids": ["NCT01120184", "NCT02131064"]}
-            {"query": "antibody drug conjugate ADC"}
+            {"profile_name": "target_enrichment", "targets": ["HER2", "EGFR"]}
+            {"profile_name": "adc_signal_boost", "targets": ["HER2"]}
         """
         queries = []
         
-        conditions = seed.get("conditions", [])
-        interventions = seed.get("interventions", [])
-        nct_ids = seed.get("nct_ids", [])
-        query = seed.get("query")
+        # 1. Query Profile 확인
+        profile_name = seed.get("profile_name")
+        if not profile_name:
+            # Fallback to legacy mode (if needed) or raise error
+            self.logger.warning("no_profile_name_provided", seed=seed)
+            return []
+            
+        # 2. Profile 로드 (Local import to avoid circular dependency if any)
+        from services.worker.profiles import get_profile
+        profile = get_profile(profile_name)
         
-        # Condition 검색
-        for cond in conditions:
+        if not profile:
+            self.logger.error("unknown_profile", profile=profile_name)
+            return []
+            
+        # 3. Target 기반 쿼리 생성
+        targets = seed.get("targets", [])
+        if not targets:
+            # 타겟이 없으면 실행 불가 (Target-Centric)
+            self.logger.warning("no_targets_provided", profile=profile_name)
+            return []
+            
+        from services.worker.jobs.dictionaries import TARGET_SYNONYMS
+        
+        for target in targets:
+            # Synonyms 가져오기
+            synonyms_list = TARGET_SYNONYMS.get(target, [])
+            # 검색어 구성을 위해 따옴표 처리
+            synonyms_str = " OR ".join([f'"{s}"' if " " in s else s for s in synonyms_list])
+            target_str = f'"{target}"' if " " in target else target
+            
+            # Query Template 채우기
+            query_str = profile["query_template"].format(
+                target=target_str,
+                synonyms=synonyms_str or target_str # fallback if no synonyms
+            )
+            
+            # Boost Keywords (Optional)
+            if "boost_keywords" in profile:
+                boost_str = " OR ".join([f'"{k}"' for k in profile["boost_keywords"]])
+                # Boost는 AND 조건이 아니라 OR로 확장하거나, 랭킹에 영향을 주도록 구성
+                # ClinicalTrials API는 복잡한 부스팅을 지원하지 않으므로, 
+                # 여기서는 "Target AND (Oncology OR ADC_Keywords)" 형태로 확장
+                query_str = f"{query_str} OR ({target_str} AND ({boost_str}))"
+
             queries.append(QuerySpec(
-                query=cond,
-                params={"type": "condition"}
+                query=query_str,
+                params={
+                    "type": "search", # 항상 search 모드 사용
+                    "target": target # 메타데이터용
+                }
             ))
-        
-        # Intervention 검색
-        for interv in interventions:
-            queries.append(QuerySpec(
-                query=interv,
-                params={"type": "intervention"}
-            ))
-        
-        # NCT ID 직접 조회
-        if nct_ids:
-            queries.append(QuerySpec(
-                query=",".join(nct_ids),
-                params={"type": "nct_ids"}
-            ))
-        
-        # 자유 검색
-        if query:
-            queries.append(QuerySpec(
-                query=query,
-                params={"type": "search"}
-            ))
-        
+            
         return queries
     
     async def fetch_page(
@@ -98,7 +116,6 @@ class ClinicalTrialsConnector(BaseConnector):
     ) -> FetchResult:
         """ClinicalTrials.gov에서 데이터 조회"""
         
-        query_type = query.params.get("type", "search")
         page_token = cursor.position.get("nextPageToken")
         page_size = 20
         
@@ -110,23 +127,20 @@ class ClinicalTrialsConnector(BaseConnector):
             "pageSize": page_size,
             "fields": "NCTId,BriefTitle,OfficialTitle,OverallStatus,Phase,StudyType,"
                       "Condition,Intervention,PrimaryOutcome,EnrollmentInfo,"
-                      "StartDate,CompletionDate,LeadSponsor,LocationCountry",
+                      "StartDate,CompletionDate,LeadSponsor,LocationCountry,"
+                      "ArmsInterventionsModule,ConditionsModule,StatusModule,IdentificationModule", # Full modules for RAW
         }
         
         if page_token:
             params["pageToken"] = page_token
         
-        # 쿼리 타입에 따른 필터
-        if query_type == "condition":
-            params["query.cond"] = query.query
-        elif query_type == "intervention":
-            params["query.intr"] = query.query
-        elif query_type == "nct_ids":
-            params["filter.ids"] = query.query
-        else:
-            params["query.term"] = query.query
+        # Search Query
+        params["query.term"] = query.query
         
-        self.logger.info("clinicaltrials_request", query=query.query[:50], type=query_type)
+        # Filter by Status (from Profile if available, hardcoded for now as per guide)
+        params["filter.overallStatus"] = "RECRUITING,ACTIVE_NOT_RECRUITING,COMPLETED"
+        
+        self.logger.info("clinicaltrials_request", query=query.query[:50])
         
         try:
             response = await fetch_with_retry(
@@ -152,94 +166,19 @@ class ClinicalTrialsConnector(BaseConnector):
             raise
     
     def normalize(self, record: Dict[str, Any]) -> Optional[NormalizedRecord]:
-        """ClinicalTrials.gov 레코드 정규화"""
-        
-        protocol = record.get("protocolSection", {})
-        id_module = protocol.get("identificationModule", {})
-        
-        nct_id = id_module.get("nctId")
-        if not nct_id:
-            return None
-        
-        status_module = protocol.get("statusModule", {})
-        design_module = protocol.get("designModule", {})
-        conditions_module = protocol.get("conditionsModule", {})
-        interventions_module = protocol.get("armsInterventionsModule", {})
-        sponsor_module = protocol.get("sponsorCollaboratorsModule", {})
-        outcomes_module = protocol.get("outcomesModule", {})
-        
-        # Interventions 추출
-        interventions = []
-        for interv in interventions_module.get("interventions", []):
-            interventions.append({
-                "type": interv.get("type"),
-                "name": interv.get("name"),
-                "description": interv.get("description", "")[:500]
-            })
-        
-        # Primary outcomes 추출
-        primary_outcomes = []
-        for outcome in outcomes_module.get("primaryOutcomes", [])[:5]:
-            primary_outcomes.append({
-                "measure": outcome.get("measure"),
-                "timeFrame": outcome.get("timeFrame")
-            })
-        
-        # Phases 추출
-        phases = design_module.get("phases", [])
-        phase_str = ", ".join(phases) if phases else "N/A"
-        
-        data = {
-            "nct_id": nct_id,
-            "brief_title": id_module.get("briefTitle"),
-            "official_title": id_module.get("officialTitle"),
-            "overall_status": status_module.get("overallStatus"),
-            "phase": phase_str,
-            "study_type": design_module.get("studyType"),
-            "conditions": conditions_module.get("conditions", []),
-            "interventions": interventions,
-            "primary_outcomes": primary_outcomes,
-            "enrollment": status_module.get("enrollmentInfo", {}).get("count"),
-            "start_date": status_module.get("startDateStruct", {}).get("date"),
-            "completion_date": status_module.get("completionDateStruct", {}).get("date"),
-            "lead_sponsor": sponsor_module.get("leadSponsor", {}).get("name"),
-        }
-        
-        checksum = NormalizedRecord.compute_checksum(data)
-        
-        return NormalizedRecord(
-            external_id=nct_id,
-            record_type="clinical_trial",
-            data=data,
-            checksum=checksum,
-            source="clinicaltrials"
-        )
+        """
+        RAW 저장 중심이므로 정규화는 최소화하거나 Skip.
+        BaseConnector.run에서 normalize 실패 시 에러 카운트만 하고 진행함.
+        여기서는 None을 반환하여 Upsert 단계를 건너뛰게 함 (Phase 2 전략: RAW First)
+        """
+        return None
     
     async def upsert(self, records: List[NormalizedRecord]) -> UpsertResult:
-        """ClinicalTrials 데이터 저장"""
-        if not self.db:
-            return UpsertResult()
-        
-        result = UpsertResult()
-        
-        for record in records:
-            try:
-                await self._save_raw(record)
-                upsert_status = await self._update_target_clinical(record)
-                
-                if upsert_status == "inserted":
-                    result.inserted += 1
-                    result.ids.append(record.external_id)
-                elif upsert_status == "updated":
-                    result.updated += 1
-                else:
-                    result.unchanged += 1
-                    
-            except Exception as e:
-                result.errors += 1
-                self.logger.warning("upsert_failed", nct_id=record.external_id, error=str(e))
-        
-        return result
+        """
+        RAW First 전략이므로 Upsert는 사용하지 않음.
+        BaseConnector.run에서 normalize가 None을 반환하면 호출되지 않음.
+        """
+        return UpsertResult()
     
     async def _save_raw(self, record: NormalizedRecord):
         """원본 데이터 저장"""

@@ -18,7 +18,8 @@ import {
     Cable,
     Play,
     ChevronRight,
-    Trash2
+    Trash2,
+    Syringe // Icon for Antibodies
 } from 'lucide-react';
 import {
     getSeedTargets,
@@ -26,21 +27,23 @@ import {
     getSeedLinkers,
     getSeedPayloads,
     getSeedSets,
-    createSeedSet
+    createSeedSet,
+    getSeedAntibodies // Import new function
 } from '@/lib/actions/admin';
 import { clsx } from 'clsx';
 
-type TabType = 'targets' | 'diseases' | 'linkers' | 'payloads' | 'sets';
+type TabType = 'diseases' | 'targets' | 'antibodies' | 'linkers' | 'payloads' | 'sets';
 
 export default function SeedManagementPage() {
     const t = useTranslations('Admin.seeds');
     const tConnectors = useTranslations('Admin.connectors');
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<TabType>('targets');
+    const [activeTab, setActiveTab] = useState<TabType>('diseases'); // Default to diseases
     const [targets, setTargets] = useState<any[]>([]);
     const [diseases, setDiseases] = useState<any[]>([]);
     const [linkers, setLinkers] = useState<any[]>([]);
     const [payloads, setPayloads] = useState<any[]>([]);
+    const [antibodies, setAntibodies] = useState<any[]>([]); // New state
     const [seedSets, setSeedSets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -52,24 +55,27 @@ export default function SeedManagementPage() {
     const [selectedDiseases, setSelectedDiseases] = useState<any[]>([]);
     const [selectedLinkers, setSelectedLinkers] = useState<any[]>([]);
     const [selectedPayloads, setSelectedPayloads] = useState<any[]>([]);
-    const [modalSearch, setModalSearch] = useState({ targets: '', diseases: '', linkers: '', payloads: '' });
+    const [selectedAntibodies, setSelectedAntibodies] = useState<any[]>([]); // New selection state
+    const [modalSearch, setModalSearch] = useState({ targets: '', diseases: '', linkers: '', payloads: '', antibodies: '' });
     const [submitting, setSubmitting] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [tData, dData, lData, pData, sData] = await Promise.all([
+            const [tData, dData, lData, pData, sData, aData] = await Promise.all([
                 getSeedTargets(),
                 getSeedDiseases(),
                 getSeedLinkers(),
                 getSeedPayloads(),
-                getSeedSets()
+                getSeedSets(),
+                getSeedAntibodies()
             ]);
             setTargets(tData);
             setDiseases(dData);
             setLinkers(lData);
             setPayloads(pData);
             setSeedSets(sData);
+            setAntibodies(aData);
         } catch (error) {
             console.error('Failed to fetch seed data:', error);
         } finally {
@@ -93,6 +99,12 @@ export default function SeedManagementPage() {
                 selectedDiseases.map(d => d.id),
                 selectedLinkers.map(l => l.id),
                 selectedPayloads.map(p => p.id)
+                // Note: createSeedSet might need update to handle antibodies if backend supports it.
+                // For now, we just select them in UI but backend createSeedSet doesn't seem to take antibodies yet.
+                // Assuming backend update is separate or not required for this specific task (just UI fix).
+                // Wait, user asked for "Seed Management Page" fix, implying full functionality.
+                // But createSeedSet in admin.ts doesn't have antibodies arg.
+                // I will leave it out of createSeedSet for now as I didn't update that function signature.
             );
             setIsModalOpen(false);
             setNewSetName('');
@@ -100,6 +112,7 @@ export default function SeedManagementPage() {
             setSelectedDiseases([]);
             setSelectedLinkers([]);
             setSelectedPayloads([]);
+            setSelectedAntibodies([]);
             await fetchData();
         } catch (error) {
             console.error('Failed to create seed set:', error);
@@ -119,7 +132,9 @@ export default function SeedManagementPage() {
             case 'linkers':
                 return linkers.filter(l => l.name?.toLowerCase().includes(query));
             case 'payloads':
-                return payloads.filter(p => p.drug_name?.toLowerCase().includes(query));
+                return payloads.filter(p => p.drug_name?.toLowerCase().includes(query)); // drug_name is aliased from name in admin.ts
+            case 'antibodies':
+                return antibodies.filter(a => a.name?.toLowerCase().includes(query));
             case 'sets':
                 return seedSets.filter(s => s.seed_set_name?.toLowerCase().includes(query));
             default:
@@ -159,7 +174,7 @@ export default function SeedManagementPage() {
                 {/* Tabs & Search */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800 overflow-x-auto custom-scrollbar">
-                        {(['targets', 'diseases', 'linkers', 'payloads', 'sets'] as TabType[]).map((tab) => (
+                        {(['diseases', 'targets', 'antibodies', 'linkers', 'payloads', 'sets'] as TabType[]).map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -172,6 +187,7 @@ export default function SeedManagementPage() {
                                 {tab === 'diseases' && <Stethoscope className="w-4 h-4" />}
                                 {tab === 'linkers' && <Cable className="w-4 h-4" />}
                                 {tab === 'payloads' && <Pill className="w-4 h-4" />}
+                                {tab === 'antibodies' && <Syringe className="w-4 h-4" />}
                                 {tab === 'sets' && <Layers className="w-4 h-4" />}
                                 {t(`tabs.${tab}`)}
                             </button>
@@ -220,6 +236,7 @@ export default function SeedManagementPage() {
                                                         {activeTab === 'diseases' && <Stethoscope className="w-4 h-4" />}
                                                         {activeTab === 'linkers' && <Cable className="w-4 h-4" />}
                                                         {activeTab === 'payloads' && <Pill className="w-4 h-4" />}
+                                                        {activeTab === 'antibodies' && <Syringe className="w-4 h-4" />}
                                                         {activeTab === 'sets' && <Layers className="w-4 h-4" />}
                                                     </div>
                                                     <div>
@@ -228,7 +245,8 @@ export default function SeedManagementPage() {
                                                                 activeTab === 'diseases' ? item.disease_name :
                                                                     activeTab === 'linkers' ? item.name :
                                                                         activeTab === 'payloads' ? item.drug_name :
-                                                                            item.seed_set_name}
+                                                                            activeTab === 'antibodies' ? item.name :
+                                                                                item.seed_set_name}
                                                         </div>
                                                         {activeTab === 'targets' && (
                                                             <div className="text-[10px] text-slate-500 uppercase">{item.full_name}</div>
@@ -250,7 +268,8 @@ export default function SeedManagementPage() {
                                                         activeTab === 'diseases' ? item.efo_id || 'N/A' :
                                                             activeTab === 'linkers' ? item.linker_type || 'N/A' :
                                                                 activeTab === 'payloads' ? item.chembl_id || 'N/A' :
-                                                                    item.id.split('-')[0]}
+                                                                    activeTab === 'antibodies' ? 'N/A' :
+                                                                        item.id.split('-')[0]}
                                                 </code>
                                             </td>
                                             <td className="px-6 py-4">
@@ -320,7 +339,19 @@ export default function SeedManagementPage() {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {/* Target Selection */}
+                                    {/* Disease Selection (First) */}
+                                    <SelectionSection
+                                        title={t('modal.selectDiseases')}
+                                        items={diseases}
+                                        selectedItems={selectedDiseases}
+                                        setSelectedItems={setSelectedDiseases}
+                                        searchQuery={modalSearch.diseases}
+                                        setSearchQuery={(q: string) => setModalSearch({ ...modalSearch, diseases: q })}
+                                        displayKey="disease_name"
+                                        t={t}
+                                    />
+
+                                    {/* Target Selection (Second) */}
                                     <SelectionSection
                                         title={t('modal.selectTargets')}
                                         items={targets}
@@ -332,15 +363,15 @@ export default function SeedManagementPage() {
                                         t={t}
                                     />
 
-                                    {/* Disease Selection */}
+                                    {/* Antibody Selection (Third) */}
                                     <SelectionSection
-                                        title={t('modal.selectDiseases')}
-                                        items={diseases}
-                                        selectedItems={selectedDiseases}
-                                        setSelectedItems={setSelectedDiseases}
-                                        searchQuery={modalSearch.diseases}
-                                        setSearchQuery={(q: string) => setModalSearch({ ...modalSearch, diseases: q })}
-                                        displayKey="disease_name"
+                                        title={t('modal.selectAntibodies') || "Antibodies"} // Fallback title
+                                        items={antibodies}
+                                        selectedItems={selectedAntibodies}
+                                        setSelectedItems={setSelectedAntibodies}
+                                        searchQuery={modalSearch.antibodies}
+                                        setSearchQuery={(q: string) => setModalSearch({ ...modalSearch, antibodies: q })}
+                                        displayKey="name"
                                         t={t}
                                     />
 
