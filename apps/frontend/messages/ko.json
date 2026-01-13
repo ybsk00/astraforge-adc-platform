@@ -279,61 +279,272 @@
                 "runInfo": "실행 정보",
                 "creator": "생성자",
                 "status": "상태",
-                "progress": "진행률",
-                "createdAt": "생성일",
-                "actions": "작업",
-                "noRuns": "설계 실행 내역이 없습니다."
+                "processing": "Processing",
+                "failed": "Failed",
+                "calculating": "계산 중..."
             },
+            "systemStatus": "시스템 상태",
+            "system": {
+                "computationNode": "Computation Node",
+                "databaseIndex": "Database Index",
+                "operational": "Operational",
+                "syncing": "Syncing..."
+            }
+        },
+        "DataUpload": {
+            "title": "데이터 업로드",
+            "subtitle": "CSV 파일을 업로드하여 후보 데이터를 등록합니다",
+            "csvUpload": "CSV 파일 업로드",
+            "selectFile": "파일 선택",
+            "upload": "업로드",
+            "uploading": "업로드 중...",
+            "uploadComplete": "업로드 완료! 데이터를 처리 중입니다...",
+            "csvFormatGuide": "CSV 형식 안내",
+            "sampleDownload": "샘플 CSV 다운로드",
+            "requiredColumns": "필수 컬럼",
+            "optionalColumns": "선택 컬럼",
+            "uploadHistory": "업로드 내역",
+            "noHistory": "업로드 내역이 없습니다",
             "status": {
-                "queued": "대기 중",
-                "running": "실행 중",
-                "retrieving": "데이터 조회 중",
-                "structuring": "구조화 중",
-                "writing": "작성 중",
-                "qa": "QA 검토 중",
-                "rendering": "렌더링 중",
-                "done": "완료",
+                "uploaded": "업로드됨",
+                "parsing": "파싱 중",
+                "parsed": "완료",
                 "failed": "실패"
             }
+        },
+        "LiteratureSearch": {
+            "title": "심층 문헌 검색",
+            "subtitle": "컴포넌트 카탈로그를 검색합니다",
+            "searchPlaceholder": "컴포넌트 이름으로 검색...",
+            "allTypes": "모든 타입",
+            "allStatus": "모든 상태",
+            "search": "검색",
+            "noResults": "결과가 없습니다",
+            "searching": "검색 중...",
+            "results": "{count}개 결과 발견",
+            "previous": "이전",
+            "next": "다음"
+        },
+        "DesignRuns": {
+            "title": "설계 실행 목록",
+            "newRun": "새 실행",
+            "filters": {
+                "all": "모든 상태",
+                "running": "진행 중",
+                "completed": "완료됨",
+                "failed": "실패함",
+                "searchPlaceholder": "실행 검색..."
+            },
+            "table": {
+                "id": "실행 ID",
+                "name": "프로젝트명",
                 "status": "상태",
-            "actions": "작업"
+                "progress": "진행률",
+                "candidates": "후보 물질",
+                "created": "생성일",
+                "actions": "작업"
+            }
         },
-        "modal": {
-            "title": "신규 Seed Set 생성",
-            "subtitle": "4대 핵심 요소를 조합하여 새로운 수집 단위를 정의합니다.",
-            "nameLabel": "Seed Set 이름",
-            "namePlaceholder": "예: Top 250 Targets - Breast Cancer",
-            "selectTargets": "표적 선택",
-            "selectDiseases": "질환 선택",
-            "selectLinkers": "링커 선택",
-            "selectPayloads": "페이로드 선택",
-            "searchPlaceholder": "검색...",
-            "selectAll": "전체 선택",
-            "deselectAll": "전체 해제",
-            "cancel": "취소",
-            "submit": "Seed Set 생성 완료",
-            "success": "Seed Set이 성공적으로 생성되었습니다.",
-            "error": "Seed Set 생성에 실패했습니다."
-        }
-    },
-    "review": {
-        "title": "검수 큐",
-        "subtitle": "RAG 수집 및 API 조회 결과에 대한 데이터 품질 검수를 진행합니다.",
-        "tabs": {
-            "linkers": "Linkers",
-            "payloads": "Payloads"
+        "Common": {
+            "login": "로그인",
+            "logout": "로그아웃",
+            "dashboard": "대시보드",
+            "designRuns": "설계 실행",
+            "catalog": "카탈로그",
+            "admin": "관리자",
+            "menu": {
+                "admin": "관리자",
+                "overview": "개요",
+                "dashboard": "대시보드",
+                "designRuns": "설계 실행",
+                "reports": "보고서 및 아티팩트",
+                "catalog": "카탈로그",
+                "connectors": "커넥터",
+                "ops": "운영 관리",
+                "systemStatus": "시스템 상태",
+                "queues": "작업 큐",
+                "audit": "감사 로그",
+                "logs": "로그",
+                "goldenSets": "골든 셋 관리",
+                "seeds": "Seed 관리",
+                "observability": "관측성",
+                "review": "검수 큐",
+                "alerts": "알림"
+            }
         },
-        "search": "이름 검색...",
-        "noItems": "검수할 항목이 없습니다.",
-        "status": {
-            "confirmed": "승인됨",
-            "resolved": "조회됨",
-            "needs_review": "검수 필요"
-        },
-        "actions": {
-            "resolve": "구조 재조회",
-            "approve": "최종 승인"
+        "Admin": {
+            "title": "관리자 대시보드",
+            "subtitle": "시스템 실시간 개요 및 관리",
+            "stats": {
+                "connectors": "커넥터",
+                "connectorsDesc": "총 커넥터 실행 횟수",
+                "designRuns": "설계 실행",
+                "designRunsDesc": "생성된 총 설계 실행 수",
+                "queuedJobs": "대기 중인 작업",
+                "queuedJobsDesc": "큐에서 대기 중인 작업 수"
+            },
+            "recentActivity": "최근 감사 로그",
+            "viewAll": "모두 보기",
+            "table": {
+                "user": "사용자",
+                "action": "작업",
+                "entity": "엔티티",
+                "date": "날짜",
+                "noActivity": "최근 활동이 없습니다."
+            },
+            "connectors": {
+                "title": "커넥터 관리",
+                "subtitle": "외부 데이터 소스 및 수집 파이프라인 관리",
+                "add": "커넥터 추가",
+                "fetchDefaults": "기본 커넥터 가져오기",
+                "refresh": "새로고침",
+                "status": {
+                    "queued": "대기 중",
+                    "running": "실행 중",
+                    "succeeded": "성공",
+                    "failed": "실패",
+                    "idle": "대기",
+                    "processing": "처리 중...",
+                    "run": "커넥터 실행",
+                    "lastRun": "마지막 실행",
+                    "never": "실행 내역 없음",
+                    "enabled": "활성화됨",
+                    "disabled": "비활성화됨"
+                },
+                "modal": {
+                    "title": "새 커넥터 추가",
+                    "name": "이름",
+                    "type": "타입",
+                    "placeholder": "예: PubMed API",
+                    "api": "API 연동",
+                    "crawler": "웹 크롤러",
+                    "create": "커넥터 생성"
+                }
+            },
+            "alerts": {
+                "title": "알림 센터",
+                "subtitle": "시스템 알림 및 에러 로그",
+                "refresh": "새로고침",
+                "unread": "읽지 않은 알림",
+                "search": "알림 검색...",
+                "filter": "필터",
+                "all": "모든 타입",
+                "error": "에러",
+                "warning": "경고",
+                "info": "정보",
+                "markRead": "읽음 처리",
+                "delete": "삭제",
+                "noAlerts": "알림이 없습니다."
+            },
+            "observability": {
+                "title": "시스템 관측성",
+                "subtitle": "실시간 메트릭 및 시스템 상태 모니터링",
+                "period": {
+                    "7d": "최근 7일",
+                    "30d": "최근 30일",
+                    "24h": "최근 24시간"
+                },
+                "totalLogs": "총 수집 로그",
+                "health": "시스템 상태",
+                "operational": "정상 작동 중",
+                "successRate": "소스별 성공률",
+                "table": {
+                    "source": "소스",
+                    "total": "총 실행",
+                    "completed": "완료",
+                    "failed": "실패",
+                    "rate": "성공률"
+                }
+            },
+            "reports": {
+                "title": "보고서 및 아티팩트",
+                "subtitle": "생성된 설계 보고서 및 근거 데이터 확인",
+                "search": "보고서 검색...",
+                "refresh": "새로고침",
+                "filter": "필터",
+                "claimEvidence": "주장-근거",
+                "assumptions": "가정 사항",
+                "noReports": "생성된 보고서가 없습니다."
+            },
+            "designRuns": {
+                "title": "설계 실행",
+                "subtitle": "모든 보고서 생성 프로세스 모니터링 및 관리",
+                "refresh": "새로고침",
+                "table": {
+                    "runInfo": "실행 정보",
+                    "creator": "생성자",
+                    "status": "상태",
+                    "progress": "진행률",
+                    "createdAt": "생성일",
+                    "actions": "작업",
+                    "noRuns": "설계 실행 내역이 없습니다."
+                },
+                "status": {
+                    "queued": "대기 중",
+                    "running": "실행 중",
+                    "retrieving": "데이터 조회 중",
+                    "structuring": "구조화 중",
+                    "writing": "작성 중",
+                    "qa": "QA 검토 중",
+                    "rendering": "렌더링 중",
+                    "done": "완료",
+                    "failed": "실패"
+                }
+            },
+            "seeds": {
+                "title": "Seed 관리",
+                "subtitle": "표준 암종, 표적, 링커, 페이로드 데이터 및 Seed Set 관리",
+                "tabs": {
+                    "targets": "표적 (Targets)",
+                    "diseases": "암종 (Diseases)",
+                    "antibodies": "항체 (Antibodies)",
+                    "linkers": "링커 (Linkers)",
+                    "payloads": "페이로드 (Payloads)",
+                    "sets": "Seed Sets"
+                },
+                "table": {
+                    "name": "이름",
+                    "symbol": "심볼",
+                    "id": "ID",
+                    "status": "상태",
+                    "actions": "작업"
+                },
+                "modal": {
+                    "title": "신규 Seed Set 생성",
+                    "subtitle": "4대 핵심 요소를 조합하여 새로운 수집 단위를 정의합니다.",
+                    "nameLabel": "Seed Set 이름",
+                    "namePlaceholder": "예: Top 250 Targets - Breast Cancer",
+                    "selectTargets": "표적 선택",
+                    "selectDiseases": "질환 선택",
+                    "selectLinkers": "링커 선택",
+                    "selectPayloads": "페이로드 선택",
+                    "searchPlaceholder": "검색...",
+                    "selectAll": "전체 선택",
+                    "deselectAll": "전체 해제",
+                    "cancel": "취소",
+                    "submit": "Seed Set 생성 완료",
+                    "success": "Seed Set이 성공적으로 생성되었습니다.",
+                    "error": "Seed Set 생성에 실패했습니다."
+                }
+            },
+            "review": {
+                "title": "검수 큐",
+                "subtitle": "RAG 수집 및 API 조회 결과에 대한 데이터 품질 검수를 진행합니다.",
+                "tabs": {
+                    "linkers": "Linkers",
+                    "payloads": "Payloads"
+                },
+                "search": "이름 검색...",
+                "noItems": "검수할 항목이 없습니다.",
+                "status": {
+                    "confirmed": "승인됨",
+                    "resolved": "조회됨",
+                    "needs_review": "검수 필요"
+                },
+                "actions": {
+                    "resolve": "구조 재조회",
+                    "approve": "최종 승인"
+                }
+            }
         }
     }
-}
-}
