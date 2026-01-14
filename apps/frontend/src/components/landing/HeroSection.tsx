@@ -36,8 +36,8 @@ export default function HeroSection() {
                         <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight mb-2">
                             {t('titlePrefix')}
                         </h1>
-                        <h1 className="text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 leading-tight mb-6">
-                            {t.rich('titleMain', { break: () => <br /> })}
+                        <h1 className="text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 leading-tight mb-6 whitespace-pre-line">
+                            {t('titleMain')}
                         </h1>
 
                         <p className="text-lg text-slate-400 mb-8 max-w-lg leading-relaxed">
