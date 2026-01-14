@@ -183,20 +183,27 @@ export async function deleteGoldenSet(id: string) {
 /**
  * Fetch Promoted Golden Sets (Final)
  */
+/**
+ * Get Final (Promoted) Seeds for Dashboard
+ * Now queries golden_seed_items with is_final=true
+ */
 export async function getPromotedGoldenSets(limit: number = 10) {
     const supabase = await createClient();
 
     const { data, error } = await supabase
-        .from('golden_sets')
+        .from('golden_seed_items')
         .select(`
             id,
-            name,
-            version,
-            created_at,
-            candidates:golden_candidates(count)
+            drug_name_canonical,
+            resolved_target_symbol,
+            payload_family,
+            clinical_phase,
+            outcome_label,
+            is_final,
+            updated_at
         `)
-        .eq('status', 'promoted')
-        .order('created_at', { ascending: false })
+        .eq('is_final', true)
+        .order('updated_at', { ascending: false })
         .limit(limit);
 
     if (error) {
@@ -204,10 +211,7 @@ export async function getPromotedGoldenSets(limit: number = 10) {
         return [];
     }
 
-    return data.map((item: any) => ({
-        ...item,
-        candidate_count: item.candidates?.[0]?.count || 0
-    }));
+    return data || [];
 }
 
 /**

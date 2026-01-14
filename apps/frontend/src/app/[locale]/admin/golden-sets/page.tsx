@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { Database, Calendar, CheckCircle2, ArrowRight, Import, Loader2, AlertCircle, Filter, RefreshCw } from "lucide-react";
-import { getAutoCandidates, getManualSeeds, importCandidateToManual } from "@/lib/actions/golden-set";
+import { Database, Calendar, CheckCircle2, ArrowRight, Import, Loader2, AlertCircle, Filter, RefreshCw, Trophy } from "lucide-react";
+import { getAutoCandidates, getManualSeeds, importCandidateToManual, getPromotedGoldenSets } from "@/lib/actions/golden-set";
 
-type TabType = "auto" | "manual";
+type TabType = "auto" | "manual" | "final";
 
 interface AutoCandidate {
     id: string;
@@ -32,12 +32,25 @@ interface ManualSeed {
     created_at: string;
 }
 
+interface FinalSeed {
+    id: string;
+    drug_name_canonical: string;
+    resolved_target_symbol?: string;
+    payload_family?: string;
+    clinical_phase?: string;
+    outcome_label?: string;
+    is_final: boolean;
+    updated_at: string;
+}
+
 export default function GoldenSetsPage() {
     const [activeTab, setActiveTab] = useState<TabType>("auto");
     const [autoCandidates, setAutoCandidates] = useState<AutoCandidate[]>([]);
     const [manualSeeds, setManualSeeds] = useState<ManualSeed[]>([]);
+    const [finalSeeds, setFinalSeeds] = useState<FinalSeed[]>([]);
     const [autoCount, setAutoCount] = useState(0);
     const [manualCount, setManualCount] = useState(0);
+    const [finalCount, setFinalCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [isPending, startTransition] = useTransition();
     const [importingId, setImportingId] = useState<string | null>(null);
@@ -55,10 +68,15 @@ export default function GoldenSetsPage() {
                 const result = await getAutoCandidates(1, 50);
                 setAutoCandidates(result.data);
                 setAutoCount(result.count);
-            } else {
-                const result = await getManualSeeds(1, 50);
+            } else if (activeTab === "manual") {
+                const result = await getManualSeeds(1, 50, { isFinal: false }); // is_final=false only
                 setManualSeeds(result.data);
                 setManualCount(result.count);
+            } else {
+                // Final tab
+                const data = await getPromotedGoldenSets(50);
+                setFinalSeeds(data);
+                setFinalCount(data.length);
             }
         } catch (error) {
             console.error("Failed to fetch data:", error);
@@ -130,8 +148,8 @@ export default function GoldenSetsPage() {
                 {/* Message Toast */}
                 {message && (
                     <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 ${message.type === "success"
-                            ? "bg-green-900/30 text-green-400 border border-green-800"
-                            : "bg-red-900/30 text-red-400 border border-red-800"
+                        ? "bg-green-900/30 text-green-400 border border-green-800"
+                        : "bg-red-900/30 text-red-400 border border-red-800"
                         }`}>
                         {message.type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
                         {message.text}
@@ -144,8 +162,8 @@ export default function GoldenSetsPage() {
                     <button
                         onClick={() => setActiveTab("auto")}
                         className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${activeTab === "auto"
-                                ? "bg-blue-600 text-white"
-                                : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                            ? "bg-blue-600 text-white"
+                            : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                             }`}
                     >
                         Auto (자동 수집)
@@ -154,12 +172,23 @@ export default function GoldenSetsPage() {
                     <button
                         onClick={() => setActiveTab("manual")}
                         className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${activeTab === "manual"
-                                ? "bg-purple-600 text-white"
-                                : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                            ? "bg-purple-600 text-white"
+                            : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                             }`}
                     >
                         Manual (수동 Seed)
                         <span className="ml-2 px-2 py-0.5 bg-slate-900 rounded text-xs">{manualCount}</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("final")}
+                        className={`px-4 py-2 rounded-t-lg font-medium transition-colors flex items-center gap-1 ${activeTab === "final"
+                            ? "bg-green-600 text-white"
+                            : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                            }`}
+                    >
+                        <Trophy className="w-4 h-4" />
+                        Final (승격)
+                        <span className="ml-2 px-2 py-0.5 bg-slate-900 rounded text-xs">{finalCount}</span>
                     </button>
                 </div>
 
@@ -221,7 +250,7 @@ export default function GoldenSetsPage() {
                             </table>
                         )}
                     </div>
-                ) : (
+                ) : activeTab === "manual" ? (
                     /* ======================== TAB 2: MANUAL ======================== */
                     <div className="space-y-3">
                         {manualSeeds.length === 0 ? (
@@ -268,9 +297,75 @@ export default function GoldenSetsPage() {
                             </table>
                         )}
                     </div>
+                ) : (
+                    /* ======================== TAB 3: FINAL ======================== */
+                    <div className="space-y-3">
+                        {finalSeeds.length === 0 ? (
+                            <div className="text-center py-12 bg-slate-900/50 rounded-xl border border-dashed border-slate-800">
+                                <Trophy className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                                <h3 className="text-lg font-medium text-slate-400">승격된 Final Seed가 없습니다</h3>
+                                <p className="text-sm text-slate-500 mt-2">Manual 탭에서 Seed를 편집하고 승격하세요.</p>
+                            </div>
+                        ) : (
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="text-left text-sm text-slate-400 border-b border-slate-800">
+                                        <th className="py-3 px-4">Drug Name</th>
+                                        <th className="py-3 px-4">Target</th>
+                                        <th className="py-3 px-4">Payload</th>
+                                        <th className="py-3 px-4">Phase</th>
+                                        <th className="py-3 px-4 text-right">상세</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {finalSeeds.map((s) => {
+                                        const phaseBadge = getPhaseBadge(s.clinical_phase);
+                                        return (
+                                            <tr key={s.id} className="border-b border-slate-800/50 hover:bg-slate-900/50">
+                                                <td className="py-3 px-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <CheckCircle2 className="w-4 h-4 text-green-400" />
+                                                        <span className="font-medium text-white">{s.drug_name_canonical}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <span className="px-2 py-1 text-xs font-medium rounded bg-blue-900/30 text-blue-400 border border-blue-800/50">
+                                                        {s.resolved_target_symbol || "-"}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-4 text-slate-400">{s.payload_family || "-"}</td>
+                                                <td className="py-3 px-4">
+                                                    <span className={`px-2 py-1 text-xs font-medium rounded ${phaseBadge.bg} ${phaseBadge.text}`}>
+                                                        {phaseBadge.label}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-4 text-right">
+                                                    <Link
+                                                        href={`/admin/golden-sets/manual/${s.id}`}
+                                                        className="text-sm text-blue-400 hover:text-blue-300"
+                                                    >
+                                                        보기
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
                 )}
             </div>
         </div>
     );
+}
+
+// Phase badge helper
+function getPhaseBadge(phase: string | null | undefined) {
+    if (!phase) return { bg: 'bg-slate-700', text: 'text-slate-400', label: '-' };
+    if (phase === 'Approved') return { bg: 'bg-green-900/50', text: 'text-green-400', label: phase };
+    if (phase.includes('3')) return { bg: 'bg-blue-900/50', text: 'text-blue-400', label: phase };
+    if (phase.includes('2')) return { bg: 'bg-purple-900/50', text: 'text-purple-400', label: phase };
+    return { bg: 'bg-slate-700', text: 'text-slate-400', label: phase };
 }
 
