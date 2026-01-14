@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -40,7 +40,8 @@ interface ManualSeed {
     rdkit_mw?: number;
 }
 
-export default function ManualSeedDetailPage({ params }: { params: { id: string } }) {
+export default function ManualSeedDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const resolvedParams = use(params);
     const router = useRouter();
     const [seed, setSeed] = useState<ManualSeed | null>(null);
     const [loading, setLoading] = useState(true);
@@ -51,12 +52,12 @@ export default function ManualSeedDetailPage({ params }: { params: { id: string 
 
     useEffect(() => {
         fetchSeed();
-    }, [params.id]);
+    }, [resolvedParams.id]);
 
     const fetchSeed = async () => {
         setLoading(true);
         try {
-            const data = await getManualSeedById(params.id);
+            const data = await getManualSeedById(resolvedParams.id);
             if (data) {
                 setSeed(data);
                 setFormData(data);
@@ -163,8 +164,8 @@ export default function ManualSeedDetailPage({ params }: { params: { id: string 
                 {/* Message */}
                 {message && (
                     <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 ${message.type === "success"
-                            ? "bg-green-900/30 text-green-400 border border-green-800"
-                            : "bg-red-900/30 text-red-400 border border-red-800"
+                        ? "bg-green-900/30 text-green-400 border border-green-800"
+                        : "bg-red-900/30 text-red-400 border border-red-800"
                         }`}>
                         {message.type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
                         {message.text}
@@ -185,8 +186,8 @@ export default function ManualSeedDetailPage({ params }: { params: { id: string 
                             { key: 'evidenceExists', label: 'Evidence ≥ 1', desc: 'evidence_refs 1개 이상' },
                         ].map(({ key, label, desc }) => (
                             <div key={key} className={`flex items-center gap-3 p-3 rounded-lg ${gateChecks[key as keyof typeof gateChecks]
-                                    ? 'bg-green-900/20 border border-green-800'
-                                    : 'bg-slate-800/50 border border-slate-700'
+                                ? 'bg-green-900/20 border border-green-800'
+                                : 'bg-slate-800/50 border border-slate-700'
                                 }`}>
                                 {gateChecks[key as keyof typeof gateChecks]
                                     ? <CheckSquare className="w-5 h-5 text-green-400" />
@@ -204,8 +205,8 @@ export default function ManualSeedDetailPage({ params }: { params: { id: string 
                             onClick={handlePromote}
                             disabled={!canPromote || promoting}
                             className={`w-full py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors ${canPromote
-                                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white'
-                                    : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                                ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white'
+                                : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                                 }`}
                         >
                             {promoting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trophy className="w-4 h-4" />}
@@ -388,8 +389,8 @@ export default function ManualSeedDetailPage({ params }: { params: { id: string 
                         <button
                             onClick={() => updateField('is_manually_verified', !formData.is_manually_verified)}
                             className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${formData.is_manually_verified
-                                    ? 'bg-yellow-600 text-white'
-                                    : 'bg-slate-700 text-slate-400'
+                                ? 'bg-yellow-600 text-white'
+                                : 'bg-slate-700 text-slate-400'
                                 }`}
                         >
                             {formData.is_manually_verified ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
