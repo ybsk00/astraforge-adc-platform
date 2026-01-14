@@ -28,10 +28,16 @@ CREATE TABLE IF NOT EXISTS public.unmapped_queue (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Unique constraint (동일 텍스트 중복 방지)
-CREATE UNIQUE INDEX IF NOT EXISTS idx_unmapped_unique 
-    ON public.unmapped_queue(entity_type, LOWER(unmapped_text)) 
-    WHERE status = 'open';
+-- Unique constraint (동일 텍스트 중복 방지) - status='open'인 경우만
+-- Note: LOWER()는 expression index로 사용
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_unmapped_unique') THEN
+        CREATE UNIQUE INDEX idx_unmapped_unique 
+            ON public.unmapped_queue(entity_type, lower(unmapped_text)) 
+            WHERE status = 'open';
+    END IF;
+END $$;
 
 -- 인덱스
 CREATE INDEX IF NOT EXISTS idx_unmapped_status ON public.unmapped_queue(status);
