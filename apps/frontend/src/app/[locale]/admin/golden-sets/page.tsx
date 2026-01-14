@@ -1,117 +1,276 @@
-import { getGoldenSets } from "@/lib/actions/golden-set";
-import { getTranslations } from "next-intl/server";
-import Link from "next/link";
-import { Database, Calendar, CheckCircle2, AlertCircle, ArrowRight } from "lucide-react";
+"use client";
 
-export default async function GoldenSetsPage({
-    searchParams,
-}: {
-    searchParams: { page?: string };
-}) {
-    const t = await getTranslations("Admin");
-    const page = Number(searchParams.page) || 1;
-    const limit = 20;
-    const { data: goldenSets, count } = await getGoldenSets(page, limit);
-    const totalPages = Math.ceil(count / limit);
+import { useState, useEffect, useTransition } from "react";
+import Link from "next/link";
+import { Database, Calendar, CheckCircle2, ArrowRight, Import, Loader2, AlertCircle, Filter, RefreshCw } from "lucide-react";
+import { getAutoCandidates, getManualSeeds, importCandidateToManual } from "@/lib/actions/golden-set";
+
+type TabType = "auto" | "manual";
+
+interface AutoCandidate {
+    id: string;
+    drug_name: string;
+    target: string;
+    antibody?: string;
+    linker?: string;
+    payload?: string;
+    source_ref?: string;
+    review_status?: string;
+    created_at: string;
+}
+
+interface ManualSeed {
+    id: string;
+    drug_name_canonical: string;
+    target: string;
+    antibody?: string;
+    payload_family?: string;
+    gate_status: string;
+    is_final: boolean;
+    outcome_label?: string;
+    portfolio_group?: string;
+    created_at: string;
+}
+
+export default function GoldenSetsPage() {
+    const [activeTab, setActiveTab] = useState<TabType>("auto");
+    const [autoCandidates, setAutoCandidates] = useState<AutoCandidate[]>([]);
+    const [manualSeeds, setManualSeeds] = useState<ManualSeed[]>([]);
+    const [autoCount, setAutoCount] = useState(0);
+    const [manualCount, setManualCount] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [isPending, startTransition] = useTransition();
+    const [importingId, setImportingId] = useState<string | null>(null);
+    const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+    // Fetch data on tab change
+    useEffect(() => {
+        fetchData();
+    }, [activeTab]);
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            if (activeTab === "auto") {
+                const result = await getAutoCandidates(1, 50);
+                setAutoCandidates(result.data);
+                setAutoCount(result.count);
+            } else {
+                const result = await getManualSeeds(1, 50);
+                setManualSeeds(result.data);
+                setManualCount(result.count);
+            }
+        } catch (error) {
+            console.error("Failed to fetch data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleImport = async (candidateId: string, drugName: string) => {
+        setImportingId(candidateId);
+        setMessage(null);
+
+        startTransition(async () => {
+            try {
+                await importCandidateToManual(candidateId);
+                setMessage({ type: "success", text: `✓ ${drugName} imported to Manual seeds` });
+                // Refresh data
+                const result = await getAutoCandidates(1, 50);
+                setAutoCandidates(result.data);
+            } catch (error: any) {
+                setMessage({ type: "error", text: error.message || "Import failed" });
+            } finally {
+                setImportingId(null);
+            }
+        });
+    };
+
+    const getGateStatusBadge = (status: string, isFinal: boolean) => {
+        if (isFinal) {
+            return (
+                <span className="px-2 py-0.5 text-xs font-medium bg-green-900/30 text-green-400 rounded border border-green-800 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Final
+                </span>
+            );
+        }
+        const colors: Record<string, string> = {
+            draft: "bg-slate-800 text-slate-400 border-slate-700",
+            needs_review: "bg-yellow-900/30 text-yellow-400 border-yellow-800",
+            ready_to_promote: "bg-blue-900/30 text-blue-400 border-blue-800",
+        };
+        return (
+            <span className={`px-2 py-0.5 text-xs font-medium rounded border ${colors[status] || colors.draft}`}>
+                {status.replace("_", " ")}
+            </span>
+        );
+    };
 
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
-                <div className="flex items-center justify-between mb-8">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-white mb-1">Golden Sets</h1>
-                        <p className="text-sm text-slate-400">자동 생성된 골든 셋 후보군을 관리하고 시드로 승격합니다.</p>
+                        <p className="text-sm text-slate-400">
+                            Auto: 자동 수집 후보 → Manual: 정답지 큐레이션 → Final: 승격
+                        </p>
                     </div>
+                    <button
+                        onClick={fetchData}
+                        disabled={loading}
+                        className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm transition-colors"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                        새로고침
+                    </button>
                 </div>
 
-                <div className="grid gap-4">
-                    {goldenSets.length === 0 ? (
-                        <div className="text-center py-12 bg-slate-900/50 rounded-xl border border-dashed border-slate-800">
-                            <Database className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-slate-400">생성된 골든 셋이 없습니다.</h3>
-                            <p className="text-sm text-slate-500 mt-2">커넥터 관리 페이지에서 Golden Seed 커넥터를 실행해주세요.</p>
-                            <Link
-                                href="/admin/connectors"
-                                className="inline-flex items-center mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors"
-                            >
-                                커넥터 관리로 이동
-                            </Link>
-                        </div>
-                    ) : (
-                        <>
-                            {goldenSets.map((set: any) => (
-                                <div key={set.id} className="bg-slate-900 border border-slate-800 rounded-xl p-6 hover:border-slate-700 transition-all">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`p-3 rounded-lg ${set.status === 'promoted' ? 'bg-green-500/10 text-green-400' :
-                                                set.status === 'archived' ? 'bg-slate-800 text-slate-500' :
-                                                    'bg-blue-500/10 text-blue-400'
-                                                }`}>
-                                                <Database className="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <h3 className="text-lg font-bold text-white">{set.name}</h3>
-                                                    <span className="px-2 py-0.5 text-xs font-medium bg-slate-800 text-slate-300 rounded border border-slate-700">
-                                                        {set.version}
-                                                    </span>
-                                                    {set.status === 'promoted' && (
-                                                        <span className="px-2 py-0.5 text-xs font-medium bg-green-900/30 text-green-400 rounded border border-green-800 flex items-center gap-1">
-                                                            <CheckCircle2 className="w-3 h-3" /> Promoted
-                                                        </span>
+                {/* Message Toast */}
+                {message && (
+                    <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 ${message.type === "success"
+                            ? "bg-green-900/30 text-green-400 border border-green-800"
+                            : "bg-red-900/30 text-red-400 border border-red-800"
+                        }`}>
+                        {message.type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                        {message.text}
+                        <button onClick={() => setMessage(null)} className="ml-auto text-sm hover:underline">닫기</button>
+                    </div>
+                )}
+
+                {/* Tab Navigation */}
+                <div className="flex gap-2 mb-6 border-b border-slate-800 pb-2">
+                    <button
+                        onClick={() => setActiveTab("auto")}
+                        className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${activeTab === "auto"
+                                ? "bg-blue-600 text-white"
+                                : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                            }`}
+                    >
+                        Auto (자동 수집)
+                        <span className="ml-2 px-2 py-0.5 bg-slate-900 rounded text-xs">{autoCount}</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("manual")}
+                        className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${activeTab === "manual"
+                                ? "bg-purple-600 text-white"
+                                : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                            }`}
+                    >
+                        Manual (수동 Seed)
+                        <span className="ml-2 px-2 py-0.5 bg-slate-900 rounded text-xs">{manualCount}</span>
+                    </button>
+                </div>
+
+                {/* Content */}
+                {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <Loader2 className="w-8 h-8 animate-spin text-slate-500" />
+                    </div>
+                ) : activeTab === "auto" ? (
+                    /* ======================== TAB 1: AUTO ======================== */
+                    <div className="space-y-3">
+                        {autoCandidates.length === 0 ? (
+                            <div className="text-center py-12 bg-slate-900/50 rounded-xl border border-dashed border-slate-800">
+                                <Database className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                                <h3 className="text-lg font-medium text-slate-400">자동 수집된 후보가 없습니다</h3>
+                                <p className="text-sm text-slate-500 mt-2">Golden Seed 커넥터를 실행하세요.</p>
+                            </div>
+                        ) : (
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="text-left text-xs text-slate-500 uppercase border-b border-slate-800">
+                                        <th className="py-3 px-4">Drug Name</th>
+                                        <th className="py-3 px-4">Target</th>
+                                        <th className="py-3 px-4">Antibody</th>
+                                        <th className="py-3 px-4">Source</th>
+                                        <th className="py-3 px-4">Status</th>
+                                        <th className="py-3 px-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {autoCandidates.map((c) => (
+                                        <tr key={c.id} className="border-b border-slate-800/50 hover:bg-slate-900/50">
+                                            <td className="py-3 px-4 font-medium text-white">{c.drug_name}</td>
+                                            <td className="py-3 px-4 text-slate-300">{c.target}</td>
+                                            <td className="py-3 px-4 text-slate-400">{c.antibody || "-"}</td>
+                                            <td className="py-3 px-4 text-slate-500 text-sm">{c.source_ref || "-"}</td>
+                                            <td className="py-3 px-4">
+                                                <span className="px-2 py-0.5 text-xs bg-slate-800 text-slate-400 rounded">
+                                                    {c.review_status || "pending"}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4 text-right">
+                                                <button
+                                                    onClick={() => handleImport(c.id, c.drug_name)}
+                                                    disabled={importingId === c.id || isPending}
+                                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 text-white text-sm rounded-lg transition-colors"
+                                                >
+                                                    {importingId === c.id ? (
+                                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                                    ) : (
+                                                        <Import className="w-3 h-3" />
                                                     )}
-                                                </div>
-                                                <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
-                                                    <div className="flex items-center gap-1">
-                                                        <Calendar className="w-3 h-3" />
-                                                        {new Date(set.created_at).toLocaleString()}
-                                                    </div>
-                                                    <div>•</div>
-                                                    <div>
-                                                        후보 <span className="text-slate-300 font-medium">{set.candidate_count}</span>개
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <Link
-                                            href={`/admin/golden-sets/${set.id}`}
-                                            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm transition-colors"
-                                        >
-                                            상세 보기 <ArrowRight className="w-4 h-4" />
-                                        </Link>
-                                    </div>
-                                </div>
-                            ))}
-
-                            {/* Pagination */}
-                            {totalPages > 1 && (
-                                <div className="flex justify-center gap-2 mt-8">
-                                    {page > 1 && (
-                                        <Link
-                                            href={`/admin/golden-sets?page=${page - 1}`}
-                                            className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-white hover:border-slate-700 transition-colors"
-                                        >
-                                            이전
-                                        </Link>
-                                    )}
-                                    <span className="px-4 py-2 text-slate-500">
-                                        Page {page} of {totalPages}
-                                    </span>
-                                    {page < totalPages && (
-                                        <Link
-                                            href={`/admin/golden-sets?page=${page + 1}`}
-                                            className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-white hover:border-slate-700 transition-colors"
-                                        >
-                                            다음
-                                        </Link>
-                                    )}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
+                                                    Import
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                ) : (
+                    /* ======================== TAB 2: MANUAL ======================== */
+                    <div className="space-y-3">
+                        {manualSeeds.length === 0 ? (
+                            <div className="text-center py-12 bg-slate-900/50 rounded-xl border border-dashed border-slate-800">
+                                <Database className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                                <h3 className="text-lg font-medium text-slate-400">수동 Seed가 없습니다</h3>
+                                <p className="text-sm text-slate-500 mt-2">
+                                    Auto 탭에서 Import하거나, 스크립트로 직접 적재하세요.
+                                </p>
+                            </div>
+                        ) : (
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="text-left text-xs text-slate-500 uppercase border-b border-slate-800">
+                                        <th className="py-3 px-4">Drug Name</th>
+                                        <th className="py-3 px-4">Target</th>
+                                        <th className="py-3 px-4">Payload</th>
+                                        <th className="py-3 px-4">Group</th>
+                                        <th className="py-3 px-4">Gate Status</th>
+                                        <th className="py-3 px-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {manualSeeds.map((s) => (
+                                        <tr key={s.id} className="border-b border-slate-800/50 hover:bg-slate-900/50">
+                                            <td className="py-3 px-4 font-medium text-white">{s.drug_name_canonical}</td>
+                                            <td className="py-3 px-4 text-slate-300">{s.target}</td>
+                                            <td className="py-3 px-4 text-slate-400">{s.payload_family || "-"}</td>
+                                            <td className="py-3 px-4 text-slate-500 text-sm">{s.portfolio_group || "-"}</td>
+                                            <td className="py-3 px-4">
+                                                {getGateStatusBadge(s.gate_status, s.is_final)}
+                                            </td>
+                                            <td className="py-3 px-4 text-right">
+                                                <Link
+                                                    href={`/admin/golden-sets/manual/${s.id}`}
+                                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors"
+                                                >
+                                                    Edit <ArrowRight className="w-3 h-3" />
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
 }
+

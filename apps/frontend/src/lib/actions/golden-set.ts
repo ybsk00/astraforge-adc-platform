@@ -274,3 +274,301 @@ export async function searchComponentCatalog(
 
     return data || [];
 }
+
+// ============================================
+// Manual Seed (golden_seed_items) Actions
+// ============================================
+
+export interface ManualSeed {
+    id: string;
+    source_candidate_id?: string;
+    drug_name_canonical: string;
+    aliases?: string;
+    portfolio_group?: string;
+    target: string;
+    resolved_target_symbol?: string;
+    antibody?: string;
+    linker_family?: string;
+    linker_trigger?: string;
+    payload_family?: string;
+    payload_exact_name?: string;
+    payload_smiles_raw?: string;
+    payload_smiles_standardized?: string;
+    proxy_smiles_flag: boolean;
+    proxy_reference?: string;
+    clinical_phase?: string;
+    program_status?: string;
+    clinical_nct_id_primary?: string;
+    outcome_label?: string;
+    key_risk_category?: string;
+    key_risk_signal?: string;
+    primary_source_type?: string;
+    primary_source_id?: string;
+    evidence_refs: any[];
+    gate_status: string;
+    is_final: boolean;
+    is_manually_verified: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Fetch Manual Seeds (golden_seed_items) with pagination and filters
+ */
+export async function getManualSeeds(
+    page: number = 1,
+    limit: number = 20,
+    filters?: {
+        gateStatus?: string;
+        target?: string;
+        isFinal?: boolean;
+    }
+) {
+    const supabase = await createClient();
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let query = supabase
+        .from('golden_seed_items')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+    if (filters?.gateStatus) {
+        query = query.eq('gate_status', filters.gateStatus);
+    }
+    if (filters?.target) {
+        query = query.ilike('target', `%${filters.target}%`);
+    }
+    if (filters?.isFinal !== undefined) {
+        query = query.eq('is_final', filters.isFinal);
+    }
+
+    const { data, error, count } = await query;
+
+    if (error) {
+        console.error("Failed to fetch manual seeds:", error);
+        throw new Error("Failed to fetch manual seeds");
+    }
+
+    return { data: data || [], count: count || 0 };
+}
+
+/**
+ * Fetch a single Manual Seed by ID
+ */
+export async function getManualSeedById(id: string) {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from('golden_seed_items')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        console.error("Failed to fetch manual seed:", error);
+        return null;
+    }
+
+    return data;
+}
+
+/**
+ * Update Manual Seed
+ */
+export async function updateManualSeed(
+    id: string,
+    data: Partial<ManualSeed>
+) {
+    const supabase = await createClient();
+
+    // Remove read-only fields
+    const { id: _, created_at, updated_at, ...updateData } = data as any;
+
+    const { error } = await supabase
+        .from('golden_seed_items')
+        .update(updateData)
+        .eq('id', id);
+
+    if (error) {
+        console.error("Failed to update manual seed:", error);
+        throw new Error("Failed to update manual seed");
+    }
+
+    revalidatePath('/admin/golden-sets');
+}
+
+/**
+ * Import Candidate from Auto (golden_candidates) to Manual (golden_seed_items)
+ */
+export async function importCandidateToManual(candidateId: string) {
+    const supabase = await createClient();
+
+    // 1. Fetch the candidate
+    const { data: candidate, error: fetchError } = await supabase
+        .from('golden_candidates')
+        .select('*')
+        .eq('id', candidateId)
+        .single();
+
+    if (fetchError || !candidate) {
+        throw new Error("Candidate not found");
+    }
+
+    // 2. Check for duplicate
+    const { data: existing } = await supabase
+        .from('golden_seed_items')
+        .select('id')
+        .eq('drug_name_canonical', candidate.drug_name)
+        .single();
+
+    if (existing) {
+        throw new Error(`Duplicate: ${candidate.drug_name} already exists in Manual seeds`);
+    }
+
+    // 3. Map fields from Auto to Manual
+    const manualSeed = {
+        source_candidate_id: candidateId,
+        drug_name_canonical: candidate.drug_name,
+        target: candidate.target || 'Unknown',
+        antibody: candidate.antibody,
+        linker_family: candidate.linker,
+        payload_family: candidate.payload,
+        primary_source_type: "Clinical Trial",
+        primary_source_id: candidate.source_ref,
+        clinical_phase: candidate.approval_status,
+        gate_status: 'needs_review',  // Import always starts as needs_review
+        is_final: false,
+        evidence_refs: candidate.evidence_json ? [candidate.evidence_json] : [],
+    };
+
+    // 4. Insert to golden_seed_items
+    const { error: insertError } = await supabase
+        .from('golden_seed_items')
+        .insert(manualSeed);
+
+    if (insertError) {
+        console.error("Failed to import candidate:", insertError);
+        throw new Error("Failed to import candidate to manual seed");
+    }
+
+    revalidatePath('/admin/golden-sets');
+    return { success: true, drugName: candidate.drug_name };
+}
+
+/**
+ * Check if import would be duplicate
+ */
+export async function checkDuplicateImport(drugName: string) {
+    const supabase = await createClient();
+
+    const { data } = await supabase
+        .from('golden_seed_items')
+        .select('id, drug_name_canonical')
+        .eq('drug_name_canonical', drugName)
+        .single();
+
+    return { isDuplicate: !!data, existingId: data?.id };
+}
+
+/**
+ * Promote Manual Seed to Final
+ */
+export async function promoteToFinal(id: string, userId?: string) {
+    const supabase = await createClient();
+
+    // 1. Fetch the seed
+    const { data: seed, error: fetchError } = await supabase
+        .from('golden_seed_items')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (fetchError || !seed) {
+        throw new Error("Seed not found");
+    }
+
+    // 2. Check gate conditions (5 conditions)
+    const gateChecks = {
+        targetResolved: !!seed.resolved_target_symbol,
+        nctSelected: !!seed.clinical_nct_id_primary,
+        smilesReady: !!seed.payload_smiles_standardized || seed.proxy_smiles_flag === true,
+        rdkitComputed: seed.rdkit_mw !== null,  // Optional for Phase 1
+        evidenceExists: Array.isArray(seed.evidence_refs) && seed.evidence_refs.length >= 1,
+    };
+
+    // For Phase 1, skip RDKit check
+    const requiredChecks = [
+        gateChecks.targetResolved,
+        gateChecks.nctSelected,
+        gateChecks.smilesReady,
+        // gateChecks.rdkitComputed, // Phase 2
+        gateChecks.evidenceExists,
+    ];
+
+    const passedCount = requiredChecks.filter(Boolean).length;
+    const allPassed = requiredChecks.every(Boolean);
+
+    if (!allPassed) {
+        throw new Error(`Gate conditions not met (${passedCount}/${requiredChecks.length}). Please fill required fields.`);
+    }
+
+    // 3. Promote
+    const { error: updateError } = await supabase
+        .from('golden_seed_items')
+        .update({
+            is_final: true,
+            gate_status: 'final',
+            is_manually_verified: true,
+            finalized_by: userId || 'admin',
+            finalized_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+    if (updateError) {
+        console.error("Failed to promote seed:", updateError);
+        throw new Error("Failed to promote seed to final");
+    }
+
+    revalidatePath('/admin/golden-sets');
+    return { success: true, gateChecks };
+}
+
+/**
+ * Get Auto Candidates (golden_candidates) for Tab 1
+ */
+export async function getAutoCandidates(
+    page: number = 1,
+    limit: number = 20,
+    filters?: {
+        target?: string;
+        reviewStatus?: string;
+    }
+) {
+    const supabase = await createClient();
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let query = supabase
+        .from('golden_candidates')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+    if (filters?.target) {
+        query = query.ilike('target', `%${filters.target}%`);
+    }
+    if (filters?.reviewStatus) {
+        query = query.eq('review_status', filters.reviewStatus);
+    }
+
+    const { data, error, count } = await query;
+
+    if (error) {
+        console.error("Failed to fetch auto candidates:", error);
+        throw new Error("Failed to fetch auto candidates");
+    }
+
+    return { data: data || [], count: count || 0 };
+}
