@@ -3,7 +3,11 @@
 -- Description: Resolver 실패 항목 Admin 처리 큐
 -- ================================================
 
-CREATE TABLE IF NOT EXISTS public.unmapped_queue (
+-- 기존 테이블 삭제 (필요시)
+DROP TABLE IF EXISTS public.unmapped_queue CASCADE;
+
+-- 테이블 생성
+CREATE TABLE public.unmapped_queue (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     -- 엔티티 타입 (target/payload/linker/antibody)
@@ -16,7 +20,7 @@ CREATE TABLE IF NOT EXISTS public.unmapped_queue (
     context JSONB DEFAULT '{}'::jsonb,
     
     -- 상태
-    status TEXT DEFAULT 'open', -- open | resolved | ignored
+    status TEXT DEFAULT 'open',
     
     -- 해결 정보
     resolved_canonical_key TEXT,
@@ -28,20 +32,9 @@ CREATE TABLE IF NOT EXISTS public.unmapped_queue (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Unique constraint (동일 텍스트 중복 방지) - status='open'인 경우만
--- Note: LOWER()는 expression index로 사용
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_unmapped_unique') THEN
-        CREATE UNIQUE INDEX idx_unmapped_unique 
-            ON public.unmapped_queue(entity_type, lower(unmapped_text)) 
-            WHERE status = 'open';
-    END IF;
-END $$;
-
 -- 인덱스
-CREATE INDEX IF NOT EXISTS idx_unmapped_status ON public.unmapped_queue(status);
-CREATE INDEX IF NOT EXISTS idx_unmapped_entity ON public.unmapped_queue(entity_type);
+CREATE INDEX idx_unmapped_status ON public.unmapped_queue(status);
+CREATE INDEX idx_unmapped_entity ON public.unmapped_queue(entity_type);
 
 -- RLS 설정
 ALTER TABLE public.unmapped_queue ENABLE ROW LEVEL SECURITY;
@@ -68,6 +61,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_unmapped_queue_updated_at ON public.unmapped_queue;
 CREATE TRIGGER trigger_update_unmapped_queue_updated_at
     BEFORE UPDATE ON public.unmapped_queue
     FOR EACH ROW
@@ -75,6 +69,6 @@ CREATE TRIGGER trigger_update_unmapped_queue_updated_at
 
 -- 코멘트
 COMMENT ON TABLE public.unmapped_queue IS 'ID Resolver 실패 항목 - Admin이 수동 매핑 처리';
-COMMENT ON COLUMN public.unmapped_queue.context IS '예: {"seed_item_id": "...", "source": "clinicaltrials", "field": "target"}';
 
 NOTIFY pgrst, 'reload config';
+

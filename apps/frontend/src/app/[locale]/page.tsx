@@ -1,207 +1,26 @@
-import Link from 'next/link';
+import HeroSection from '@/components/landing/HeroSection';
+import ProblemSolution from '@/components/landing/ProblemSolution';
+import FeaturesGrid from '@/components/landing/FeaturesGrid';
+import HowItWorks from '@/components/landing/HowItWorks';
+import TrustSection from '@/components/landing/TrustSection';
+import DashboardPreview from '@/components/landing/DashboardPreview';
+import FAQSection from '@/components/landing/FAQSection';
+import BottomCTA from '@/components/landing/BottomCTA';
 import { useTranslations } from 'next-intl';
-import HeroVideo from '@/components/ui/HeroVideo';
-import { Beaker, BookOpen, Zap, TrendingUp, Shield, Globe } from 'lucide-react';
 
 export default function Home() {
   const t = useTranslations('HomePage');
 
   return (
-    <main className="min-h-screen bg-transparent relative">
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-24 overflow-hidden">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="relative z-10">
-              <div className="inline-block px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-6">
-                {t('platformName')}
-              </div>
-              <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight mb-2">
-                {t('titlePrefix')}
-              </h1>
-              <h1 className="text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 leading-tight mb-6">
-                {t.rich('titleMain', { br: () => <br /> })}
-              </h1>
-              <p className="text-lg text-slate-400 mb-8 max-w-lg leading-relaxed">
-                {t('subtitle')}
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Link
-                  href="/login"
-                  className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-all shadow-lg shadow-blue-600/25"
-                >
-                  {t('start')}
-                </Link>
-                <button className="px-8 py-4 bg-slate-800/50 hover:bg-slate-800 text-white font-semibold rounded-lg border border-slate-700 transition-all flex items-center gap-2">
-                  {t('demo')}
-                </button>
-              </div>
-              <div className="mt-10 flex items-center gap-6 text-xs text-slate-500">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  {t('badges.fda')}
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  {t('badges.security')}
-                </div>
-              </div>
-            </div>
-
-            {/* Hero Visual */}
-            <div className="relative z-10 lg:h-[550px] flex items-center justify-center">
-              <HeroVideo />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-24 bg-transparent">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-sm text-blue-400 font-medium uppercase tracking-wider mb-3">{t('featuresLabel')}</h2>
-            <h3 className="text-3xl font-bold text-white mb-4">{t('featuresTitle')}</h3>
-            <p className="text-slate-400 max-w-2xl mx-auto">
-              {t('featuresSubtitle')}
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="bg-slate-800/30 border border-slate-800 rounded-2xl p-8 hover:border-slate-700 transition-colors group">
-              <div className="w-14 h-14 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 mb-6 group-hover:bg-blue-500/20 transition-colors">
-                <Beaker className="w-7 h-7" />
-              </div>
-              <h4 className="text-xl font-bold text-white mb-3">{t('features.scoring')}</h4>
-              <p className="text-slate-400 leading-relaxed text-sm">
-                {t('features.scoringDesc')}
-              </p>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="bg-slate-800/30 border border-slate-800 rounded-2xl p-8 hover:border-slate-700 transition-colors group">
-              <div className="w-14 h-14 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400 mb-6 group-hover:bg-purple-500/20 transition-colors">
-                <BookOpen className="w-7 h-7" />
-              </div>
-              <h4 className="text-xl font-bold text-white mb-3">{t('features.literature')}</h4>
-              <p className="text-slate-400 leading-relaxed text-sm">
-                {t('features.literatureDesc')}
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="bg-slate-800/30 border border-slate-800 rounded-2xl p-8 hover:border-slate-700 transition-colors group">
-              <div className="w-14 h-14 bg-green-500/10 rounded-xl flex items-center justify-center text-green-400 mb-6 group-hover:bg-green-500/20 transition-colors">
-                <Zap className="w-7 h-7" />
-              </div>
-              <h4 className="text-xl font-bold text-white mb-3">{t('features.protocol')}</h4>
-              <p className="text-slate-400 leading-relaxed text-sm">
-                {t('features.protocolDesc')}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* System Interface Section */}
-      <section id="interface" className="py-24 bg-transparent">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-white mb-4">{t('interfaceTitle')}</h2>
-            <p className="text-slate-400 max-w-2xl mx-auto">
-              {t('interfaceSubtitle')}
-            </p>
-          </div>
-
-          <div className="relative max-w-6xl mx-auto">
-            {/* Glow effect */}
-            <div className="absolute inset-0 bg-blue-500/10 blur-3xl rounded-full opacity-30"></div>
-
-            {/* Dashboard Preview */}
-            <div className="relative bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-              <div className="p-6 md:p-8">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Left Panel - Chart */}
-                  <div className="md:col-span-2 bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
-                    <div className="flex items-center justify-between mb-6">
-                      <h4 className="text-white font-medium">{t('charts.bindingAffinity')}</h4>
-                      <span className="text-xs text-slate-400">{t('charts.last30Days')}</span>
-                    </div>
-                    {/* Mock Bar Chart */}
-                    <div className="flex items-end gap-3 h-40">
-                      <div className="flex-1 flex flex-col gap-1">
-                        <div className="h-[30%] bg-blue-600/30 rounded-t"></div>
-                        <span className="text-xs text-slate-500 text-center">nM</span>
-                      </div>
-                      <div className="flex-1 flex flex-col gap-1">
-                        <div className="h-[50%] bg-blue-600/50 rounded-t"></div>
-                        <span className="text-xs text-slate-500 text-center"></span>
-                      </div>
-                      <div className="flex-1 flex flex-col gap-1">
-                        <div className="h-[70%] bg-blue-600/70 rounded-t"></div>
-                        <span className="text-xs text-slate-500 text-center"></span>
-                      </div>
-                      <div className="flex-1 flex flex-col gap-1">
-                        <div className="h-[90%] bg-blue-600 rounded-t"></div>
-                        <span className="text-xs text-slate-500 text-center">pM</span>
-                      </div>
-                      <div className="flex-1 flex flex-col gap-1">
-                        <div className="h-[60%] bg-blue-600/60 rounded-t"></div>
-                        <span className="text-xs text-slate-500 text-center"></span>
-                      </div>
-                    </div>
-
-                    {/* Mock Records */}
-                    <div className="mt-6 space-y-2">
-                      <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
-                        <span className="text-sm text-slate-300">ADC-2024-V1</span>
-                        <span className="text-sm text-green-400">95.2%</span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
-                        <span className="text-sm text-slate-300">ADC-2024-V2</span>
-                        <span className="text-sm text-blue-400">88.1%</span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
-                        <span className="text-sm text-slate-300">ADC-REF-01</span>
-                        <span className="text-sm text-yellow-400">72.5%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Panel - Live Protocols */}
-                  <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
-                    <h4 className="text-white font-medium mb-4">{t('charts.liveProtocols')}</h4>
-                    <div className="space-y-4">
-                      <div className="p-3 bg-gradient-to-r from-green-500/10 to-transparent border-l-2 border-green-500 rounded-r">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                          <span className="text-sm text-white">Synthesis A</span>
-                        </div>
-                        <span className="text-xs text-slate-400">{t('charts.running')} • 45% complete</span>
-                      </div>
-                      <div className="p-3 bg-gradient-to-r from-blue-500/10 to-transparent border-l-2 border-blue-500 rounded-r">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                          <span className="text-sm text-white">Toxicity Test</span>
-                        </div>
-                        <span className="text-xs text-slate-400">{t('charts.pending')} • Queue #2</span>
-                      </div>
-                      <div className="p-3 bg-gradient-to-r from-purple-500/10 to-transparent border-l-2 border-purple-500 rounded-r">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                          <span className="text-sm text-white">Stability Assay</span>
-                        </div>
-                        <span className="text-xs text-slate-400">{t('charts.scheduled')} • Tomorrow</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+    <main className="min-h-screen bg-slate-950 relative">
+      <HeroSection />
+      <ProblemSolution />
+      <FeaturesGrid />
+      <HowItWorks />
+      <TrustSection />
+      <DashboardPreview />
+      <FAQSection />
+      <BottomCTA />
 
       {/* Footer */}
       <footer id="contact" className="bg-slate-950 border-t border-slate-900 py-16">
@@ -222,7 +41,7 @@ export default function Home() {
               <h4 className="text-white font-bold mb-6">{t('footer.product')}</h4>
               <ul className="space-y-4 text-sm text-slate-400">
                 <li><a href="#" className="hover:text-blue-400 transition-colors">{t('features.scoring')}</a></li>
-                <li><a href="#" className="hover:text-blue-400 transition-colors">{t('features.literature')}</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition-colors">{t('features.evidence')}</a></li>
                 <li><a href="#" className="hover:text-blue-400 transition-colors">{t('features.protocol')}</a></li>
               </ul>
             </div>
@@ -250,3 +69,4 @@ export default function Home() {
     </main>
   );
 }
+
