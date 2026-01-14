@@ -46,13 +46,13 @@
             "title": "작동 방식",
             "subtitle": "복잡한 과정은 저희가 처리합니다. 연구에만 집중하세요.",
             "step1": "입력 (Input)",
-            "step1Desc": "타겟(Target)과 암종,\n혹은 선호하는 항체를\n입력합니다.",
+            "step1Desc": "타겟(Target)과 암종, 혹은 선호하는 항체를\n입력합니다.",
             "step2": "탐색 (Discovery)",
             "step2Desc": "전 세계 임상 데이터와 화학 DB를 뒤져 최적의 후보를 찾습니다.",
             "step3": "검증 (Validation)",
-            "step3Desc": "구조가 없는 최신 약물은 '유사 구조(Proxy)'를 통해 시뮬레이션합니다.",
+            "step3Desc": "구조가 없는 최신 약물은 '유사 구조(Proxy)'를 통해\n시뮬레이션합니다.",
             "step4": "결과 (Result)",
-            "step4Desc": "점수화된 후보 리스트와\n상세 분석 보고서를\n확인합니다."
+            "step4Desc": "점수화된 후보 리스트와 상세 분석 보고서를\n확인합니다."
         },
         "trust": {
             "title": "신뢰의 기준",
