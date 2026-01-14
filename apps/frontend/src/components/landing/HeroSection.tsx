@@ -37,7 +37,7 @@ export default function HeroSection() {
                             {t('titlePrefix')}
                         </h1>
                         <h1 className="text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 leading-tight mb-6">
-                            {t.rich('titleMain', { br: () => <br /> })}
+                            {t.rich('titleMain', { break: () => <br /> })}
                         </h1>
 
                         <p className="text-lg text-slate-400 mb-8 max-w-lg leading-relaxed">
