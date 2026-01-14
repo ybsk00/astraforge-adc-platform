@@ -45,6 +45,7 @@ export default function Header() {
                 <nav className="hidden md:flex items-center gap-8">
                     {isPublicPage ? (
                         <>
+                            {/* Hidden as per user request
                             <Link
                                 href="/services"
                                 className={`text-sm font-medium transition-colors ${isActive('/services') ? 'text-white' : 'text-slate-300 hover:text-white'}`}
@@ -63,6 +64,7 @@ export default function Header() {
                             >
                                 {tHome('solutions')}
                             </Link>
+                            */}
                         </>
                     ) : (
                         <>
