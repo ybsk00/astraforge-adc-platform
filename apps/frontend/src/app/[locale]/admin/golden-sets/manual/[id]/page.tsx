@@ -105,17 +105,18 @@ export default function ManualSeedDetailPage({ params }: { params: Promise<{ id:
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    // Gate Checklist Conditions
+    // Gate Checklist Conditions (Option C: NCT Optional)
     const gateChecks = seed ? {
-        targetResolved: !!formData.resolved_target_symbol,
-        nctSelected: !!formData.clinical_nct_id_primary,
+        targetResolved: !!formData.resolved_target_symbol && formData.resolved_target_symbol !== '',
         smilesReady: !!formData.payload_smiles_standardized || formData.proxy_smiles_flag === true,
-        rdkitComputed: seed.rdkit_mw !== null && seed.rdkit_mw !== undefined,
         evidenceExists: Array.isArray(formData.evidence_refs) && formData.evidence_refs.length >= 1,
-    } : { targetResolved: false, nctSelected: false, smilesReady: false, rdkitComputed: false, evidenceExists: false };
+        // Optional fields
+        nctSelected: !!formData.clinical_nct_id_primary,
+        rdkitComputed: seed.rdkit_mw !== null && seed.rdkit_mw !== undefined,
+    } : { targetResolved: false, smilesReady: false, evidenceExists: false, nctSelected: false, rdkitComputed: false };
 
-    // Phase 1: Skip rdkitComputed
-    const requiredChecks = [gateChecks.targetResolved, gateChecks.nctSelected, gateChecks.smilesReady, gateChecks.evidenceExists];
+    // Option C: Only 3 required gates (NCT is optional)
+    const requiredChecks = [gateChecks.targetResolved, gateChecks.smilesReady, gateChecks.evidenceExists];
     const passedCount = requiredChecks.filter(Boolean).length;
     const canPromote = requiredChecks.every(Boolean) && !seed?.is_final;
 
@@ -177,13 +178,14 @@ export default function ManualSeedDetailPage({ params }: { params: Promise<{ id:
                     <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                         <Trophy className="w-5 h-5 text-yellow-500" />
                         Gate Checklist ({passedCount}/{requiredChecks.length})
+                        <span className="text-xs text-slate-500 font-normal">(Option C: NCT Optional)</span>
                     </h2>
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* Required Gates */}
+                    <div className="grid grid-cols-3 gap-3 mb-4">
                         {[
-                            { key: 'targetResolved', label: 'Target Resolved', desc: 'resolved_target_symbol 설정' },
-                            { key: 'nctSelected', label: 'Primary NCT', desc: 'clinical_nct_id_primary 설정' },
-                            { key: 'smilesReady', label: 'SMILES Ready', desc: 'SMILES 또는 Proxy Flag 설정' },
-                            { key: 'evidenceExists', label: 'Evidence ≥ 1', desc: 'evidence_refs 1개 이상' },
+                            { key: 'targetResolved', label: 'Target Resolved', desc: 'resolved_target_symbol' },
+                            { key: 'smilesReady', label: 'SMILES Ready', desc: 'SMILES 또는 Proxy Flag' },
+                            { key: 'evidenceExists', label: 'Evidence ≥ 1', desc: 'evidence_refs' },
                         ].map(({ key, label, desc }) => (
                             <div key={key} className={`flex items-center gap-3 p-3 rounded-lg ${gateChecks[key as keyof typeof gateChecks]
                                 ? 'bg-green-900/20 border border-green-800'
@@ -195,6 +197,27 @@ export default function ManualSeedDetailPage({ params }: { params: Promise<{ id:
                                 <div>
                                     <div className="text-sm font-medium text-white">{label}</div>
                                     <div className="text-xs text-slate-500">{desc}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {/* Optional Fields */}
+                    <div className="text-xs text-slate-500 mb-2">임상 추적용 (옵션)</div>
+                    <div className="grid grid-cols-2 gap-3">
+                        {[
+                            { key: 'nctSelected', label: 'Primary NCT', desc: '임상 동기화용', optional: true },
+                            { key: 'rdkitComputed', label: 'RDKit', desc: 'MW/LogP 등', optional: true },
+                        ].map(({ key, label, desc }) => (
+                            <div key={key} className={`flex items-center gap-3 p-2 rounded-lg ${gateChecks[key as keyof typeof gateChecks]
+                                ? 'bg-blue-900/20 border border-blue-800/50'
+                                : 'bg-slate-800/30 border border-slate-700/50'
+                                }`}>
+                                {gateChecks[key as keyof typeof gateChecks]
+                                    ? <CheckSquare className="w-4 h-4 text-blue-400" />
+                                    : <Square className="w-4 h-4 text-slate-600" />}
+                                <div>
+                                    <div className="text-xs font-medium text-slate-400">{label}</div>
+                                    <div className="text-xs text-slate-600">{desc}</div>
                                 </div>
                             </div>
                         ))}

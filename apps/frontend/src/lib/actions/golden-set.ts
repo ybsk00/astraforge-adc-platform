@@ -473,7 +473,11 @@ export async function checkDuplicateImport(drugName: string) {
 }
 
 /**
- * Promote Manual Seed to Final
+ * Promote Manual Seed to Final (Option C Policy: NCT Optional)
+ * 
+ * Gate-1: Target Resolved (resolved_target_symbol)
+ * Gate-2: SMILES Ready (payload_smiles_standardized OR proxy_smiles_flag)
+ * Gate-3: Evidence Exists (evidence_refs >= 1)
  */
 export async function promoteToFinal(id: string, userId?: string) {
     const supabase = await createClient();
@@ -489,21 +493,20 @@ export async function promoteToFinal(id: string, userId?: string) {
         throw new Error("Seed not found");
     }
 
-    // 2. Check gate conditions (5 conditions)
+    // 2. Check gate conditions (Option C: 3 required conditions)
     const gateChecks = {
-        targetResolved: !!seed.resolved_target_symbol,
-        nctSelected: !!seed.clinical_nct_id_primary,
+        targetResolved: !!seed.resolved_target_symbol && seed.resolved_target_symbol !== '',
         smilesReady: !!seed.payload_smiles_standardized || seed.proxy_smiles_flag === true,
-        rdkitComputed: seed.rdkit_mw !== null,  // Optional for Phase 1
         evidenceExists: Array.isArray(seed.evidence_refs) && seed.evidence_refs.length >= 1,
+        // Optional fields (not required for promotion)
+        nctSelected: !!seed.clinical_nct_id_primary,
+        rdkitComputed: seed.rdkit_mw !== null,
     };
 
-    // For Phase 1, skip RDKit check
+    // Option C: Only 3 required gates (NCT is optional)
     const requiredChecks = [
         gateChecks.targetResolved,
-        gateChecks.nctSelected,
         gateChecks.smilesReady,
-        // gateChecks.rdkitComputed, // Phase 2
         gateChecks.evidenceExists,
     ];
 
