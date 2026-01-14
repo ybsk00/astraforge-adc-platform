@@ -79,7 +79,7 @@ export default function HowItWorks() {
                                     <h3 className="text-xl font-bold text-white mb-3">
                                         {t(`howItWorks.${step.id}`)}
                                     </h3>
-                                    <p className="text-sm text-slate-400 leading-relaxed">
+                                    <p className="text-sm text-slate-400 leading-relaxed whitespace-pre-line">
                                         {t(`howItWorks.${step.id}Desc`)}
                                     </p>
                                 </div>

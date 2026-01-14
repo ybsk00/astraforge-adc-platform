@@ -2,7 +2,6 @@
 
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Activity, Database, AlertTriangle } from 'lucide-react';
 
 export default function DashboardPreview() {
     const t = useTranslations('HomePage');
@@ -40,7 +39,7 @@ export default function DashboardPreview() {
 
                         <div className="relative aspect-video bg-slate-950 group">
                             <img
-                                src="/images/landing/adc_dashboard_preview.png"
+                                src="/images/landing/real_dashboard.png"
                                 alt="ADC Platform Dashboard"
                                 className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500"
                             />
