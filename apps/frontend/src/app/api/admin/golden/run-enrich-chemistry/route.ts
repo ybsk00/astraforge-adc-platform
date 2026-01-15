@@ -9,18 +9,31 @@ import { NextResponse } from 'next/server';
  */
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const seedIds = body.seed_ids || [];
+        const body = await request.json().catch(() => ({}));
+        let seedIds = body.seed_ids || body.seedIds || [];
         const mode = body.mode || 'all'; // 'payload' | 'linker' | 'antibody' | 'all'
 
-        if (!seedIds.length) {
-            return NextResponse.json(
-                { detail: 'seed_ids is required' },
-                { status: 400 }
-            );
-        }
-
         const supabase = await createClient();
+
+        // seed_ids가 없으면 처리 대상 seed 자동 조회
+        if (!seedIds.length) {
+            const { data: pendingSeeds } = await supabase
+                .from('golden_seed_items')
+                .select('id')
+                .eq('is_final', false)
+                .or('payload_smiles_standardized.is.null,linker_smiles.is.null,antibody_name_canonical.is.null')
+                .limit(50);
+
+            seedIds = (pendingSeeds || []).map((s: any) => s.id);
+
+            if (!seedIds.length) {
+                return NextResponse.json({
+                    status: 'ok',
+                    message: 'No seeds require chemistry enrichment',
+                    processed: 0
+                });
+            }
+        }
 
         let smilesFound = 0;
         let proxyProposed = 0;
