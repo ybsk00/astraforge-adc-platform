@@ -597,10 +597,17 @@ export interface ReviewQueueItem {
     source_job?: string;
     created_at: string;
     reviewed_at?: string;
-    // Join fields
+    // Join fields - expanded for component info
     seed_item?: {
         drug_name_canonical: string;
         target: string;
+        resolved_target_symbol?: string;
+        antibody?: string;
+        linker_family?: string;
+        payload_family?: string;
+        payload_smiles_standardized?: string;
+        proxy_smiles_flag?: boolean;
+        gate_status?: string;
     };
 }
 
@@ -620,7 +627,17 @@ export async function getReviewQueue(
         .from('golden_review_queue')
         .select(`
             *,
-            seed_item:golden_seed_items(drug_name_canonical, target)
+            seed_item:golden_seed_items(
+                drug_name_canonical,
+                target,
+                resolved_target_symbol,
+                antibody,
+                linker_family,
+                payload_family,
+                payload_smiles_standardized,
+                proxy_smiles_flag,
+                gate_status
+            )
         `, { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(from, to);
