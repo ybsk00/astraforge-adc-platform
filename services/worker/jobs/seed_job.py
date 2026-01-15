@@ -1,5 +1,5 @@
 import asyncio
-from typing import Dict, Any, List
+from typing import Dict, Any
 import structlog
 from datetime import datetime
 import os

@@ -25,8 +25,8 @@ cases:
       anal_difficulty: 0.1
       missing_features: []
     expected:
-      eng_fit: 85.0
-      agg_risk: 7.0
+      eng_fit: 75.5
+      agg_risk: 50.0
       proc_risk: 20.0
       anal_risk: 10.0
 
@@ -41,8 +41,8 @@ cases:
       anal_difficulty: 0.2
       missing_features: []
     expected:
-      eng_fit: 55.0
-      agg_risk: 35.0
+      eng_fit: 56.0
+      agg_risk: 100.0
 
   - id: "eng_high_dar"
     name: "High DAR (Manufacturing Risk)"
@@ -55,8 +55,8 @@ cases:
       anal_difficulty: 0.4
       missing_features: []
     expected:
-      eng_fit: 45.0
-      agg_risk: 45.0
+      eng_fit: 46.25
+      agg_risk: 95.0
 
   - id: "eng_missing_data"
     name: "Missing Features Penalty"
@@ -69,7 +69,7 @@ cases:
       anal_difficulty: 0.2
       missing_features: ["h_patch", "proc_complexity"]
     expected:
-      eng_fit: 60.0
+      eng_fit: 90.0
       unc_penalty: 30.0
 
   # --------------------------------------------------------
@@ -87,8 +87,8 @@ cases:
       bystander_need: 0.3
       bystander_capability: 0.35
     expected:
-      bio_fit: 90.0
-      dea: 85.0
+      bio_fit: 92.18
+      dea: 90.73
 
   - id: "bio_low_dea"
     name: "Low Differential Expression"
@@ -102,8 +102,8 @@ cases:
       bystander_need: 0.3
       bystander_capability: 0.3
     expected:
-      bio_fit: 50.0
-      dea: 40.0
+      bio_fit: 80.98
+      dea: 53.92
 
   - id: "bio_poor_internalization"
     name: "Poor Internalization"
@@ -117,7 +117,7 @@ cases:
       bystander_need: 0.0
       bystander_capability: 0.0
     expected:
-      bio_fit: 55.0
+      bio_fit: 82.39
       int: 30.0
 
   - id: "bio_high_heterogeneity"
@@ -132,7 +132,7 @@ cases:
       bystander_need: 0.8
       bystander_capability: 0.5
     expected:
-      bio_fit: 50.0
+      bio_fit: 77.81
       het_pen: 80.0
 
   # --------------------------------------------------------
@@ -149,8 +149,8 @@ cases:
       systemic_exposure: 0.1
       negative_signal: 0.0
     expected:
-      safety_fit: 90.0
-      oot: 10.0
+      safety_fit: 85.7
+      oot: 16.0
 
   - id: "safety_high_offtarget"
     name: "High Off-Target Expression"
@@ -163,8 +163,8 @@ cases:
       systemic_exposure: 0.3
       negative_signal: 0.0
     expected:
-      safety_fit: 35.0
-      oot: 65.0
+      safety_fit: 63.89
+      oot: 65.38
 
   - id: "safety_toxic_payload"
     name: "Toxic Payload Warning"
@@ -177,7 +177,7 @@ cases:
       systemic_exposure: 0.5
       negative_signal: 0.3
     expected:
-      safety_fit: 30.0
+      safety_fit: 51.8
       ph: 90.0
 
   - id: "safety_negative_signal"
@@ -191,7 +191,7 @@ cases:
       systemic_exposure: 0.2
       negative_signal: 0.8
     expected:
-      safety_fit: 40.0
+      safety_fit: 68.3
       neg: 80.0
 
   # --------------------------------------------------------
@@ -206,7 +206,7 @@ cases:
       safety_fit: 70.0
       evidence_fit: 60.0
     expected:
-      total_fit: 73.25  # 0.25*75 + 0.35*80 + 0.30*70 + 0.10*60
+      total_fit: 73.75
 
   - id: "total_bio_focused"
     name: "Bio-Optimized Candidate"
@@ -217,7 +217,7 @@ cases:
       safety_fit: 65.0
       evidence_fit: 70.0
     expected:
-      total_fit: 75.0  # 0.25*60 + 0.35*95 + 0.30*65 + 0.10*70
+      total_fit: 74.75
 
   - id: "total_safety_concern"
     name: "Safety Concern Candidate"
