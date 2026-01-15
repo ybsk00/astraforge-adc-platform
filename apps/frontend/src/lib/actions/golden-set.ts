@@ -197,13 +197,20 @@ export async function getPromotedGoldenSets(limit: number = 10) {
             drug_name_canonical,
             resolved_target_symbol,
             payload_family,
+            payload_exact_name,
             clinical_phase,
             outcome_label,
             golden_group,
             is_final,
+            is_failed_adc,
+            failure_mode,
+            key_risk_category,
+            key_risk_signal,
+            evidence_refs,
+            failure_learning_notes,
             updated_at
         `)
-        .or('is_final.eq.true,golden_group.eq.failed')
+        .or('is_final.eq.true,golden_group.eq.failed,is_failed_adc.eq.true')
         .order('updated_at', { ascending: false })
         .limit(limit);
 

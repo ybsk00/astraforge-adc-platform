@@ -43,10 +43,17 @@ interface FinalSeed {
     drug_name_canonical: string;
     resolved_target_symbol?: string;
     payload_family?: string;
+    payload_exact_name?: string;
     clinical_phase?: string;
     outcome_label?: string;
     golden_group?: string;
     is_final: boolean;
+    is_failed_adc?: boolean;
+    failure_mode?: string;
+    key_risk_category?: string;
+    key_risk_signal?: string;
+    evidence_refs?: any[] | string;
+    failure_learning_notes?: string;
     updated_at: string;
 }
 
