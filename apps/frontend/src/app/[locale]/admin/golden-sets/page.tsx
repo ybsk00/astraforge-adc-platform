@@ -25,8 +25,12 @@ interface ManualSeed {
     id: string;
     drug_name_canonical: string;
     target: string;
+    resolved_target_symbol?: string;
     antibody?: string;
+    linker_family?: string;
     payload_family?: string;
+    payload_smiles_standardized?: string;
+    proxy_smiles_flag?: boolean;
     gate_status: string;
     is_final: boolean;
     outcome_label?: string;
@@ -235,24 +239,40 @@ export default function GoldenSetsPage() {
                             <table className="w-full">
                                 <thead>
                                     <tr className="text-left text-xs text-slate-500 uppercase border-b border-slate-800">
-                                        <th className="py-3 px-4">Drug Name</th>
-                                        <th className="py-3 px-4">Target</th>
-                                        <th className="py-3 px-4">Antibody</th>
-                                        <th className="py-3 px-4">Source</th>
-                                        <th className="py-3 px-4">Status</th>
-                                        <th className="py-3 px-4 text-right">Actions</th>
+                                        <th className="py-3 px-3">Drug Name</th>
+                                        <th className="py-3 px-2">Target</th>
+                                        <th className="py-3 px-2">Antibody</th>
+                                        <th className="py-3 px-2">Linker</th>
+                                        <th className="py-3 px-2">Payload</th>
+                                        <th className="py-3 px-2">Source</th>
+                                        <th className="py-3 px-2">Status</th>
+                                        <th className="py-3 px-2 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {autoCandidates.map((c) => (
                                         <tr key={c.id} className="border-b border-slate-800/50 hover:bg-slate-900/50">
-                                            <td className="py-3 px-4 font-medium text-white">{c.drug_name}</td>
-                                            <td className="py-3 px-4 text-slate-300">{c.target}</td>
-                                            <td className="py-3 px-4 text-slate-400">{c.antibody || "-"}</td>
-                                            <td className="py-3 px-4 text-slate-500 text-sm">{c.source_ref || "-"}</td>
-                                            <td className="py-3 px-4">
+                                            <td className="py-2 px-3 font-medium text-white text-sm">{c.drug_name}</td>
+                                            <td className="py-2 px-2">
+                                                <span className={`px-1.5 py-0.5 text-xs rounded ${c.target && c.target !== 'Unknown' ? 'bg-blue-900/30 text-blue-400' : 'bg-slate-800 text-slate-500'}`}>
+                                                    {c.target || '-'}
+                                                </span>
+                                            </td>
+                                            <td className="py-2 px-2 text-slate-400 text-sm">{c.antibody || '-'}</td>
+                                            <td className="py-2 px-2">
+                                                <span className={`px-1.5 py-0.5 text-xs rounded ${c.linker ? 'bg-purple-900/30 text-purple-400' : 'bg-slate-800 text-slate-500'}`}>
+                                                    {c.linker || '-'}
+                                                </span>
+                                            </td>
+                                            <td className="py-2 px-2">
+                                                <span className={`px-1.5 py-0.5 text-xs rounded ${c.payload ? 'bg-green-900/30 text-green-400' : 'bg-slate-800 text-slate-500'}`}>
+                                                    {c.payload || '-'}
+                                                </span>
+                                            </td>
+                                            <td className="py-2 px-2 text-slate-500 text-xs">{c.source_ref || '-'}</td>
+                                            <td className="py-2 px-2">
                                                 <span className="px-2 py-0.5 text-xs bg-slate-800 text-slate-400 rounded">
-                                                    {c.review_status || "pending"}
+                                                    {c.review_status || 'pending'}
                                                 </span>
                                             </td>
                                             <td className="py-3 px-4 text-right">
@@ -290,25 +310,51 @@ export default function GoldenSetsPage() {
                             <table className="w-full">
                                 <thead>
                                     <tr className="text-left text-xs text-slate-500 uppercase border-b border-slate-800">
-                                        <th className="py-3 px-4">Drug Name</th>
-                                        <th className="py-3 px-4">Target</th>
-                                        <th className="py-3 px-4">Payload</th>
-                                        <th className="py-3 px-4">Group</th>
-                                        <th className="py-3 px-4">Gate Status</th>
-                                        <th className="py-3 px-4 text-right">Actions</th>
+                                        <th className="py-3 px-3">Drug Name</th>
+                                        <th className="py-3 px-2">Target</th>
+                                        <th className="py-3 px-2">Linker</th>
+                                        <th className="py-3 px-2">Payload</th>
+                                        <th className="py-3 px-2">SMILES</th>
+                                        <th className="py-3 px-2">Gate Status</th>
+                                        <th className="py-3 px-2 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {manualSeeds.map((s) => (
                                         <tr key={s.id} className="border-b border-slate-800/50 hover:bg-slate-900/50">
-                                            <td className="py-3 px-4 font-medium text-white">{s.drug_name_canonical}</td>
-                                            <td className="py-3 px-4 text-slate-300">{s.target}</td>
-                                            <td className="py-3 px-4 text-slate-400">{s.payload_family || "-"}</td>
-                                            <td className="py-3 px-4 text-slate-500 text-sm">{s.portfolio_group || "-"}</td>
-                                            <td className="py-3 px-4">
+                                            <td className="py-2 px-3 font-medium text-white text-sm">{s.drug_name_canonical}</td>
+                                            <td className="py-2 px-2">
+                                                <span className={`px-1.5 py-0.5 text-xs rounded ${s.resolved_target_symbol ? 'bg-blue-900/30 text-blue-400' : 'bg-slate-800 text-slate-500'}`}>
+                                                    {s.resolved_target_symbol || s.target || '-'}
+                                                </span>
+                                            </td>
+                                            <td className="py-2 px-2">
+                                                <span className={`px-1.5 py-0.5 text-xs rounded ${s.linker_family ? 'bg-purple-900/30 text-purple-400' : 'bg-slate-800 text-slate-500'}`}>
+                                                    {s.linker_family || '-'}
+                                                </span>
+                                            </td>
+                                            <td className="py-2 px-2">
+                                                <span className={`px-1.5 py-0.5 text-xs rounded ${s.payload_family ? 'bg-green-900/30 text-green-400' : 'bg-slate-800 text-slate-500'}`}>
+                                                    {s.payload_family || '-'}
+                                                </span>
+                                            </td>
+                                            <td className="py-2 px-2">
+                                                {s.payload_smiles_standardized ? (
+                                                    <span className="px-1.5 py-0.5 text-xs rounded bg-emerald-900/30 text-emerald-400" title={s.payload_smiles_standardized}>
+                                                        ✓ Ready
+                                                    </span>
+                                                ) : s.proxy_smiles_flag ? (
+                                                    <span className="px-1.5 py-0.5 text-xs rounded bg-yellow-900/30 text-yellow-400">
+                                                        Proxy
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-1.5 py-0.5 text-xs rounded bg-slate-800 text-slate-500">-</span>
+                                                )}
+                                            </td>
+                                            <td className="py-2 px-2">
                                                 {getGateStatusBadge(s.gate_status, s.is_final)}
                                             </td>
-                                            <td className="py-3 px-4 text-right">
+                                            <td className="py-2 px-2 text-right">
                                                 <Link
                                                     href={`/admin/golden-sets/manual/${s.id}`}
                                                     className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors"
