@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { calculateAdcScore } from '@/lib/adc-scoring';
 
 /**
  * Step 1: 골든셋 로우데이터 찾기
@@ -26,11 +27,25 @@ export async function POST(request: Request) {
             });
         }
 
-        // golden_candidates에 upsert
         let insertedCount = 0;
         let updatedCount = 0;
+        let skippedNotAdc = 0;
 
         for (const candidate of results) {
+            // ADC 스코어 계산
+            const scoreText = [
+                candidate.drug_name,
+                candidate.summary_raw,
+                JSON.stringify(candidate.interventions_raw)
+            ].join(' ');
+            const adcResult = calculateAdcScore(scoreText);
+
+            // score < 3 이면 스킵 (not_adc)
+            if (adcResult.classification === 'not_adc') {
+                skippedNotAdc++;
+                continue;
+            }
+
             // 중복 체크 (nct_id 기준)
             const nctIds = candidate.nct_ids || [];
             const primaryNct = nctIds[0];
@@ -53,6 +68,9 @@ export async function POST(request: Request) {
                             extracted_target_raw: candidate.extracted_target,
                             extracted_payload_raw: candidate.extracted_payload,
                             extracted_linker_raw: candidate.extracted_linker,
+                            adc_score: adcResult.score,
+                            adc_classification: adcResult.classification,
+                            adc_reason: adcResult.reason,
                             updated_at: new Date().toISOString()
                         })
                         .eq('id', existing.id);
@@ -75,6 +93,9 @@ export async function POST(request: Request) {
                             extracted_linker_raw: candidate.extracted_linker,
                             approval_status: candidate.phase,
                             confidence_score: candidate.match_score || 0.5,
+                            adc_score: adcResult.score,
+                            adc_classification: adcResult.classification,
+                            adc_reason: adcResult.reason,
                             evidence_refs: nctIds.map((nct: string) => ({
                                 type: 'NCT',
                                 id: nct,
@@ -90,6 +111,7 @@ export async function POST(request: Request) {
             status: 'ok',
             inserted: insertedCount,
             updated: updatedCount,
+            skipped_not_adc: skippedNotAdc,
             total_found: results.length
         });
 

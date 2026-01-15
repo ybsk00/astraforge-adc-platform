@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { calculateAdcScore } from '@/lib/adc-scoring';
 
 // Target 동의어 사전 (HGNC 기반)
 const TARGET_SYNONYMS: Record<string, string> = {
@@ -68,11 +69,13 @@ export async function POST(request: Request) {
             return NextResponse.json({
                 status: 'ok',
                 proposals_created: 0,
+                skipped_not_adc: 0,
                 message: 'No candidates to process'
             });
         }
 
         let proposalsCreated = 0;
+        let skippedNotAdc = 0;
 
         for (const candidate of candidates) {
             // 1. 구성요소 추출
@@ -86,6 +89,17 @@ export async function POST(request: Request) {
 
             // 4. Linker 표준화
             const resolvedLinker = resolveLinker(extracted.linker);
+
+            // 4.5. ADC 분류
+            const adcResult = candidate.adc_classification
+                ? { score: candidate.adc_score || 0, classification: candidate.adc_classification, reason: candidate.adc_reason }
+                : calculateAdcScore([candidate.drug_name, candidate.summary_raw].join(' '));
+
+            // not_adc 인 경우 스킵
+            if (adcResult.classification === 'not_adc') {
+                skippedNotAdc++;
+                continue;
+            }
 
             // 5. Seed Item 존재 여부 확인 (이미 Import된 경우)
             const { data: existingSeed } = await supabase
@@ -130,7 +144,10 @@ export async function POST(request: Request) {
                         payload_exact_name: resolvedPayload.name,
                         clinical_phase: candidate.approval_status,
                         evidence_refs: candidate.evidence_refs || [],
-                        gate_status: 'needs_review'
+                        gate_status: 'needs_review',
+                        adc_score: adcResult.score,
+                        adc_classification: adcResult.classification,
+                        adc_reason: adcResult.reason
                     })
                     .select()
                     .single();
@@ -149,7 +166,8 @@ export async function POST(request: Request) {
         return NextResponse.json({
             status: 'ok',
             processed: candidates.length,
-            proposals_created: proposalsCreated
+            proposals_created: proposalsCreated,
+            skipped_not_adc: skippedNotAdc
         });
 
     } catch (error: any) {
