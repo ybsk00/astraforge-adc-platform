@@ -45,9 +45,12 @@ interface FinalSeed {
     payload_family?: string;
     clinical_phase?: string;
     outcome_label?: string;
+    golden_group?: string;
     is_final: boolean;
     updated_at: string;
 }
+
+type FinalSubFilter = 'all' | 'approved' | 'clinical_late' | 'clinical_early' | 'failed';
 
 export default function GoldenSetsPage() {
     const [activeTab, setActiveTab] = useState<TabType>("auto");
@@ -63,6 +66,7 @@ export default function GoldenSetsPage() {
     const [isPending, startTransition] = useTransition();
     const [importingId, setImportingId] = useState<string | null>(null);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [finalSubFilter, setFinalSubFilter] = useState<FinalSubFilter>('all');
 
     // Fetch data on tab change
     useEffect(() => {
@@ -373,8 +377,34 @@ export default function GoldenSetsPage() {
                     <ReviewQueueTab items={reviewItems} onRefresh={fetchData} />
                 ) : (
                     /* ======================== TAB 4: FINAL ======================== */
-                    <div className="space-y-3">
-                        {finalSeeds.length === 0 ? (
+                    <div className="space-y-4">
+                        {/* Sub-filter buttons */}
+                        <div className="flex gap-2 flex-wrap">
+                            {[
+                                { key: 'all', label: '전체', color: 'slate' },
+                                { key: 'approved', label: 'Approved (A)', color: 'green' },
+                                { key: 'clinical_late', label: 'Late (B)', color: 'blue' },
+                                { key: 'clinical_early', label: 'Early (C)', color: 'purple' },
+                                { key: 'failed', label: 'Failed (D)', color: 'red' }
+                            ].map((f) => (
+                                <button
+                                    key={f.key}
+                                    onClick={() => setFinalSubFilter(f.key as FinalSubFilter)}
+                                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${finalSubFilter === f.key
+                                        ? f.color === 'green' ? 'bg-green-600 text-white'
+                                            : f.color === 'blue' ? 'bg-blue-600 text-white'
+                                                : f.color === 'purple' ? 'bg-purple-600 text-white'
+                                                    : f.color === 'red' ? 'bg-red-600 text-white'
+                                                        : 'bg-slate-600 text-white'
+                                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                        }`}
+                                >
+                                    {f.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {finalSeeds.filter(s => finalSubFilter === 'all' || s.golden_group === finalSubFilter).length === 0 ? (
                             <div className="text-center py-12 bg-slate-900/50 rounded-xl border border-dashed border-slate-800">
                                 <Trophy className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                                 <h3 className="text-lg font-medium text-slate-400">승격된 Final Seed가 없습니다</h3>
@@ -387,43 +417,56 @@ export default function GoldenSetsPage() {
                                         <th className="py-3 px-4">Drug Name</th>
                                         <th className="py-3 px-4">Target</th>
                                         <th className="py-3 px-4">Payload</th>
+                                        <th className="py-3 px-4">Group</th>
                                         <th className="py-3 px-4">Phase</th>
                                         <th className="py-3 px-4 text-right">상세</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {finalSeeds.map((s) => {
-                                        const phaseBadge = getPhaseBadge(s.clinical_phase);
-                                        return (
-                                            <tr key={s.id} className="border-b border-slate-800/50 hover:bg-slate-900/50">
-                                                <td className="py-3 px-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <CheckCircle2 className="w-4 h-4 text-green-400" />
-                                                        <span className="font-medium text-white">{s.drug_name_canonical}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    <span className="px-2 py-1 text-xs font-medium rounded bg-blue-900/30 text-blue-400 border border-blue-800/50">
-                                                        {s.resolved_target_symbol || "-"}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-4 text-slate-400">{s.payload_family || "-"}</td>
-                                                <td className="py-3 px-4">
-                                                    <span className={`px-2 py-1 text-xs font-medium rounded ${phaseBadge.bg} ${phaseBadge.text}`}>
-                                                        {phaseBadge.label}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-4 text-right">
-                                                    <Link
-                                                        href={`/admin/golden-sets/manual/${s.id}`}
-                                                        className="text-sm text-blue-400 hover:text-blue-300"
-                                                    >
-                                                        보기
-                                                    </Link>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
+                                    {finalSeeds
+                                        .filter(s => finalSubFilter === 'all' || s.golden_group === finalSubFilter)
+                                        .map((s) => {
+                                            const phaseBadge = getPhaseBadge(s.clinical_phase);
+                                            const groupBadge = getGroupBadge(s.golden_group);
+                                            return (
+                                                <tr key={s.id} className="border-b border-slate-800/50 hover:bg-slate-900/50">
+                                                    <td className="py-3 px-4">
+                                                        <div className="flex items-center gap-2">
+                                                            {s.golden_group === 'failed' ? (
+                                                                <AlertCircle className="w-4 h-4 text-red-400" />
+                                                            ) : (
+                                                                <CheckCircle2 className="w-4 h-4 text-green-400" />
+                                                            )}
+                                                            <span className="font-medium text-white">{s.drug_name_canonical}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-3 px-4">
+                                                        <span className="px-2 py-1 text-xs font-medium rounded bg-blue-900/30 text-blue-400 border border-blue-800/50">
+                                                            {s.resolved_target_symbol || "-"}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-4 text-slate-400">{s.payload_family || "-"}</td>
+                                                    <td className="py-3 px-4">
+                                                        <span className={`px-2 py-1 text-xs font-medium rounded ${groupBadge.bg} ${groupBadge.text}`}>
+                                                            {groupBadge.label}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-4">
+                                                        <span className={`px-2 py-1 text-xs font-medium rounded ${phaseBadge.bg} ${phaseBadge.text}`}>
+                                                            {phaseBadge.label}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-4 text-right">
+                                                        <Link
+                                                            href={`/admin/golden-sets/manual/${s.id}`}
+                                                            className="text-sm text-blue-400 hover:text-blue-300"
+                                                        >
+                                                            보기
+                                                        </Link>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                 </tbody>
                             </table>
                         )}
@@ -442,4 +485,21 @@ function getPhaseBadge(phase: string | null | undefined) {
     if (phase.includes('2')) return { bg: 'bg-purple-900/50', text: 'text-purple-400', label: phase };
     return { bg: 'bg-slate-700', text: 'text-slate-400', label: phase };
 }
+
+// Group badge helper
+function getGroupBadge(group: string | null | undefined) {
+    switch (group) {
+        case 'approved':
+            return { bg: 'bg-green-900/50', text: 'text-green-400', label: 'Approved' };
+        case 'clinical_late':
+            return { bg: 'bg-blue-900/50', text: 'text-blue-400', label: 'Late (2/3)' };
+        case 'clinical_early':
+            return { bg: 'bg-purple-900/50', text: 'text-purple-400', label: 'Early (1)' };
+        case 'failed':
+            return { bg: 'bg-red-900/50', text: 'text-red-400', label: 'Failed' };
+        default:
+            return { bg: 'bg-slate-700', text: 'text-slate-400', label: '-' };
+    }
+}
+
 

@@ -199,10 +199,11 @@ export async function getPromotedGoldenSets(limit: number = 10) {
             payload_family,
             clinical_phase,
             outcome_label,
+            golden_group,
             is_final,
             updated_at
         `)
-        .eq('is_final', true)
+        .or('is_final.eq.true,golden_group.eq.failed')
         .order('updated_at', { ascending: false })
         .limit(limit);
 
