@@ -579,3 +579,213 @@ export async function getAutoCandidates(
 
     return { data: data || [], count: count || 0 };
 }
+
+// ============================================
+// Review Queue (golden_review_queue) Actions
+// ============================================
+
+export interface ReviewQueueItem {
+    id: string;
+    seed_item_id: string;
+    change_type: string;
+    field_name: string;
+    old_value: string | null;
+    new_value: string | null;
+    proposed_patch: Record<string, any> | null;
+    status: 'pending' | 'approved' | 'rejected';
+    reviewer_comment?: string;
+    source_job?: string;
+    created_at: string;
+    reviewed_at?: string;
+    // Join fields
+    seed_item?: {
+        drug_name_canonical: string;
+        target: string;
+    };
+}
+
+/**
+ * Get Review Queue items (pending by default)
+ */
+export async function getReviewQueue(
+    page: number = 1,
+    limit: number = 50,
+    status: 'pending' | 'approved' | 'rejected' | 'all' = 'pending'
+) {
+    const supabase = await createClient();
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let query = supabase
+        .from('golden_review_queue')
+        .select(`
+            *,
+            seed_item:golden_seed_items(drug_name_canonical, target)
+        `, { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+    if (status !== 'all') {
+        query = query.eq('status', status);
+    }
+
+    const { data, error, count } = await query;
+
+    if (error) {
+        console.error("Failed to fetch review queue:", error);
+        throw new Error("Failed to fetch review queue");
+    }
+
+    return { data: data || [], count: count || 0 };
+}
+
+/**
+ * Approve a Review Queue item
+ */
+export async function approveReviewItem(id: string, comment?: string) {
+    const supabase = await createClient();
+
+    // 1. Fetch the review item
+    const { data: item, error: fetchError } = await supabase
+        .from('golden_review_queue')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (fetchError || !item) {
+        throw new Error("Review item not found");
+    }
+
+    // 2. Apply the proposed patch to the seed item
+    if (item.proposed_patch && item.seed_item_id) {
+        const { error: patchError } = await supabase
+            .from('golden_seed_items')
+            .update(item.proposed_patch)
+            .eq('id', item.seed_item_id);
+
+        if (patchError) {
+            console.error("Failed to apply patch:", patchError);
+            throw new Error("Failed to apply changes");
+        }
+    }
+
+    // 3. Mark the review item as approved
+    const { error: updateError } = await supabase
+        .from('golden_review_queue')
+        .update({
+            status: 'approved',
+            reviewer_comment: comment,
+            reviewed_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+    if (updateError) {
+        throw new Error("Failed to update review status");
+    }
+
+    revalidatePath('/admin/golden-sets');
+    return { success: true };
+}
+
+/**
+ * Reject a Review Queue item
+ */
+export async function rejectReviewItem(id: string, comment?: string) {
+    const supabase = await createClient();
+
+    const { error } = await supabase
+        .from('golden_review_queue')
+        .update({
+            status: 'rejected',
+            reviewer_comment: comment,
+            reviewed_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+    if (error) {
+        throw new Error("Failed to reject review item");
+    }
+
+    revalidatePath('/admin/golden-sets');
+    return { success: true };
+}
+
+// ============================================
+// Pipeline Step Runners
+// ============================================
+
+/**
+ * Run Step 1: Collect candidates from ClinicalTrials
+ */
+export async function runPipelineStep1(cancerType: string, targets: string[], limit: number = 50) {
+    const response = await fetch('/api/admin/golden/run-candidates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cancerType, targets, limit }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to run Step 1');
+    }
+
+    revalidatePath('/admin/golden-sets');
+    return response.json();
+}
+
+/**
+ * Run Step 2: Enrich components (target, linker, payload)
+ */
+export async function runPipelineStep2(seedIds?: string[]) {
+    const response = await fetch('/api/admin/golden/run-enrich-components', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seedIds }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to run Step 2');
+    }
+
+    revalidatePath('/admin/golden-sets');
+    return response.json();
+}
+
+/**
+ * Run Step 3: Enrich chemistry (SMILES, Antibody Identity)
+ */
+export async function runPipelineStep3(seedIds?: string[]) {
+    const response = await fetch('/api/admin/golden/run-enrich-chemistry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seedIds }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to run Step 3');
+    }
+
+    revalidatePath('/admin/golden-sets');
+    return response.json();
+}
+
+/**
+ * Run Step 4: Promote approved seeds to final
+ */
+export async function runPipelineStep4(seedIds?: string[]) {
+    const response = await fetch('/api/admin/golden/promote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seedIds }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to run Step 4');
+    }
+
+    revalidatePath('/admin/golden-sets');
+    return response.json();
+}

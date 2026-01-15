@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { Database, Calendar, CheckCircle2, ArrowRight, Import, Loader2, AlertCircle, Filter, RefreshCw, Trophy } from "lucide-react";
-import { getAutoCandidates, getManualSeeds, importCandidateToManual, getPromotedGoldenSets } from "@/lib/actions/golden-set";
+import { Database, Calendar, CheckCircle2, ArrowRight, Import, Loader2, AlertCircle, Filter, RefreshCw, Trophy, ClipboardList } from "lucide-react";
+import { getAutoCandidates, getManualSeeds, importCandidateToManual, getPromotedGoldenSets, getReviewQueue, ReviewQueueItem } from "@/lib/actions/golden-set";
+import PipelinePanel from "./components/PipelinePanel";
+import ReviewQueueTab from "./components/ReviewQueueTab";
 
-type TabType = "auto" | "manual" | "final";
+type TabType = "auto" | "manual" | "review" | "final";
 
 interface AutoCandidate {
     id: string;
@@ -48,9 +50,11 @@ export default function GoldenSetsPage() {
     const [autoCandidates, setAutoCandidates] = useState<AutoCandidate[]>([]);
     const [manualSeeds, setManualSeeds] = useState<ManualSeed[]>([]);
     const [finalSeeds, setFinalSeeds] = useState<FinalSeed[]>([]);
+    const [reviewItems, setReviewItems] = useState<ReviewQueueItem[]>([]);
     const [autoCount, setAutoCount] = useState(0);
     const [manualCount, setManualCount] = useState(0);
     const [finalCount, setFinalCount] = useState(0);
+    const [reviewCount, setReviewCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [isPending, startTransition] = useTransition();
     const [importingId, setImportingId] = useState<string | null>(null);
@@ -61,6 +65,7 @@ export default function GoldenSetsPage() {
         fetchData();
     }, [activeTab]);
 
+
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -69,9 +74,13 @@ export default function GoldenSetsPage() {
                 setAutoCandidates(result.data);
                 setAutoCount(result.count);
             } else if (activeTab === "manual") {
-                const result = await getManualSeeds(1, 50, { isFinal: false }); // is_final=false only
+                const result = await getManualSeeds(1, 50, { isFinal: false });
                 setManualSeeds(result.data);
                 setManualCount(result.count);
+            } else if (activeTab === "review") {
+                const result = await getReviewQueue(1, 50, 'pending');
+                setReviewItems(result.data);
+                setReviewCount(result.count);
             } else {
                 // Final tab
                 const data = await getPromotedGoldenSets(50);
@@ -128,11 +137,11 @@ export default function GoldenSetsPage() {
         <div className="min-h-screen bg-slate-950 p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-4">
                     <div>
                         <h1 className="text-2xl font-bold text-white mb-1">Golden Sets</h1>
                         <p className="text-sm text-slate-400">
-                            Auto: 자동 수집 후보 → Manual: 정답지 큐레이션 → Final: 승격
+                            Auto: 자동 수집 후보 → Manual: 정답지 큐레이션 → Review: 검토 → Final: 승격
                         </p>
                     </div>
                     <button
@@ -143,6 +152,11 @@ export default function GoldenSetsPage() {
                         <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
                         새로고침
                     </button>
+                </div>
+
+                {/* Pipeline Panel */}
+                <div className="mb-6">
+                    <PipelinePanel onStepComplete={fetchData} />
                 </div>
 
                 {/* Message Toast */}
@@ -178,6 +192,17 @@ export default function GoldenSetsPage() {
                     >
                         Manual (수동 Seed)
                         <span className="ml-2 px-2 py-0.5 bg-slate-900 rounded text-xs">{manualCount}</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("review")}
+                        className={`px-4 py-2 rounded-t-lg font-medium transition-colors flex items-center gap-1 ${activeTab === "review"
+                            ? "bg-yellow-600 text-white"
+                            : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                            }`}
+                    >
+                        <ClipboardList className="w-4 h-4" />
+                        Review (검토)
+                        <span className="ml-2 px-2 py-0.5 bg-slate-900 rounded text-xs">{reviewCount}</span>
                     </button>
                     <button
                         onClick={() => setActiveTab("final")}
@@ -297,8 +322,11 @@ export default function GoldenSetsPage() {
                             </table>
                         )}
                     </div>
+                ) : activeTab === "review" ? (
+                    /* ======================== TAB 3: REVIEW ======================== */
+                    <ReviewQueueTab items={reviewItems} onRefresh={fetchData} />
                 ) : (
-                    /* ======================== TAB 3: FINAL ======================== */
+                    /* ======================== TAB 4: FINAL ======================== */
                     <div className="space-y-3">
                         {finalSeeds.length === 0 ? (
                             <div className="text-center py-12 bg-slate-900/50 rounded-xl border border-dashed border-slate-800">
