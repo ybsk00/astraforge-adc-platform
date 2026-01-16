@@ -40,7 +40,7 @@ export default function AlertsPage() {
         try {
             setLoading(true);
             const data = await getAlerts();
-            setAlerts(data as any);
+            setAlerts(data as Alert[]);
         } catch (err) {
             console.error('Failed to fetch alerts:', err);
         } finally {

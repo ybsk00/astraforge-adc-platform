@@ -4,7 +4,6 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     getGoldenSetById,
-    updateCandidateReviewStatus,
     promoteGoldenSet,
     getGoldenCandidateEvidence,
     deleteGoldenSet,
@@ -14,7 +13,6 @@ import {
 import {
     ArrowLeft,
     CheckCircle2,
-    XCircle,
     AlertCircle,
     Loader2,
     Search,
@@ -23,11 +21,9 @@ import {
     Save,
     Trash2,
     ExternalLink,
-    FileText,
     ShieldCheck,
     Edit3,
-    BookOpen,
-    Link2
+    BookOpen
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { createClient } from '@/lib/supabase/client';

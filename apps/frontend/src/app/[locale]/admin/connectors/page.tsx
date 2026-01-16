@@ -13,12 +13,9 @@ import {
     FileText,
     RefreshCw,
     Play,
-    ChevronRight,
-    ArrowRight,
     Download
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
 import { getConnectors, triggerConnectorRun, createConnector, setupDefaultConnectors } from '@/lib/actions/admin';
 import { clsx } from 'clsx';
 
@@ -27,17 +24,19 @@ interface Connector {
     name: string;
     type: string;
     is_enabled: boolean;
-    config: any;
+    config: Record<string, unknown>;
     latest_run: {
         status: string;
         started_at: string | null;
         ended_at: string | null;
-        result_summary: any;
-        error_json: any;
+        result_summary: Record<string, unknown> | null;
+        error_json: Record<string, unknown> | null;
     } | null;
 }
 
-const STATUS_CONFIG: Record<string, { labelKey: string; icon: any; class: string; color: string }> = {
+type LucideIcon = React.ComponentType<{ className?: string }>;
+
+const STATUS_CONFIG: Record<string, { labelKey: string; icon: LucideIcon; class: string; color: string }> = {
     queued: { labelKey: 'status.queued', icon: Clock, class: 'bg-amber-500/20 text-amber-400 border-amber-500/20', color: 'text-amber-400' },
     running: { labelKey: 'status.running', icon: Loader2, class: 'bg-blue-500/20 text-blue-400 border-blue-500/20', color: 'text-blue-400' },
     succeeded: { labelKey: 'status.succeeded', icon: CheckCircle, class: 'bg-green-500/20 text-green-400 border-green-500/20', color: 'text-green-400' },
@@ -45,7 +44,7 @@ const STATUS_CONFIG: Record<string, { labelKey: string; icon: any; class: string
     idle: { labelKey: 'status.idle', icon: CheckCircle, class: 'bg-slate-500/20 text-slate-400 border-slate-500/20', color: 'text-slate-400' },
 };
 
-const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
+const TYPE_CONFIG: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
     api: { icon: Activity, color: 'text-blue-400', bg: 'bg-blue-500/20' },
     crawler: { icon: Database, color: 'text-purple-400', bg: 'bg-purple-500/20' },
     golden_seed: { icon: Database, color: 'text-amber-400', bg: 'bg-amber-500/20' },
@@ -54,20 +53,17 @@ const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
 
 export default function ConnectorsPage() {
     const t = useTranslations('Admin.connectors');
-    const router = useRouter();
     const [connectors, setConnectors] = useState<Connector[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newConnector, setNewConnector] = useState({ name: '', type: 'api', config: {} });
 
     const fetchConnectors = async () => {
         try {
             const data = await getConnectors();
-            setConnectors(data as any);
-            setError(null);
+            setConnectors(data as Connector[]);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to fetch connectors');
+            console.error('Failed to fetch connectors:', err);
         } finally {
             setLoading(false);
         }

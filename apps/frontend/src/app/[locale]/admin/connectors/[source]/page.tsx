@@ -3,14 +3,23 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
+interface ConnectorCursor {
+    status: string;
+    stats?: {
+        fetched?: number;
+    };
+    last_success_at?: string;
+    error_message?: string;
+}
+
 interface ConnectorDetail {
     source: string;
     name: string;
     description: string;
     category: string;
     rate_limit: string;
-    cursors: any[];
-    recent_logs: any[];
+    cursors: ConnectorCursor[];
+    recent_logs: LogEntry[];
 }
 
 interface LogEntry {
@@ -63,6 +72,7 @@ export default function ConnectorDetailPage() {
         fetchDetail();
         const interval = setInterval(fetchDetail, 10000);
         return () => clearInterval(interval);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [source]);
 
     const handleRun = async () => {
@@ -78,7 +88,7 @@ export default function ConnectorDetailPage() {
 
             await fetchDetail();
             setRunQuery('');
-        } catch (err) {
+        } catch {
             alert('Failed to run connector');
         } finally {
             setRunning(false);
