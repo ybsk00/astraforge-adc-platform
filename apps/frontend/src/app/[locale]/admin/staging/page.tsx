@@ -29,6 +29,16 @@ interface StagingComponent {
     created_at: string;
 }
 
+interface StagingStats {
+    total: number;
+    by_status: {
+        pending: number;
+        approved: number;
+        rejected: number;
+    };
+    by_type: Record<string, number>;
+}
+
 type LucideIcon = React.ComponentType<{ className?: string }>;
 
 const TYPE_CONFIG: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
@@ -57,7 +67,7 @@ export default function StagingPage() {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [filterType, setFilterType] = useState<string>('');
     const [filterStatus, setFilterStatus] = useState<string>('pending');
-    const [stats, setStats] = useState<Record<string, unknown> | null>(null);
+    const [stats, setStats] = useState<StagingStats | null>(null);
 
     const fetchComponents = async () => {
         try {
