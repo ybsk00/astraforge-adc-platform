@@ -270,8 +270,8 @@ export default function ReviewQueuePage() {
                                                     <div
                                                         className={clsx(
                                                             "h-full transition-all duration-500",
-                                                            selectedItem.structure_confidence >= 80 ? "bg-emerald-500" :
-                                                                selectedItem.structure_confidence >= 50 ? "bg-blue-500" :
+                                                            (selectedItem.structure_confidence || 0) >= 80 ? "bg-emerald-500" :
+                                                                (selectedItem.structure_confidence || 0) >= 50 ? "bg-blue-500" :
                                                                     "bg-amber-500"
                                                         )}
                                                         style={{ width: `${selectedItem.structure_confidence || 0}%` }}
