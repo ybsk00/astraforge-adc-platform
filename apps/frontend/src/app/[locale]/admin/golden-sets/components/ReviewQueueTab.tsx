@@ -24,8 +24,9 @@ export default function ReviewQueueTab({ items, onRefresh }: ReviewQueueTabProps
                 setMessage({ type: "success", text: "변경 사항이 승인되었습니다." });
                 setComment("");
                 onRefresh();
-            } catch (error: any) {
-                setMessage({ type: "error", text: error.message });
+            } catch (error: unknown) {
+                const errorMessage = error instanceof Error ? error.message : '오류 발생';
+                setMessage({ type: "error", text: errorMessage });
             } finally {
                 setProcessingId(null);
             }
@@ -40,8 +41,9 @@ export default function ReviewQueueTab({ items, onRefresh }: ReviewQueueTabProps
                 setMessage({ type: "success", text: "변경 사항이 거절되었습니다." });
                 setComment("");
                 onRefresh();
-            } catch (error: any) {
-                setMessage({ type: "error", text: error.message });
+            } catch (error: unknown) {
+                const errorMessage = error instanceof Error ? error.message : '오류 발생';
+                setMessage({ type: "error", text: errorMessage });
             } finally {
                 setProcessingId(null);
             }

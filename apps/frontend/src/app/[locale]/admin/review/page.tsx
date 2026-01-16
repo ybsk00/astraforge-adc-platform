@@ -1,16 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
 import {
     CheckCircle2,
-    XCircle,
-    Edit3,
     ExternalLink,
     Search,
-    Filter,
     AlertCircle,
-    ChevronRight,
     Loader2,
     Database,
     FileText
@@ -24,13 +19,25 @@ import {
     resolvePayloadStructure
 } from '@/lib/actions/admin';
 
+interface ReviewItem {
+    id: string;
+    name?: string;
+    drug_name?: string;
+    structure_status: string;
+    structure_source?: string;
+    structure_confidence?: number;
+    smiles?: string;
+    inchi_key?: string;
+    external_id?: string;
+    synonyms?: string[];
+}
+
 export default function ReviewQueuePage() {
-    const t = useTranslations('Admin.review');
     const [activeTab, setActiveTab] = useState<'linkers' | 'payloads'>('linkers');
     const [loading, setLoading] = useState(true);
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState<ReviewItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedItem, setSelectedItem] = useState<any>(null);
+    const [selectedItem, setSelectedItem] = useState<ReviewItem | null>(null);
     const [resolving, setResolving] = useState<string | null>(null);
 
     const fetchData = async () => {
@@ -38,7 +45,7 @@ export default function ReviewQueuePage() {
         try {
             const data = activeTab === 'linkers' ? await getSeedLinkers() : await getSeedPayloads();
             // 검수가 필요한 항목(resolved, needs_review) 우선 표시
-            setItems(data.sort((a: any, b: any) => {
+            setItems((data as ReviewItem[]).sort((a: ReviewItem, b: ReviewItem) => {
                 if (a.structure_status === 'confirmed' && b.structure_status !== 'confirmed') return 1;
                 if (a.structure_status !== 'confirmed' && b.structure_status === 'confirmed') return -1;
                 return (b.structure_confidence || 0) - (a.structure_confidence || 0);
@@ -52,9 +59,10 @@ export default function ReviewQueuePage() {
 
     useEffect(() => {
         fetchData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab]);
 
-    const handleApprove = async (item: any) => {
+    const handleApprove = async (item: ReviewItem) => {
         try {
             await updateEntityStructure(
                 activeTab === 'linkers' ? 'linker' : 'payload',
@@ -63,12 +71,12 @@ export default function ReviewQueuePage() {
             );
             await fetchData();
             setSelectedItem(null);
-        } catch (error) {
+        } catch {
             alert('승인에 실패했습니다.');
         }
     };
 
-    const handleResolve = async (item: any) => {
+    const handleResolve = async (item: ReviewItem) => {
         setResolving(item.id);
         try {
             if (activeTab === 'linkers') {
@@ -77,7 +85,7 @@ export default function ReviewQueuePage() {
                 await resolvePayloadStructure(item.id);
             }
             await fetchData();
-        } catch (error) {
+        } catch {
             alert('구조 조회에 실패했습니다.');
         } finally {
             setResolving(null);

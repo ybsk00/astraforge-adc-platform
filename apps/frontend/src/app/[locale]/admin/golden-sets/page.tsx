@@ -52,7 +52,7 @@ interface FinalSeed {
     failure_mode?: string;
     key_risk_category?: string;
     key_risk_signal?: string;
-    evidence_refs?: any[] | string;
+    evidence_refs?: Record<string, unknown>[] | string;
     failure_learning_notes?: string;
     updated_at: string;
 }
@@ -124,8 +124,9 @@ export default function GoldenSetsPage() {
                 const result = await getAutoCandidates(1, 50);
                 setAutoCandidates(result.data);
                 setAutoCount(result.count);
-            } catch (error: any) {
-                setMessage({ type: "error", text: error.message || "삭제 실패" });
+            } catch (error: unknown) {
+                const errorMessage = error instanceof Error ? error.message : "삭제 실패";
+                setMessage({ type: "error", text: errorMessage });
             } finally {
                 setImportingId(null);
             }
@@ -144,8 +145,9 @@ export default function GoldenSetsPage() {
                 const result = await getAutoCandidates(1, 50);
                 setAutoCandidates(result.data);
                 setAutoCount(result.count);
-            } catch (error: any) {
-                setMessage({ type: "error", text: error.message || "구성요소 추출 실패" });
+            } catch (error: unknown) {
+                const errorMessage = error instanceof Error ? error.message : "구성요소 추출 실패";
+                setMessage({ type: "error", text: errorMessage });
             } finally {
                 setImportingId(null);
             }

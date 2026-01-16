@@ -8,12 +8,13 @@ import {
     Loader2,
     CheckCircle2,
     AlertCircle,
-    Play,
     History,
     User,
     Layers
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+
+type LucideIcon = React.ComponentType<{ className?: string }>;
 
 interface DesignRun {
     id: string;
@@ -27,7 +28,7 @@ interface DesignRun {
     } | null;
 }
 
-const STATUS_CONFIG: Record<string, { labelKey: string; icon: any; class: string; color: string }> = {
+const STATUS_CONFIG: Record<string, { labelKey: string; icon: LucideIcon; class: string; color: string }> = {
     queued: { labelKey: 'status.queued', icon: Clock, class: 'bg-amber-500/20 text-amber-400', color: 'text-amber-400' },
     running: { labelKey: 'status.running', icon: Loader2, class: 'bg-blue-500/20 text-blue-400', color: 'text-blue-400' },
     retrieving: { labelKey: 'status.retrieving', icon: Loader2, class: 'bg-blue-500/20 text-blue-400', color: 'text-blue-400' },
@@ -43,15 +44,13 @@ export default function RunsPage() {
     const t = useTranslations('Admin.designRuns');
     const [runs, setRuns] = useState<DesignRun[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
     const fetchRuns = async () => {
         try {
             const data = await getDesignRuns();
-            setRuns(data as any);
-            setError(null);
+            setRuns(data as DesignRun[]);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to fetch runs');
+            console.error('Failed to fetch runs:', err);
         } finally {
             setLoading(false);
         }

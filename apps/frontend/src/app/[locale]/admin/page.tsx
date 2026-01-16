@@ -12,10 +12,18 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+interface FinalSeed {
+    id: string;
+    drug_name_canonical: string;
+    resolved_target_symbol?: string;
+    payload_family?: string;
+    clinical_phase?: string;
+}
+
 export default async function AdminDashboardPage() {
     const t = await getTranslations('Admin');
     const stats = await getAdminStats();
-    const finalSeeds = await getPromotedGoldenSets();
+    const finalSeeds = await getPromotedGoldenSets() as FinalSeed[];
 
     const kpiCards = [
         {
@@ -92,7 +100,7 @@ export default async function AdminDashboardPage() {
                         <div className="flex items-center gap-3 mb-2">
                             <Target className="w-5 h-5 text-blue-400" />
                             <span className="text-lg font-bold text-white">
-                                {new Set(finalSeeds.map((s: any) => s.resolved_target_symbol).filter(Boolean)).size}
+                                {new Set(finalSeeds.map((s: FinalSeed) => s.resolved_target_symbol).filter(Boolean)).size}
                             </span>
                         </div>
                         <div className="text-sm text-slate-400">Unique Targets</div>
@@ -101,7 +109,7 @@ export default async function AdminDashboardPage() {
                         <div className="flex items-center gap-3 mb-2">
                             <Beaker className="w-5 h-5 text-purple-400" />
                             <span className="text-lg font-bold text-white">
-                                {new Set(finalSeeds.map((s: any) => s.payload_family).filter(Boolean)).size}
+                                {new Set(finalSeeds.map((s: FinalSeed) => s.payload_family).filter(Boolean)).size}
                             </span>
                         </div>
                         <div className="text-sm text-slate-400">Payload Families</div>
@@ -110,7 +118,7 @@ export default async function AdminDashboardPage() {
                         <div className="flex items-center gap-3 mb-2">
                             <CheckCircle2 className="w-5 h-5 text-amber-400" />
                             <span className="text-lg font-bold text-white">
-                                {finalSeeds.filter((s: any) => s.clinical_phase === 'Approved').length}
+                                {finalSeeds.filter((s: FinalSeed) => s.clinical_phase === 'Approved').length}
                             </span>
                         </div>
                         <div className="text-sm text-slate-400">Approved</div>
@@ -144,7 +152,7 @@ export default async function AdminDashboardPage() {
                             </thead>
                             <tbody className="divide-y divide-slate-800">
                                 {finalSeeds.length > 0 ? (
-                                    finalSeeds.slice(0, 10).map((seed: any) => {
+                                    finalSeeds.slice(0, 10).map((seed: FinalSeed) => {
                                         const phaseBadge = getPhaseBadge(seed.clinical_phase);
                                         return (
                                             <tr key={seed.id} className="hover:bg-slate-800/30 transition-colors">

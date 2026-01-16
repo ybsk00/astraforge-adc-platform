@@ -93,11 +93,12 @@ export default function PipelinePanel({ onStepComplete }: PipelinePanelProps) {
                 if (step === 1) setShowStep1Modal(false);
                 onStepComplete?.();
 
-            } catch (error: any) {
+            } catch (error: unknown) {
                 setStepStatus(prev => ({ ...prev, [stepKey]: 'error' }));
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
                 setResult({
                     step,
-                    message: error.message,
+                    message: errorMessage,
                     type: 'error'
                 });
             }
@@ -178,8 +179,8 @@ export default function PipelinePanel({ onStepComplete }: PipelinePanelProps) {
             {/* Result Message */}
             {result && (
                 <div className={`mt-2 p-2 rounded-lg text-sm flex items-center gap-2 ${result.type === 'success'
-                        ? 'bg-green-900/30 text-green-400 border border-green-800'
-                        : 'bg-red-900/30 text-red-400 border border-red-800'
+                    ? 'bg-green-900/30 text-green-400 border border-green-800'
+                    : 'bg-red-900/30 text-red-400 border border-red-800'
                     }`}>
                     {result.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
                     Step {result.step}: {result.message}

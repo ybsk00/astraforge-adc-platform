@@ -230,7 +230,7 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
     };
 
     // Edit Candidate Handlers
-    const handleEditCandidate = (candidate: any) => {
+    const handleEditCandidate = (candidate: GoldenCandidate) => {
         setEditingCandidate(candidate);
         setEditForm({
             drug_name: candidate.drug_name || '',
@@ -275,14 +275,14 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
         }
     };
 
-    const handleFieldSelect = (item: any) => {
+    const handleFieldSelect = (item: CatalogItem) => {
         if (!fieldSearchType) return;
         setEditForm(prev => ({ ...prev, [fieldSearchType]: item.name }));
         setFieldSearchType(null);
     };
 
     // Evidence Handlers
-    const handleShowEvidence = async (candidate: any) => {
+    const handleShowEvidence = async (candidate: GoldenCandidate) => {
         setEvidenceCandidate(candidate);
         setLoadingEvidence(true);
         try {
