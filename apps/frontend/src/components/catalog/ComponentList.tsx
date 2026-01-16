@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { api, type Component, type CatalogStats } from '@/lib/api';
 import ComponentForm from './ComponentForm';
 import Link from 'next/link';
-import { Search, Filter, Plus, Target, Syringe, Link as LinkIcon, Pill, FlaskConical } from 'lucide-react';
+import { Search, Plus, Target, Syringe, Link as LinkIcon, Pill, FlaskConical } from 'lucide-react';
 
 const STATUS_BADGE: Record<string, { label: string; class: string }> = {
     pending_compute: { label: 'Processing', class: 'bg-blue-500/20 text-blue-400' },

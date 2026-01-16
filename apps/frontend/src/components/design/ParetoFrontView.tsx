@@ -3,7 +3,7 @@
 /**
  * 파레토 프론트 시각화 컴포넌트
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ScoreRadarChart from "./ScoreRadarChart";
 
 interface Candidate {
@@ -28,11 +28,7 @@ export default function ParetoFrontView({ runId }: ParetoFrontViewProps) {
 
     const ENGINE_URL = process.env.NEXT_PUBLIC_ENGINE_URL || "http://localhost:8000";
 
-    useEffect(() => {
-        fetchParetoData();
-    }, [runId]);
-
-    const fetchParetoData = async () => {
+    const fetchParetoData = useCallback(async () => {
         setLoading(true);
         try {
             const res = await fetch(`${ENGINE_URL}/api/v1/design/runs/${runId}/pareto`);
@@ -57,7 +53,11 @@ export default function ParetoFrontView({ runId }: ParetoFrontViewProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [runId, ENGINE_URL]);
+
+    useEffect(() => {
+        fetchParetoData();
+    }, [fetchParetoData]);
 
     if (loading) return <div className="p-8 text-center animate-pulse">파레토 데이터 로드 중...</div>;
 

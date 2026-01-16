@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { AlertTriangle, CheckCircle2, Search, FlaskConical, DollarSign, BrainCircuit } from 'lucide-react';
 
 export default function ProblemSolution() {
@@ -52,10 +53,11 @@ export default function ProblemSolution() {
                         <div className="bg-red-950/10 border border-red-900/30 rounded-2xl p-8 relative overflow-hidden group">
                             {/* Image Background */}
                             <div className="absolute inset-0 z-0">
-                                <img
+                                <Image
                                     src="/images/landing/drug_discovery_funnel.jpg"
                                     alt="Drug Discovery Funnel"
-                                    className="w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500"
+                                    fill
+                                    className="object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
                             </div>

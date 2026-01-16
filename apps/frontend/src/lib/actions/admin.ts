@@ -77,7 +77,7 @@ export async function getConnectors() {
 /**
  * 커넥터 생성
  */
-export async function createConnector(formData: { name: string; type: string; config: any }) {
+export async function createConnector(formData: { name: string; type: string; config: Record<string, unknown> }) {
     const supabase = await createClient();
 
     // 1. 커넥터 생성
@@ -125,7 +125,7 @@ export async function triggerConnectorRun(connectorId: string) {
         // 커넥터가 없으면 생성 시도 (동기화)
         const info = CONNECTOR_REGISTRY[connectorId];
         if (info) {
-            const { data: newConnector, error: createError } = await supabase
+            const { error: createError } = await supabase
                 .from('connectors')
                 .insert([{
                     name: connectorId,

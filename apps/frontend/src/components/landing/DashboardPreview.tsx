@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 export default function DashboardPreview() {
     const t = useTranslations('HomePage');
@@ -38,10 +39,11 @@ export default function DashboardPreview() {
                         </div>
 
                         <div className="relative aspect-video bg-slate-950 group">
-                            <img
+                            <Image
                                 src="/images/landing/real_dashboard.png"
                                 alt="ADC Platform Dashboard"
-                                className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500"
+                                fill
+                                className="object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500"
                             />
                             {/* Overlay gradient for better integration */}
                             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent pointer-events-none" />

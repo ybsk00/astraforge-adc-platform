@@ -3,7 +3,7 @@
 /**
  * 후보 목록 컴포넌트
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface Candidate {
     id: string;
@@ -43,11 +43,7 @@ export default function CandidatesList({ runId, onSelect }: CandidatesListProps)
 
     const ENGINE_URL = process.env.NEXT_PUBLIC_ENGINE_URL || "http://localhost:8000";
 
-    useEffect(() => {
-        fetchCandidates();
-    }, [runId, sortBy, sortOrder]);
-
-    const fetchCandidates = async () => {
+    const fetchCandidates = useCallback(async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams({
@@ -66,7 +62,11 @@ export default function CandidatesList({ runId, onSelect }: CandidatesListProps)
         } finally {
             setLoading(false);
         }
-    };
+    }, [runId, sortBy, sortOrder, ENGINE_URL]);
+
+    useEffect(() => {
+        fetchCandidates();
+    }, [fetchCandidates]);
 
     const handleSort = (field: string) => {
         if (sortBy === field) {
