@@ -814,3 +814,45 @@ export async function runPipelineStep4(seedIds?: string[]) {
     revalidatePath('/admin/golden-sets');
     return response.json();
 }
+
+// ============================================
+// Individual Candidate Actions
+// ============================================
+
+/**
+ * Delete a single candidate from golden_candidates
+ */
+export async function deleteCandidate(candidateId: string) {
+    const supabase = await createClient();
+
+    const { error } = await supabase
+        .from('golden_candidates')
+        .delete()
+        .eq('id', candidateId);
+
+    if (error) {
+        throw new Error(`Failed to delete candidate: ${error.message}`);
+    }
+
+    revalidatePath('/admin/golden-sets');
+    return { success: true };
+}
+
+/**
+ * Enrich a single candidate (run Step 2 for one candidate)
+ */
+export async function enrichCandidateSingle(candidateId: string) {
+    const response = await fetch('/api/admin/golden/run-enrich-components', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidateIds: [candidateId] }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to enrich candidate');
+    }
+
+    revalidatePath('/admin/golden-sets');
+    return response.json();
+}

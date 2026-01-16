@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { Database, Calendar, CheckCircle2, ArrowRight, Import, Loader2, AlertCircle, Filter, RefreshCw, Trophy, ClipboardList } from "lucide-react";
-import { getAutoCandidates, getManualSeeds, importCandidateToManual, getPromotedGoldenSets, getReviewQueue, ReviewQueueItem } from "@/lib/actions/golden-set";
+import { Database, Calendar, CheckCircle2, ArrowRight, Trash2, Puzzle, Loader2, AlertCircle, Filter, RefreshCw, Trophy, ClipboardList } from "lucide-react";
+import { getAutoCandidates, getManualSeeds, getPromotedGoldenSets, getReviewQueue, ReviewQueueItem, deleteCandidate, enrichCandidateSingle } from "@/lib/actions/golden-set";
 import PipelinePanel from "./components/PipelinePanel";
 import ReviewQueueTab from "./components/ReviewQueueTab";
 
@@ -109,19 +109,42 @@ export default function GoldenSetsPage() {
         }
     };
 
-    const handleImport = async (candidateId: string, drugName: string) => {
+    const handleDelete = async (candidateId: string, drugName: string) => {
+        if (!confirm(`"${drugName}" 후보를 삭제하시겠습니까?`)) return;
+
         setImportingId(candidateId);
         setMessage(null);
 
         startTransition(async () => {
             try {
-                await importCandidateToManual(candidateId);
-                setMessage({ type: "success", text: `✓ ${drugName} imported to Manual seeds` });
+                await deleteCandidate(candidateId);
+                setMessage({ type: "success", text: `✓ ${drugName} 삭제됨` });
                 // Refresh data
                 const result = await getAutoCandidates(1, 50);
                 setAutoCandidates(result.data);
+                setAutoCount(result.count);
             } catch (error: any) {
-                setMessage({ type: "error", text: error.message || "Import failed" });
+                setMessage({ type: "error", text: error.message || "삭제 실패" });
+            } finally {
+                setImportingId(null);
+            }
+        });
+    };
+
+    const handleEnrichSingle = async (candidateId: string, drugName: string) => {
+        setImportingId(candidateId);
+        setMessage(null);
+
+        startTransition(async () => {
+            try {
+                await enrichCandidateSingle(candidateId);
+                setMessage({ type: "success", text: `✓ ${drugName} 구성요소 추출 완료` });
+                // Refresh data
+                const result = await getAutoCandidates(1, 50);
+                setAutoCandidates(result.data);
+                setAutoCount(result.count);
+            } catch (error: any) {
+                setMessage({ type: "error", text: error.message || "구성요소 추출 실패" });
             } finally {
                 setImportingId(null);
             }
@@ -287,18 +310,29 @@ export default function GoldenSetsPage() {
                                                 </span>
                                             </td>
                                             <td className="py-3 px-4 text-right">
-                                                <button
-                                                    onClick={() => handleImport(c.id, c.drug_name)}
-                                                    disabled={importingId === c.id || isPending}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 text-white text-sm rounded-lg transition-colors"
-                                                >
-                                                    {importingId === c.id ? (
-                                                        <Loader2 className="w-3 h-3 animate-spin" />
-                                                    ) : (
-                                                        <Import className="w-3 h-3" />
-                                                    )}
-                                                    Import
-                                                </button>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => handleEnrichSingle(c.id, c.drug_name)}
+                                                        disabled={importingId === c.id || isPending}
+                                                        className="inline-flex items-center gap-1 px-2 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 text-white text-xs rounded-lg transition-colors"
+                                                        title="구성요소 추출"
+                                                    >
+                                                        {importingId === c.id ? (
+                                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                                        ) : (
+                                                            <Puzzle className="w-3 h-3" />
+                                                        )}
+                                                        구성요소
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(c.id, c.drug_name)}
+                                                        disabled={importingId === c.id || isPending}
+                                                        className="inline-flex items-center gap-1 px-2 py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-slate-700 text-white text-xs rounded-lg transition-colors"
+                                                        title="후보 삭제"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
