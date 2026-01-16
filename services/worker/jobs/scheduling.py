@@ -10,7 +10,6 @@ Arq Worker Scheduling Configuration
 """
 from datetime import datetime, timedelta
 from typing import Dict, Any
-import asyncio
 
 from arq import cron
 
@@ -280,7 +279,7 @@ async def fingerprint_daily_compute(ctx: Dict[str, Any]):
                 
                 errors += 1
                 
-        except Exception as e:
+        except Exception:
             errors += 1
     
     return {
