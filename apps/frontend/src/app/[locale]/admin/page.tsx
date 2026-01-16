@@ -153,7 +153,7 @@ export default async function AdminDashboardPage() {
                             <tbody className="divide-y divide-slate-800">
                                 {finalSeeds.length > 0 ? (
                                     finalSeeds.slice(0, 10).map((seed: FinalSeed) => {
-                                        const phaseBadge = getPhaseBadge(seed.clinical_phase);
+                                        const phaseBadge = getPhaseBadge(seed.clinical_phase || null);
                                         return (
                                             <tr key={seed.id} className="hover:bg-slate-800/30 transition-colors">
                                                 <td className="px-6 py-4">
