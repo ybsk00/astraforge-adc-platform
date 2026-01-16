@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { calculateAdcScore } from '@/lib/adc-scoring';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 // Target 동의어 사전 (HGNC 기반)
 const TARGET_SYNONYMS: Record<string, string> = {
@@ -37,6 +38,19 @@ const LINKER_DICTIONARY: Record<string, string> = {
     'spdb': 'SPDB', 'disulfide': 'Disulfide',
     'hydrazone': 'Hydrazone'
 };
+
+interface Candidate {
+    id: string;
+    drug_name: string;
+    summary_raw: string;
+    interventions_raw?: string[];
+    target: string | null;
+    adc_classification?: string;
+    adc_score?: number;
+    adc_reason?: string;
+    approval_status?: string;
+    evidence_refs?: any[];
+}
 
 /**
  * Step 2: 표적/링커/페이로드 채우기
@@ -170,10 +184,11 @@ export async function POST(request: Request) {
             skipped_not_adc: skippedNotAdc
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Step 2 API error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json(
-            { status: 'error', detail: error.message },
+            { status: 'error', detail: errorMessage },
             { status: 500 }
         );
     }
@@ -182,7 +197,7 @@ export async function POST(request: Request) {
 /**
  * 후보에서 구성요소 추출
  */
-function extractComponents(candidate: any): {
+function extractComponents(candidate: Candidate): {
     target: string | null;
     antibody: string | null;
     linker: string | null;
@@ -239,13 +254,13 @@ function resolveLinker(rawLinker: string | null): { family: string | null } {
  * Review Queue에 제안 생성
  */
 async function createReviewProposal(
-    supabase: any,
+    supabase: SupabaseClient,
     seedItemId: string,
-    proposedChanges: Record<string, any>,
+    proposedChanges: Record<string, unknown>,
     jobName: string
 ) {
     // Diff 형식으로 변환
-    const proposedPatch: Record<string, { old: any; new: any; source: string }> = {};
+    const proposedPatch: Record<string, { old: unknown; new: unknown; source: string }> = {};
 
     for (const [field, newValue] of Object.entries(proposedChanges)) {
         if (newValue !== null && newValue !== undefined) {

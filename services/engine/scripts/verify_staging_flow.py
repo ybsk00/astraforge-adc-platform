@@ -166,14 +166,14 @@ async def verify_staging_flow():
                 db.table("staging_components").delete().eq(
                     "id", test_component_id
                 ).execute()
-            except:
+            except Exception:
                 pass
         if catalog_component_id:
             try:
                 db.table("component_catalog").delete().eq(
                     "id", catalog_component_id
                 ).execute()
-            except:
+            except Exception:
                 pass
 
     # 결과 요약

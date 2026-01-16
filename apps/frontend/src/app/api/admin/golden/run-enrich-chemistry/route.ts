@@ -1,6 +1,14 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
+import { SupabaseClient } from '@supabase/supabase-js';
+
+interface AntibodyInfo {
+    name: string;
+    format: string;
+    drugbankId: string;
+}
+
 /**
  * Step 3: SMILES/Identity 채우기 (확장)
  * - (A) Payload SMILES (PubChem + Proxy)
@@ -24,7 +32,7 @@ export async function POST(request: Request) {
                 .or('payload_smiles_standardized.is.null,linker_smiles.is.null,antibody_name_canonical.is.null')
                 .limit(50);
 
-            seedIds = (pendingSeeds || []).map((s: any) => s.id);
+            seedIds = (pendingSeeds || []).map((s: { id: string }) => s.id);
 
             if (!seedIds.length) {
                 return NextResponse.json({
@@ -109,7 +117,7 @@ export async function POST(request: Request) {
             // (C) Antibody Identity
             if (mode === 'all' || mode === 'antibody') {
                 if (seed.antibody && !seed.antibody_name_canonical) {
-                    const antibodyResult = await resolveAntibodyIdentity(seed.antibody, seed.drug_name_canonical);
+                    const antibodyResult = await resolveAntibodyIdentity(seed.antibody);
 
                     if (antibodyResult.found) {
                         await createChemistryProposal(supabase, seedId, 'antibody', {
@@ -133,10 +141,11 @@ export async function POST(request: Request) {
             identity_found: identityFound
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Step 3 API error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json(
-            { status: 'error', detail: error.message },
+            { status: 'error', detail: errorMessage },
             { status: 500 }
         );
     }
@@ -193,7 +202,7 @@ async function resolvePayloadSmiles(payloadName: string): Promise<{
 /**
  * Linker Library에서 SMILES 조회
  */
-async function resolveLinkerSmiles(supabase: any, linkerFamily: string): Promise<{
+async function resolveLinkerSmiles(supabase: SupabaseClient, linkerFamily: string): Promise<{
     smiles: string | null;
     linkerLibraryId: string | null;
     suggestedProxy: string | null;
@@ -239,7 +248,7 @@ async function resolveLinkerSmiles(supabase: any, linkerFamily: string): Promise
 /**
  * 항체 Identity 조회 (기본 규칙 기반)
  */
-async function resolveAntibodyIdentity(antibodyName: string, drugName: string): Promise<{
+async function resolveAntibodyIdentity(antibodyName: string): Promise<{
     found: boolean;
     name: string | null;
     format: string | null;
@@ -247,7 +256,7 @@ async function resolveAntibodyIdentity(antibodyName: string, drugName: string): 
     drugbankId: string | null;
 }> {
     // 간단한 규칙 기반 매핑 (실제로는 DrugBank/UniProt API 호출 필요)
-    const knownAntibodies: Record<string, any> = {
+    const knownAntibodies: Record<string, AntibodyInfo> = {
         'trastuzumab': { name: 'Trastuzumab', format: 'mAb', drugbankId: 'DB00072' },
         'pertuzumab': { name: 'Pertuzumab', format: 'mAb', drugbankId: 'DB06366' },
         'sacituzumab': { name: 'Sacituzumab', format: 'mAb', drugbankId: 'DB15140' },
@@ -280,13 +289,13 @@ async function resolveAntibodyIdentity(antibodyName: string, drugName: string): 
  * Review Queue에 Chemistry 제안 생성
  */
 async function createChemistryProposal(
-    supabase: any,
+    supabase: SupabaseClient,
     seedItemId: string,
     componentType: string,
-    proposedChanges: Record<string, any>,
+    proposedChanges: Record<string, unknown>,
     isVerified: boolean
 ) {
-    const proposedPatch: Record<string, any> = {};
+    const proposedPatch: Record<string, unknown> = {};
 
     for (const [field, value] of Object.entries(proposedChanges)) {
         if (value !== null && value !== undefined) {
