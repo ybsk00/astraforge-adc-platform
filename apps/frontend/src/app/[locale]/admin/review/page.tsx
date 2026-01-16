@@ -259,8 +259,8 @@ export default function ReviewQueuePage() {
                                                     <span className="text-sm text-slate-300">종합 신뢰도 점수</span>
                                                     <span className={clsx(
                                                         "text-lg font-bold",
-                                                        selectedItem.structure_confidence >= 80 ? "text-emerald-400" :
-                                                            selectedItem.structure_confidence >= 50 ? "text-blue-400" :
+                                                        (selectedItem.structure_confidence || 0) >= 80 ? "text-emerald-400" :
+                                                            (selectedItem.structure_confidence || 0) >= 50 ? "text-blue-400" :
                                                                 "text-amber-400"
                                                     )}>
                                                         {selectedItem.structure_confidence || 0}%
