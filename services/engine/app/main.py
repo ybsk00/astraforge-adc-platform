@@ -27,6 +27,7 @@ from app.api import (
     automation,
     pipeline,
     admin,
+    golden_seeds,
 )
 
 
@@ -105,3 +106,6 @@ app.include_router(ops.router, prefix="/api/v1/ops", tags=["Ops"])
 app.include_router(automation.router, prefix="/api/v1", tags=["Automation"])
 app.include_router(pipeline.router, prefix="/api/v1/pipeline", tags=["Pipeline"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
+app.include_router(
+    golden_seeds.router, prefix="/api/v1/golden-seeds", tags=["Golden Seeds"]
+)
