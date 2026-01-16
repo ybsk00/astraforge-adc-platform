@@ -28,7 +28,7 @@ export async function GET() {
         if (metricsError) throw metricsError;
 
         // 3. 데이터 가공 (run_id별로 metrics 그룹화)
-        const metricsMap: Record<string, any> = {};
+        const metricsMap: Record<string, Record<string, Record<string, number>>> = {};
         metrics?.forEach(m => {
             const rid = m.run_id;
             const axis = m.axis || 'overall';
@@ -60,10 +60,11 @@ export async function GET() {
 
         return NextResponse.json({ items });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('get_golden_trend_failed:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json(
-            { error: 'Failed to fetch golden trend data', details: error.message },
+            { error: 'Failed to fetch golden trend data', details: errorMessage },
             { status: 500 }
         );
     }

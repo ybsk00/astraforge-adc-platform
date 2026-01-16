@@ -39,6 +39,12 @@ const LINKER_DICTIONARY: Record<string, string> = {
     'hydrazone': 'Hydrazone'
 };
 
+interface EvidenceRef {
+    source: string;
+    url?: string;
+    title?: string;
+}
+
 interface Candidate {
     id: string;
     drug_name: string;
@@ -49,7 +55,7 @@ interface Candidate {
     adc_score?: number;
     adc_reason?: string;
     approval_status?: string;
-    evidence_refs?: any[];
+    evidence_refs?: EvidenceRef[];
 }
 
 /**

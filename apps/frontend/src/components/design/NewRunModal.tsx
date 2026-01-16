@@ -25,8 +25,15 @@ interface NewRunModalProps {
 }
 
 export default function NewRunModal({ onClose, onCreated }: NewRunModalProps) {
+    interface SeedSet {
+        id: string;
+        seed_set_name: string;
+        seed_set_targets?: unknown[];
+        seed_set_diseases?: unknown[];
+    }
+
     const [step, setStep] = useState(1);
-    const [seedSets, setSeedSets] = useState<any[]>([]);
+    const [seedSets, setSeedSets] = useState<SeedSet[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Form State
@@ -76,9 +83,10 @@ export default function NewRunModal({ onClose, onCreated }: NewRunModalProps) {
                 const errorData = await res.json();
                 throw new Error(errorData.detail || '실행 시작에 실패했습니다.');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to start run:', error);
-            alert(`실행 시작에 실패했습니다: ${error.message}`);
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            alert(`실행 시작에 실패했습니다: ${message}`);
         } finally {
             setSubmitting(false);
         }

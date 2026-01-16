@@ -44,7 +44,7 @@ export async function POST(request: Request) {
             message: `Job queued for ${targets.length} targets. Local worker will process it.`
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('API error:', error);
         return NextResponse.json(
             { detail: 'Failed to queue job' },

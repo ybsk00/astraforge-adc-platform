@@ -13,7 +13,7 @@ const STATUS_BADGE: Record<string, { label: string; class: string }> = {
     deprecated: { label: 'Deprecated', class: 'bg-slate-500/20 text-slate-400' },
 };
 
-const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
+const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
     target: { icon: Target, color: 'text-red-400', bg: 'bg-red-500/20' },
     antibody: { icon: Syringe, color: 'text-blue-400', bg: 'bg-blue-500/20' },
     linker: { icon: LinkIcon, color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
@@ -136,8 +136,8 @@ export default function ComponentList() {
                                     key={type}
                                     onClick={() => setTypeFilter(type === typeFilter ? '' : type)}
                                     className={`bg-slate-900 border rounded-xl p-4 cursor-pointer transition-all ${typeFilter === type
-                                            ? 'border-blue-500 ring-1 ring-blue-500/50'
-                                            : 'border-slate-800 hover:border-slate-700'
+                                        ? 'border-blue-500 ring-1 ring-blue-500/50'
+                                        : 'border-slate-800 hover:border-slate-700'
                                         }`}
                                 >
                                     <div className="flex items-center gap-3 mb-2">
