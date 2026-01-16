@@ -11,7 +11,7 @@ import {
     CheckCircle2,
     Loader2,
     Database,
-    Search,
+
     Info,
     Pill,
     RefreshCw
@@ -304,8 +304,8 @@ export default function NewRunModal({ onClose, onCreated }: NewRunModalProps) {
                                 </div>
                             </div>
                             <p className="text-center text-xs text-slate-500">
-                                '수집 시작' 버튼을 클릭하면 백엔드 파이프라인이 즉시 가동됩니다.<br />
-                                수집 결과는 '데이터 & 근거' 메뉴에서 실시간으로 확인할 수 있습니다.
+                                &apos;수집 시작&apos; 버튼을 클릭하면 백엔드 파이프라인이 즉시 가동됩니다.<br />
+                                수집 결과는 &apos;데이터 &amp; 근거&apos; 메뉴에서 실시간으로 확인할 수 있습니다.
                             </p>
                         </div>
                     )}

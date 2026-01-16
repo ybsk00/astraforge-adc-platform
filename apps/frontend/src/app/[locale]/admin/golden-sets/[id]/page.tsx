@@ -124,8 +124,11 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [resolvedParams.id]);
 
+    // 수정:
     const handlePromote = async () => {
+        if (!setInfo) return;  // 이 줄 추가
         if (!confirm('이 골든 셋을 최종 승격하시겠습니까? 승격 시 시드 데이터로 활용됩니다.')) return;
+
 
         setPromoting(true);
         try {
@@ -211,18 +214,6 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
             alert('추가되었습니다.');
             fetchData();
         } catch (error) {
-            console.error('Add failed:', error);
-            alert('추가 실패');
-        }
-    };
-
-    const handleDelete = async () => {
-        if (!confirm('정말로 이 골든 셋을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
-
-        try {
-            await deleteGoldenSet(resolvedParams.id);
-            alert('삭제되었습니다.');
-            router.push('/admin/golden-sets');
         } catch (error) {
             console.error('Delete failed:', error);
             alert('삭제 실패');

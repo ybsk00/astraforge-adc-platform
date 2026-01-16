@@ -31,8 +31,12 @@ export default function GlobalBackground() {
 
         // Check for reduced motion preference
         const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-        setPrefersReducedMotion(mediaQuery.matches);
-        mediaQuery.addEventListener('change', (e) => setPrefersReducedMotion(e.matches));
+        const handleChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+        // Initial value set via callback to avoid synchronous setState
+        if (mediaQuery.matches) {
+            setPrefersReducedMotion(true);
+        }
+        mediaQuery.addEventListener('change', handleChange);
 
         // Mouse move handler
         const handleMouseMove = (e: MouseEvent) => {

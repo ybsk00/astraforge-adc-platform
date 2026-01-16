@@ -5,7 +5,7 @@
  * 
  * Eng-Fit, Bio-Fit, Safety-Fit, Evidence-Fit 시각화
  */
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 
 interface ScoreRadarChartProps {
     scores: {
@@ -43,14 +43,14 @@ export default function ScoreRadarChart({
     const radius = (size - 40) / 2;
 
     // Convert score (0-100) to coordinate
-    const scoreToPoint = (score: number, axisIndex: number) => {
+    const scoreToPoint = useCallback((score: number, axisIndex: number) => {
         const angleRad = ((AXIS_LABELS[axisIndex].angle - 90) * Math.PI) / 180;
         const r = (score / 100) * radius;
         return {
             x: center + r * Math.cos(angleRad),
             y: center + r * Math.sin(angleRad),
         };
-    };
+    }, [center, radius]);
 
     // Generate polygon points for main scores
     const polygonPoints = useMemo(() => {
@@ -58,7 +58,7 @@ export default function ScoreRadarChart({
             const score = scores[axis.key as keyof typeof scores] || 0;
             return scoreToPoint(score, i);
         });
-    }, [scores, center, radius]);
+    }, [scores, scoreToPoint]);
 
     const polygonPath = polygonPoints.map((p) => `${p.x},${p.y}`).join(" ");
 
@@ -70,7 +70,7 @@ export default function ScoreRadarChart({
             return scoreToPoint(score, i);
         });
         return points.map((p) => `${p.x},${p.y}`).join(" ");
-    }, [compareScores, center, radius]);
+    }, [compareScores, scoreToPoint]);
 
     // Grid lines
     const gridLines = [0.25, 0.5, 0.75, 1].map((ratio) => {
@@ -108,7 +108,7 @@ export default function ScoreRadarChart({
             ))}
 
             {/* Axis lines */}
-            {AXIS_LABELS.map((axis, i) => {
+            {AXIS_LABELS.map((axis) => {
                 const angleRad = ((axis.angle - 90) * Math.PI) / 180;
                 return (
                     <line
@@ -157,7 +157,7 @@ export default function ScoreRadarChart({
 
             {/* Labels */}
             {showLabels &&
-                AXIS_LABELS.map((axis, i) => {
+                AXIS_LABELS.map((axis) => {
                     const angleRad = ((axis.angle - 90) * Math.PI) / 180;
                     const labelR = radius + 18;
                     const x = center + labelR * Math.cos(angleRad);
