@@ -1,11 +1,9 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { useState } from 'react';
 
 export default function SignupPage() {
-    const t = useTranslations('Common');
     const [formData, setFormData] = useState({
         name: '',
         email: '',

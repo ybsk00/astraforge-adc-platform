@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function Header() {
     const t = useTranslations('Common');
-    const tHome = useTranslations('HomePage.nav');
     const locale = useLocale();
     const router = useRouter();
     const pathname = usePathname();
@@ -27,8 +26,6 @@ export default function Header() {
         pathname.startsWith('/features') ||
         pathname.startsWith('/solutions') ||
         pathname.startsWith('/login');
-
-    const isActive = (path: string) => pathname === path;
 
     return (
         <header className="border-b border-white/10 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">

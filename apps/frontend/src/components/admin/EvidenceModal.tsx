@@ -4,23 +4,25 @@ import { useState, useEffect } from "react";
 import { getGoldenCandidateEvidence } from "@/lib/actions/golden-set";
 import { X, ExternalLink, Loader2, FileText, AlertCircle } from "lucide-react";
 
+interface EvidenceItem {
+    id: string;
+    source: string;
+    url?: string;
+    snippet?: string;
+    ref_id?: string;
+}
+
 interface Props {
     candidateId: string;
     candidateName: string;
     isOpen: boolean;
     onClose: () => void;
-    fallbackEvidence?: any; // evidence_json from golden_candidates
+    fallbackEvidence?: Record<string, unknown>; // evidence_json from golden_candidates
 }
 
 export default function EvidenceModal({ candidateId, candidateName, isOpen, onClose, fallbackEvidence }: Props) {
-    const [evidence, setEvidence] = useState<any[]>([]);
+    const [evidence, setEvidence] = useState<EvidenceItem[]>([]);
     const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        if (isOpen && candidateId) {
-            fetchEvidence();
-        }
-    }, [isOpen, candidateId]);
 
     const fetchEvidence = async () => {
         setLoading(true);
@@ -33,6 +35,13 @@ export default function EvidenceModal({ candidateId, candidateName, isOpen, onCl
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (isOpen && candidateId) {
+            fetchEvidence();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, candidateId]);
 
     if (!isOpen) return null;
 

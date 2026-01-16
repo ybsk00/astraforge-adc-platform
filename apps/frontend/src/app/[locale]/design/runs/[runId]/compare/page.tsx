@@ -6,13 +6,25 @@ import { ArrowLeft, Download, Loader2, AlertCircle } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import ScoreRadarChart from '@/components/design/ScoreRadarChart';
 
+interface CandidateScore {
+    eng_fit?: number;
+    bio_fit?: number;
+    safety_fit?: number;
+    evidence_fit?: number;
+}
+
+interface AssayResult {
+    assay_type: string;
+    result_value: string;
+}
+
 interface Candidate {
     id: string;
     target_id?: string;
     payload_id?: string;
-    snapshot?: any;
-    candidate_scores?: any[];
-    assay_results?: any[];
+    snapshot?: { target?: { name?: string }; payload?: { name?: string } };
+    candidate_scores?: CandidateScore[];
+    assay_results?: AssayResult[];
 }
 
 export default function ComparePage({ params }: { params: { runId: string } }) {

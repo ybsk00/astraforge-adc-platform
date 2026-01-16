@@ -24,8 +24,9 @@ export default function PromoteButton({ goldenSetId, defaultName }: Props) {
             toast.success("시드 승격이 완료되었습니다!");
             console.log("Promotion Result:", result);
             router.refresh();
-        } catch (error: any) {
-            toast.error(`승격 실패: ${error.message}`);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            toast.error(`승격 실패: ${errorMessage}`);
         } finally {
             setLoading(false);
         }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { GoldenCandidate, updateCandidateReviewStatus } from "@/lib/actions/golden-set";
-import { Check, X, Search, Filter, FileText, Eye } from "lucide-react";
+import { Check, X, Search, Filter, Eye } from "lucide-react";
 import { toast } from "sonner";
 import EvidenceModal from "./EvidenceModal";
 
@@ -33,7 +33,7 @@ export default function GoldenCandidateList({ candidates = [] }: Props) {
         try {
             await updateCandidateReviewStatus(id, status);
             toast.success(`후보 상태가 ${status === 'approved' ? '승인' : '거절'}되었습니다.`);
-        } catch (error) {
+        } catch {
             toast.error("상태 업데이트 실패");
         }
     };
@@ -59,7 +59,7 @@ export default function GoldenCandidateList({ candidates = [] }: Props) {
                         <select
                             className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white outline-none"
                             value={filter}
-                            onChange={(e) => setFilter(e.target.value as any)}
+                            onChange={(e) => setFilter(e.target.value as 'all' | 'pending' | 'approved' | 'rejected')}
                         >
                             <option value="all">모든 상태</option>
                             <option value="pending">대기 중 (Pending)</option>

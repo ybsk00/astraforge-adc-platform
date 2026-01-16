@@ -1,11 +1,9 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { useState } from 'react';
 
 export default function ForgotPasswordPage() {
-    const t = useTranslations('Common');
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
 
@@ -66,14 +64,14 @@ export default function ForgotPasswordPage() {
                             </div>
                             <h3 className="text-xl font-semibold text-white mb-2">Check Your Email</h3>
                             <p className="text-slate-400 mb-4">
-                                We've sent a password reset link to<br />
+                                We have sent a password reset link to<br />
                                 <span className="text-white">{email}</span>
                             </p>
                             <button
                                 onClick={() => setSubmitted(false)}
                                 className="text-blue-400 hover:text-blue-300 text-sm"
                             >
-                                Didn't receive? Try again
+                                Did not receive? Try again
                             </button>
                         </div>
                     )}

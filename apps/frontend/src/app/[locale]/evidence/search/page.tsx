@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { Search, Filter, BookOpen, FileText, Plus, Loader2 } from 'lucide-react';
 
 interface EvidenceItem {

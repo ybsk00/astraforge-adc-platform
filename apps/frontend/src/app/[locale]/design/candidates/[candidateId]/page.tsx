@@ -81,7 +81,7 @@ export default function CandidateDetailsPage({ params }: { params: { candidateId
                                         <span className="text-xs text-slate-500">PMID: 37829102</span>
                                     </div>
                                     <p className="text-sm text-slate-300 mb-2">
-                                        "The combination of HER2 antibody and MMAE showed significant tumor regression in xenograft models..."
+                                        The combination of HER2 antibody and MMAE showed significant tumor regression in xenograft models...
                                     </p>
                                     <div className="text-xs text-slate-500">Nature Medicine (2023)</div>
                                 </div>
@@ -91,7 +91,7 @@ export default function CandidateDetailsPage({ params }: { params: { candidateId
                                         <span className="text-xs text-slate-500">PMID: 36123456</span>
                                     </div>
                                     <p className="text-sm text-slate-300 mb-2">
-                                        "High dose MMAE payloads have been associated with neutropenia in some clinical trials..."
+                                        High dose MMAE payloads have been associated with neutropenia in some clinical trials...
                                     </p>
                                     <div className="text-xs text-slate-500">Clinical Cancer Research (2022)</div>
                                 </div>

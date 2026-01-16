@@ -1,15 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Link } from '@/i18n/routing';
 import {
     Search,
-    Filter,
     Plus,
     Download,
     MoreVertical,
-    ChevronLeft,
-    ChevronRight,
     Beaker
 } from 'lucide-react';
 import NewRunModal from '@/components/design/NewRunModal';

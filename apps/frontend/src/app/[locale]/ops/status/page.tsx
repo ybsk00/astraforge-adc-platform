@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity, Server, Database, Cpu, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Activity, Server, Database, Cpu } from 'lucide-react';
 
 export default function OpsStatusPage() {
     return (

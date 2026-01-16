@@ -4,7 +4,7 @@
  * Golden Set 검증 트렌드 시각화 컴포넌트
  */
 import { useState, useEffect } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Activity, TrendingDown, TrendingUp, AlertCircle } from "lucide-react";
 
 interface ValidationRun {
@@ -32,8 +32,6 @@ export default function GoldenValidationTrend() {
     const [error, setError] = useState<string | null>(null);
     const [activeAxis, setActiveAxis] = useState("overall");
 
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
     useEffect(() => {
         fetchTrendData();
     }, []);
@@ -46,7 +44,7 @@ export default function GoldenValidationTrend() {
             if (res.ok) {
                 const result = await res.json();
                 // 날짜순 정렬
-                const sorted = result.items.sort((a: any, b: any) =>
+                const sorted = result.items.sort((a: ValidationRun, b: ValidationRun) =>
                     new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
                 );
                 setData(sorted);

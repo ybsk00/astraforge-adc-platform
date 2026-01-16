@@ -75,22 +75,20 @@ export default function GlobalBackground() {
                 style={{
                     x: isMobile ? 0 : blob2X,
                     y: isMobile ? 0 : blob2Y,
-                    background: 'radial-gradient(circle, rgba(168, 85, 247, 0.55) 0%, rgba(126, 34, 206, 0.35) 40%, transparent 70%)'
+                    background: 'radial-gradient(circle, rgba(168, 85, 247, 0.55) 0%, rgba(126, 34, 206, 0.35) 40%, transparent 70%)',
+                    animationDelay: '2s'
                 }}
                 className="absolute top-1/3 -right-1/4 w-[500px] h-[500px] rounded-full blur-3xl animate-pulse"
-                // @ts-ignore
-                style={{ animationDelay: '2s' }}
             />
 
             <motion.div
                 style={{
                     x: isMobile ? 0 : blob3X,
                     y: isMobile ? 0 : blob3Y,
-                    background: 'radial-gradient(circle, rgba(34, 211, 238, 0.5) 0%, rgba(8, 145, 178, 0.3) 40%, transparent 70%)'
+                    background: 'radial-gradient(circle, rgba(34, 211, 238, 0.5) 0%, rgba(8, 145, 178, 0.3) 40%, transparent 70%)',
+                    animationDelay: '4s'
                 }}
                 className="absolute -bottom-1/4 left-1/3 w-[700px] h-[700px] rounded-full blur-3xl animate-pulse"
-                // @ts-ignore
-                style={{ animationDelay: '4s' }}
             />
 
             {/* Particle Field Layer */}

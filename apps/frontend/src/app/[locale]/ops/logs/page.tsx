@@ -1,6 +1,6 @@
 'use client';
 
-import { Terminal, Copy, ExternalLink } from 'lucide-react';
+import { Copy } from 'lucide-react';
 
 export default function OpsLogsPage() {
     return (

@@ -70,7 +70,7 @@ export default function FeaturesPage() {
                                                     <span>{itemText}</span>
                                                 </li>
                                             );
-                                        } catch (e) {
+                                        } catch {
                                             return null;
                                         }
                                     })}

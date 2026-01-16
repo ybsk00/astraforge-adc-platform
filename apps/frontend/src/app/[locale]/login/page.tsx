@@ -1,12 +1,10 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/routing';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
-    const t = useTranslations('Common');
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -57,7 +55,7 @@ export default function LoginPage() {
                     router.push('/dashboard');
                 }
             }
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred');
             setLoading(false);
         }
@@ -218,7 +216,7 @@ export default function LoginPage() {
 
                 <div className="text-center mt-8">
                     <p className="text-slate-400 text-sm">
-                        Don't have an account?{' '}
+                        Do not have an account?{' '}
                         <Link href="/signup" className="text-blue-400 hover:text-blue-300 font-medium">
                             Sign up now
                         </Link>
