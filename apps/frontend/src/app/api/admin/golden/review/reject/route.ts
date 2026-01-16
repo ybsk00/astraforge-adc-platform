@@ -58,6 +58,7 @@ export async function POST(request: Request) {
             review_id: reviewId
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
         console.error('Review reject error:', error);
         return NextResponse.json(

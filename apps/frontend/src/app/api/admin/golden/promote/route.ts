@@ -90,6 +90,7 @@ export async function POST(request: Request) {
             failed_reasons: failedReasons
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
         console.error('Promote API error:', error);
         return NextResponse.json(
@@ -107,6 +108,7 @@ export async function POST(request: Request) {
  * 2. payload_smiles_standardized 존재 OR is_proxy_payload = true
  * 3. evidence_refs >= 1
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function checkGate(seed: any): {
     passed: boolean;
     gates: Record<string, boolean>;

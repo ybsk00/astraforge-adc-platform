@@ -47,9 +47,11 @@ export async function POST(request: Request) {
 
         // 2. Verified 체크 (필드별)
         const fieldVerified = seedItem?.field_verified || {};
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const updateData: Record<string, any> = {};
         const skippedFields: string[] = [];
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         for (const [field, patchInfo] of Object.entries(proposedPatch) as [string, any][]) {
             if (field.startsWith('_')) continue; // 메타 필드 스킵
 
@@ -93,6 +95,7 @@ export async function POST(request: Request) {
             skipped_verified_fields: skippedFields
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
         console.error('Review approve error:', error);
         return NextResponse.json(

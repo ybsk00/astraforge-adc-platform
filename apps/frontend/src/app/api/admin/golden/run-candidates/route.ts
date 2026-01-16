@@ -115,6 +115,7 @@ export async function POST(request: Request) {
             total_found: results.length
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
         console.error('Step 1 API error:', error);
         return NextResponse.json(
@@ -131,6 +132,7 @@ async function searchClinicalTrials(
     cancerType: string,
     targetList: string[],
     limit: number
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any[]> {
     const CT_API_BASE = 'https://clinicaltrials.gov/api/v2/studies';
 
@@ -183,6 +185,7 @@ async function searchClinicalTrials(
         const data = await response.json();
         const studies = data.studies || [];
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return studies.map((study: any) => {
             const proto = study.protocolSection || {};
             const ident = proto.identificationModule || {};
@@ -193,6 +196,7 @@ async function searchClinicalTrials(
             // Drug/Intervention 추출
             const interventions = arms.interventions || [];
             const drugInterventions = interventions.filter(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (i: any) => i.type === 'DRUG' || i.type === 'BIOLOGICAL'
             );
             const drugName = drugInterventions[0]?.name || ident.briefTitle?.split(' ')[0] || 'Unknown';
