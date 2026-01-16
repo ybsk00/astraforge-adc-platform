@@ -5,22 +5,17 @@ from .engine import (
     CandidateScores,
     ScoreComponents,
     get_scoring_engine,
-    get_batch_scoring_engine
+    get_batch_scoring_engine,
 )
 
 from .generator import (
     CandidateGenerator,
     HardRejectFilter,
     GeneratorStats,
-    create_generator_from_catalog
+    create_generator_from_catalog,
 )
 
-from .pareto import (
-    ParetoCalculator,
-    ParetoFront,
-    ParetoMember,
-    calculate_pareto_fronts
-)
+from .pareto import ParetoCalculator, ParetoFront, ParetoMember, calculate_pareto_fronts
 
 __all__ = [
     # Engine
@@ -39,5 +34,5 @@ __all__ = [
     "ParetoCalculator",
     "ParetoFront",
     "ParetoMember",
-    "calculate_pareto_fronts"
+    "calculate_pareto_fronts",
 ]

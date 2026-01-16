@@ -1,12 +1,34 @@
 """
 ADC Engine - FastAPI Application Entry Point
 """
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from fastapi import HTTPException
+from app.core.errors import global_exception_handler
 
 from app.core.config import settings
-from app.api import health, design, catalog, staging, connectors, ingestion, fingerprint, feedback, observability, alerts, uploads, evidence, reports, ops, automation, pipeline, admin
+from app.api import (
+    health,
+    design,
+    catalog,
+    staging,
+    connectors,
+    ingestion,
+    fingerprint,
+    feedback,
+    observability,
+    alerts,
+    uploads,
+    evidence,
+    reports,
+    ops,
+    automation,
+    pipeline,
+    admin,
+)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -14,7 +36,7 @@ async def lifespan(app: FastAPI):
     # Startup
     from app.core.database import get_db
     import structlog
-    
+
     logger = structlog.get_logger()
     try:
         db = get_db()
@@ -24,18 +46,20 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         # Log but don't crash, as per recommendation
         logger.error("database_connection_failed", error=str(e))
-    
+
     # 2. 스케줄러 시작 (Phase 15)
     from app.services.scheduler_service import get_scheduler_service
+
     scheduler = get_scheduler_service()
     scheduler.start()
-    
+
     yield
-    
+
     # Shutdown
     # 3. 스케줄러 중지
     scheduler.stop()
     logger.info("application_shutdown")
+
 
 app = FastAPI(
     title="ADC Design Engine",
@@ -54,8 +78,7 @@ app.add_middleware(
 )
 
 # Exception Handlers
-from fastapi import HTTPException
-from app.core.errors import global_exception_handler
+
 
 app.add_exception_handler(HTTPException, global_exception_handler)
 app.add_exception_handler(Exception, global_exception_handler)
@@ -67,9 +90,13 @@ app.include_router(design.router, prefix="/api/v1/design", tags=["Design"])
 app.include_router(staging.router, prefix="/api/v1/staging", tags=["Staging"])
 app.include_router(connectors.router, prefix="/api/v1/connectors", tags=["Connectors"])
 app.include_router(ingestion.router, prefix="/api/v1/ingestion", tags=["Ingestion"])
-app.include_router(fingerprint.router, prefix="/api/v1/fingerprint", tags=["Fingerprint"])
+app.include_router(
+    fingerprint.router, prefix="/api/v1/fingerprint", tags=["Fingerprint"]
+)
 app.include_router(feedback.router, prefix="/api/v1/feedback", tags=["Feedback"])
-app.include_router(observability.router, prefix="/api/v1/observability", tags=["Observability"])
+app.include_router(
+    observability.router, prefix="/api/v1/observability", tags=["Observability"]
+)
 app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["Alerts"])
 app.include_router(uploads.router, prefix="/api/v1/uploads", tags=["Uploads"])
 app.include_router(evidence.router, prefix="/api/v1/evidence", tags=["Evidence"])

@@ -1,16 +1,14 @@
 """
 Supabase Database Client
 """
+
 from supabase import create_client, Client
 from app.core.config import settings
 
 
 def get_supabase_client() -> Client:
     """Supabase 클라이언트 생성"""
-    return create_client(
-        settings.SUPABASE_URL,
-        settings.SUPABASE_SERVICE_ROLE_KEY
-    )
+    return create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
 
 
 # 싱글톤 클라이언트

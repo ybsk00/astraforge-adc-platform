@@ -9,13 +9,11 @@ PAYLOAD_DICTIONARY = {
     "monomethyl auristatin f": "MMAF",
     "mmaf": "MMAF",
     "mafodotin": "MMAF",
-    
     # Maytansinoids
     "emtansine": "DM1",
     "dm1": "DM1",
     "ravtansine": "DM4",
     "dm4": "DM4",
-    
     # Camptothecins / Topoisomerase I inhibitors
     "deruxtecan": "DXd",
     "dxd": "DXd",
@@ -23,12 +21,10 @@ PAYLOAD_DICTIONARY = {
     "sn38": "SN-38",
     "govetecan": "SN-38",
     "exatecan": "Exatecan",
-    
     # DNA Damaging Agents (PBDs)
     "tesirine": "SG3199",
     "talirine": "SGD-1910",
     "pbd": "PBD_Generic",
-    
     # Others
     "calicheamicin": "Calicheamicin",
     "ozogamicin": "Calicheamicin",
@@ -42,15 +38,12 @@ LINKER_DICTIONARY = {
     "val-cit": "VC",
     "mc-vc-pab": "Mc-VC-PAB",
     "ggfg": "GGFG",
-    
     # Cleavable (pH / Acid)
     "hydrazone": "Hydrazone",
     "acid-labile": "Hydrazone",
-    
     # Cleavable (Reducible)
     "disulfide": "Disulfide",
     "spdb": "SPDB",
-    
     # Non-Cleavable
     "mcc": "MCC",
     "smcc": "SMCC",
@@ -90,52 +83,125 @@ TARGET_DICTIONARY = {
 
 # 6. IO Blocklist (Exclude these from Target-Centric Collection)
 IO_BLOCKLIST = [
-    "pembrolizumab", "keytruda",
-    "nivolumab", "opdivo",
-    "atezolizumab", "tecentriq",
-    "durvalumab", "imfinzi",
-    "avelumab", "bavencio",
-    "cemiplimab", "libtayo",
-    "dostarlimab", "jemperli",
-    "ipilimumab", "yervoy",
-    "tremelimumab", "imjudo",
+    "pembrolizumab",
+    "keytruda",
+    "nivolumab",
+    "opdivo",
+    "atezolizumab",
+    "tecentriq",
+    "durvalumab",
+    "imfinzi",
+    "avelumab",
+    "bavencio",
+    "cemiplimab",
+    "libtayo",
+    "dostarlimab",
+    "jemperli",
+    "ipilimumab",
+    "yervoy",
+    "tremelimumab",
+    "imjudo",
     "spartalizumab",
     "tislelizumab",
     "toripalimab",
     "sintilimab",
     "camrelizumab",
-    "pd-1", "pd-l1", "ctla-4",
-    "pd1", "pdl1", "ctla4",
+    "pd-1",
+    "pd-l1",
+    "ctla-4",
+    "pd1",
+    "pdl1",
+    "ctla4",
     "programmed cell death",
-    "checkpoint inhibitor"
+    "checkpoint inhibitor",
 ]
 
 # 7. Chemo & Placebo Blocklist (Exclude these from Target-Centric Collection)
 CHEMO_BLOCKLIST = [
-    "docetaxel", "paclitaxel", "nab-paclitaxel",
-    "carboplatin", "cisplatin", "oxaliplatin",
-    "doxorubicin", "capecitabine", "gemcitabine",
-    "vinorelbine", "eribulin", "cyclophosphamide",
-    "fluorouracil", "5-fu", "pemetrexed",
-    "irinotecan", "topotecan", "etoposide"
+    "docetaxel",
+    "paclitaxel",
+    "nab-paclitaxel",
+    "carboplatin",
+    "cisplatin",
+    "oxaliplatin",
+    "doxorubicin",
+    "capecitabine",
+    "gemcitabine",
+    "vinorelbine",
+    "eribulin",
+    "cyclophosphamide",
+    "fluorouracil",
+    "5-fu",
+    "pemetrexed",
+    "irinotecan",
+    "topotecan",
+    "etoposide",
 ]
 
 PLACEBO_BLOCKLIST = [
-    "placebo", "standard of care", "best supportive care",
-    "investigator's choice", "chemotherapy", "vehicle"
+    "placebo",
+    "standard of care",
+    "best supportive care",
+    "investigator's choice",
+    "chemotherapy",
+    "vehicle",
 ]
 
 # 4. Target Lists (Solid / Heme)
 TARGET_LIST_SOLID = [
-    "HER2", "HER3", "TROP2", "NECTIN4", "FOLR1", "SLC39A6", "CD276", "MSLN", "MET", "EGFR", 
-    "CLDN18", "F3", "TPBG", "SLC34A2", "PTK7", "ROR1", "AXL", "CEACAM5", "MUC1", "EPCAM", 
-    "GPC3", "FOLH1", "MUC16", "STEAP1", "ICAM1"
+    "HER2",
+    "HER3",
+    "TROP2",
+    "NECTIN4",
+    "FOLR1",
+    "SLC39A6",
+    "CD276",
+    "MSLN",
+    "MET",
+    "EGFR",
+    "CLDN18",
+    "F3",
+    "TPBG",
+    "SLC34A2",
+    "PTK7",
+    "ROR1",
+    "AXL",
+    "CEACAM5",
+    "MUC1",
+    "EPCAM",
+    "GPC3",
+    "FOLH1",
+    "MUC16",
+    "STEAP1",
+    "ICAM1",
 ]
 
 TARGET_LIST_HEME = [
-    "CD19", "CD22", "CD30", "CD79B", "CD33", "IL3RA", "TNFRSF17", "CD37", "CD38", "SDC1", 
-    "CD70", "CD74", "FLT3", "KIT", "SLAMF7", "CD24", "CD47", "CD52", "CD20", "CD66", 
-    "CCR4", "CXCR4", "CD25", "CD71", "CD45"
+    "CD19",
+    "CD22",
+    "CD30",
+    "CD79B",
+    "CD33",
+    "IL3RA",
+    "TNFRSF17",
+    "CD37",
+    "CD38",
+    "SDC1",
+    "CD70",
+    "CD74",
+    "FLT3",
+    "KIT",
+    "SLAMF7",
+    "CD24",
+    "CD47",
+    "CD52",
+    "CD20",
+    "CD66",
+    "CCR4",
+    "CXCR4",
+    "CD25",
+    "CD71",
+    "CD45",
 ]
 
 # 5. Target Synonyms (For Query Construction)

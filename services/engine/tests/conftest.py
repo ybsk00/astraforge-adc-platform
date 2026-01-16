@@ -2,15 +2,16 @@
 Pytest Fixtures
 공통 테스트 픽스처 정의
 """
+
 import pytest
 import asyncio
-from unittest.mock import MagicMock, AsyncMock, patch
-from datetime import datetime
+from unittest.mock import MagicMock, AsyncMock
 
 
 # ============================================================
 # Event Loop
 # ============================================================
+
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -24,14 +25,15 @@ def event_loop():
 # Mock Database Client
 # ============================================================
 
+
 @pytest.fixture
 def mock_db():
     """Mock Supabase client"""
     db = MagicMock()
-    
+
     # Table mock
     table_mock = MagicMock()
-    
+
     # Select chain
     table_mock.select.return_value = table_mock
     table_mock.eq.return_value = table_mock
@@ -40,21 +42,22 @@ def mock_db():
     table_mock.limit.return_value = table_mock
     table_mock.range.return_value = table_mock
     table_mock.execute.return_value = MagicMock(data=[], count=0)
-    
+
     # Insert/Update/Upsert
     table_mock.insert.return_value = table_mock
     table_mock.update.return_value = table_mock
     table_mock.upsert.return_value = table_mock
     table_mock.delete.return_value = table_mock
-    
+
     db.table.return_value = table_mock
-    
+
     return db
 
 
 # ============================================================
 # Mock HTTP Responses
 # ============================================================
+
 
 @pytest.fixture
 def mock_pubmed_response():
@@ -69,7 +72,7 @@ def mock_pubmed_response():
             <Id>12345679</Id>
         </IdList>
     </eSearchResult>"""
-    
+
     efetch_response = """<?xml version="1.0"?>
     <PubmedArticleSet>
         <PubmedArticle>
@@ -84,7 +87,7 @@ def mock_pubmed_response():
             </MedlineCitation>
         </PubmedArticle>
     </PubmedArticleSet>"""
-    
+
     return {"esearch": esearch_response, "efetch": efetch_response}
 
 
@@ -97,16 +100,24 @@ def mock_uniprot_response():
         "organism": {"scientificName": "Homo sapiens", "taxonId": 9606},
         "genes": [{"geneName": {"value": "ERBB2"}}],
         "proteinDescription": {
-            "recommendedName": {"fullName": {"value": "Receptor tyrosine-protein kinase erbB-2"}}
+            "recommendedName": {
+                "fullName": {"value": "Receptor tyrosine-protein kinase erbB-2"}
+            }
         },
-        "comments": [{
-            "commentType": "FUNCTION",
-            "texts": [{"value": "Protein tyrosine kinase that is part of several cell surface receptor complexes."}]
-        }],
+        "comments": [
+            {
+                "commentType": "FUNCTION",
+                "texts": [
+                    {
+                        "value": "Protein tyrosine kinase that is part of several cell surface receptor complexes."
+                    }
+                ],
+            }
+        ],
         "uniProtKBCrossReferences": [
             {"database": "Ensembl", "id": "ENSG00000141736"},
-            {"database": "HGNC", "id": "HGNC:3430"}
-        ]
+            {"database": "HGNC", "id": "HGNC:3430"},
+        ],
     }
 
 
@@ -127,13 +138,15 @@ def mock_opentargets_response():
                             "disease": {
                                 "id": "EFO_0000305",
                                 "name": "breast carcinoma",
-                                "therapeuticAreas": [{"id": "MONDO_0045024", "name": "cancer"}]
+                                "therapeuticAreas": [
+                                    {"id": "MONDO_0045024", "name": "cancer"}
+                                ],
                             },
                             "score": 0.8,
-                            "datatypeScores": [{"id": "literature", "score": 0.5}]
+                            "datatypeScores": [{"id": "literature", "score": 0.5}],
                         }
-                    ]
-                }
+                    ],
+                },
             }
         }
     }
@@ -151,12 +164,9 @@ def mock_chembl_response():
         "molecule_structures": {
             "canonical_smiles": None,
             "standard_inchi": None,
-            "standard_inchi_key": None
+            "standard_inchi_key": None,
         },
-        "molecule_properties": {
-            "mw_freebase": 150000,
-            "alogp": None
-        }
+        "molecule_properties": {"mw_freebase": 150000, "alogp": None},
     }
 
 
@@ -165,14 +175,16 @@ def mock_pubchem_response():
     """Mock PubChem response"""
     return {
         "PropertyTable": {
-            "Properties": [{
-                "CID": 2244,
-                "MolecularFormula": "C9H8O4",
-                "MolecularWeight": 180.16,
-                "CanonicalSMILES": "CC(=O)OC1=CC=CC=C1C(=O)O",
-                "InChIKey": "BSYNRYMUTXBXSQ-UHFFFAOYSA-N",
-                "IUPACName": "2-acetyloxybenzoic acid"
-            }]
+            "Properties": [
+                {
+                    "CID": 2244,
+                    "MolecularFormula": "C9H8O4",
+                    "MolecularWeight": 180.16,
+                    "CanonicalSMILES": "CC(=O)OC1=CC=CC=C1C(=O)O",
+                    "InChIKey": "BSYNRYMUTXBXSQ-UHFFFAOYSA-N",
+                    "IUPACName": "2-acetyloxybenzoic acid",
+                }
+            ]
         }
     }
 
@@ -186,28 +198,26 @@ def mock_clinicaltrials_response():
                 "protocolSection": {
                     "identificationModule": {
                         "nctId": "NCT01120184",
-                        "briefTitle": "Study of T-DM1 in HER2+ Breast Cancer"
+                        "briefTitle": "Study of T-DM1 in HER2+ Breast Cancer",
                     },
                     "statusModule": {
                         "overallStatus": "COMPLETED",
-                        "enrollmentInfo": {"count": 500}
+                        "enrollmentInfo": {"count": 500},
                     },
                     "designModule": {
                         "phases": ["PHASE3"],
-                        "studyType": "INTERVENTIONAL"
+                        "studyType": "INTERVENTIONAL",
                     },
-                    "conditionsModule": {
-                        "conditions": ["HER2 Positive Breast Cancer"]
-                    },
+                    "conditionsModule": {"conditions": ["HER2 Positive Breast Cancer"]},
                     "armsInterventionsModule": {
                         "interventions": [
                             {"type": "DRUG", "name": "T-DM1", "description": "ADC drug"}
                         ]
-                    }
+                    },
                 }
             }
         ],
-        "nextPageToken": None
+        "nextPageToken": None,
     }
 
 
@@ -230,16 +240,17 @@ def mock_openfda_response():
                     ],
                     "drug": [
                         {"medicinalproduct": "TRASTUZUMAB", "drugcharacterization": "1"}
-                    ]
-                }
+                    ],
+                },
             }
-        ]
+        ],
     }
 
 
 # ============================================================
 # Mock HTTP Client
 # ============================================================
+
 
 @pytest.fixture
 def mock_httpx_client():
@@ -249,17 +260,18 @@ def mock_httpx_client():
     mock_response.json.return_value = {}
     mock_response.text = ""
     mock_response.raise_for_status.return_value = None
-    
+
     mock_client = AsyncMock()
     mock_client.get.return_value = mock_response
     mock_client.post.return_value = mock_response
-    
+
     return mock_client
 
 
 # ============================================================
 # Sample Data
 # ============================================================
+
 
 @pytest.fixture
 def sample_target():
@@ -271,22 +283,19 @@ def sample_target():
         "properties": {
             "uniprot_id": "P04626",
             "gene_symbol": "ERBB2",
-            "organism": "Homo sapiens"
+            "organism": "Homo sapiens",
         },
-        "status": "active"
+        "status": "active",
     }
 
 
-@pytest.fixture  
+@pytest.fixture
 def sample_payload():
     """Sample payload component"""
     return {
         "id": "550e8400-e29b-41d4-a716-446655440002",
         "type": "payload",
         "name": "DM1",
-        "properties": {
-            "smiles": "C[C@H]1C[C@@H]...",
-            "mechanism": "tubulin_inhibitor"
-        },
-        "status": "active"
+        "properties": {"smiles": "C[C@H]1C[C@@H]...", "mechanism": "tubulin_inhibitor"},
+        "status": "active",
     }

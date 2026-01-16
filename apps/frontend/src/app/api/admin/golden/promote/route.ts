@@ -91,13 +91,22 @@ export async function POST(request: Request) {
         });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Promote API error:', error);
+        const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json(
-            { status: 'error', detail: error.message },
+            { status: 'error', detail: message },
             { status: 500 }
         );
     }
+}
+
+interface Seed {
+    resolved_target_symbol?: string;
+    payload_smiles_standardized?: string;
+    is_proxy_payload?: boolean;
+    proxy_smiles_flag?: boolean;
+    evidence_refs?: unknown[];
 }
 
 /**
@@ -108,8 +117,7 @@ export async function POST(request: Request) {
  * 2. payload_smiles_standardized 존재 OR is_proxy_payload = true
  * 3. evidence_refs >= 1
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function checkGate(seed: any): {
+function checkGate(seed: Seed): {
     passed: boolean;
     gates: Record<string, boolean>;
     missing: string[];

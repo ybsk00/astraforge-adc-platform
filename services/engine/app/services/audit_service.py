@@ -7,10 +7,10 @@ Audit Service
 - 민감정보 마스킹 (중첩 지원)
 - 실패 정책: warn 로그 + 업무 계속, critical은 fail-fast 옵션
 """
+
 import os
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any
 from datetime import datetime
-from uuid import UUID
 import structlog
 
 logger = structlog.get_logger()
@@ -18,6 +18,7 @@ logger = structlog.get_logger()
 
 class AuditWriteError(Exception):
     """감사 로그 기록 실패"""
+
     pass
 
 
@@ -71,12 +72,12 @@ EVENT_TYPES = {
 class AuditService:
     """
     감사 로그 서비스
-    
+
     - 이벤트 기록
     - 민감정보 마스킹
     - 비동기 처리 (실패 시 warn)
     """
-    
+
     def __init__(self, db_client=None, fail_fast_enabled: bool = False):
         """
         Args:
@@ -84,9 +85,11 @@ class AuditService:
             fail_fast_enabled: Critical 이벤트 실패 시 예외 발생 여부
         """
         self.db = db_client
-        self.fail_fast_enabled = fail_fast_enabled or os.getenv("AUDIT_FAIL_FAST", "").lower() == "true"
+        self.fail_fast_enabled = (
+            fail_fast_enabled or os.getenv("AUDIT_FAIL_FAST", "").lower() == "true"
+        )
         self.logger = logger.bind(service="audit")
-    
+
     async def log_event(
         self,
         event_type: str,
@@ -101,7 +104,7 @@ class AuditService:
     ):
         """
         감사 이벤트 기록
-        
+
         Args:
             event_type: 이벤트 유형 (예: "run.completed")
             resource_type: 리소스 타입 (예: "design_run")
@@ -115,24 +118,21 @@ class AuditService:
         """
         # 메타데이터 마스킹
         masked_metadata = self.mask_sensitive(metadata or {})
-        
+
         # 이벤트 레코드 생성
         event_record = {
             "event_type": event_type,
             "entity_type": resource_type,
             "entity_id": resource_id,
-            "details": {
-                "action": action,
-                **masked_metadata
-            },
+            "details": {"action": action, **masked_metadata},
             "created_at": datetime.utcnow().isoformat(),
         }
-        
+
         if user_id:
             event_record["user_id"] = user_id
         if workspace_id:
             event_record["workspace_id"] = workspace_id
-        
+
         # 로깅
         self.logger.info(
             "audit_event",
@@ -140,7 +140,7 @@ class AuditService:
             resource_type=resource_type,
             resource_id=resource_id,
         )
-        
+
         # DB 기록
         try:
             if self.db:
@@ -148,17 +148,15 @@ class AuditService:
             else:
                 # DB 없으면 로그로만 기록
                 self.logger.debug("audit_event_details", **event_record)
-                
+
         except Exception as e:
             if event_type in CRITICAL_EVENTS and self.fail_fast_enabled:
                 raise AuditWriteError(f"Critical audit event failed: {e}")
             else:
                 self.logger.warning(
-                    "audit_write_failed",
-                    event_type=event_type,
-                    error=str(e)
+                    "audit_write_failed", event_type=event_type, error=str(e)
                 )
-    
+
     async def _write_to_db(self, event_record: Dict[str, Any]):
         """DB에 이벤트 기록"""
         if hasattr(self.db, "table"):
@@ -166,7 +164,7 @@ class AuditService:
             result = self.db.table("audit_events").insert(event_record).execute()
             return result
         # 다른 DB 클라이언트 지원 시 추가
-    
+
     def log_event_sync(
         self,
         event_type: str,
@@ -179,64 +177,56 @@ class AuditService:
     ):
         """동기 이벤트 기록 (async 불가 시)"""
         masked_metadata = self.mask_sensitive(metadata or {})
-        
+
         event_record = {
             "event_type": event_type,
             "entity_type": resource_type,
             "entity_id": resource_id,
-            "details": {
-                "action": action,
-                **masked_metadata
-            },
+            "details": {"action": action, **masked_metadata},
             "created_at": datetime.utcnow().isoformat(),
         }
-        
+
         if user_id:
             event_record["user_id"] = user_id
         if workspace_id:
             event_record["workspace_id"] = workspace_id
-        
+
         self.logger.info(
             "audit_event",
             event_type=event_type,
             resource_type=resource_type,
             resource_id=resource_id,
         )
-        
+
         try:
             if self.db and hasattr(self.db, "table"):
                 self.db.table("audit_events").insert(event_record).execute()
             else:
                 self.logger.debug("audit_event_details", **event_record)
-                
+
         except Exception as e:
             if event_type in CRITICAL_EVENTS and self.fail_fast_enabled:
                 raise AuditWriteError(f"Critical audit event failed: {e}")
             else:
                 self.logger.warning(
-                    "audit_write_failed",
-                    event_type=event_type,
-                    error=str(e)
+                    "audit_write_failed", event_type=event_type, error=str(e)
                 )
-    
+
     def mask_sensitive(
-        self, 
-        data: Dict[str, Any], 
-        depth: int = 0, 
-        max_depth: int = 10
+        self, data: Dict[str, Any], depth: int = 0, max_depth: int = 10
     ) -> Dict[str, Any]:
         """
         민감정보 마스킹
-        
+
         - 중첩 dict/list 지원
         - prefix/suffix 보존 (길이 > 8)
         """
         if depth > max_depth:
             return data
-        
+
         if not isinstance(data, dict):
             return data
-        
+
         result = {}
         for key, value in data.items():
             if self._is_sensitive_field(key):
@@ -245,25 +235,26 @@ class AuditService:
                 result[key] = self.mask_sensitive(value, depth + 1, max_depth)
             elif isinstance(value, list):
                 result[key] = [
-                    self.mask_sensitive(v, depth + 1, max_depth) 
-                    if isinstance(v, dict) else v 
+                    self.mask_sensitive(v, depth + 1, max_depth)
+                    if isinstance(v, dict)
+                    else v
                     for v in value
                 ]
             else:
                 result[key] = value
-        
+
         return result
-    
+
     def _is_sensitive_field(self, field_name: str) -> bool:
         """민감 필드 여부 확인"""
         field_lower = field_name.lower()
         return any(sensitive in field_lower for sensitive in MASKED_FIELDS)
-    
+
     def _mask_value(self, value: Any) -> str:
         """값 마스킹"""
         if value is None:
             return None
-        
+
         str_value = str(value)
         if len(str_value) > 8:
             # 처음 2자 + *** + 마지막 2자

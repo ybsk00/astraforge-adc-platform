@@ -116,13 +116,38 @@ export async function POST(request: Request) {
         });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Step 1 API error:', error);
+        const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json(
-            { status: 'error', detail: error.message },
+            { status: 'error', detail: message },
             { status: 500 }
         );
     }
+}
+
+interface ClinicalStudy {
+    protocolSection?: {
+        identificationModule?: {
+            nctId?: string;
+            briefTitle?: string;
+            officialTitle?: string;
+        };
+        statusModule?: {
+            phases?: string[];
+        };
+        armsInterventionsModule?: {
+            interventions?: Intervention[];
+        };
+        conditionsModule?: {
+            conditions?: string[];
+        };
+    };
+}
+
+interface Intervention {
+    type?: string;
+    name?: string;
 }
 
 /**
@@ -132,7 +157,6 @@ async function searchClinicalTrials(
     cancerType: string,
     targetList: string[],
     limit: number
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any[]> {
     const CT_API_BASE = 'https://clinicaltrials.gov/api/v2/studies';
 
@@ -185,8 +209,7 @@ async function searchClinicalTrials(
         const data = await response.json();
         const studies = data.studies || [];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return studies.map((study: any) => {
+        return studies.map((study: ClinicalStudy) => {
             const proto = study.protocolSection || {};
             const ident = proto.identificationModule || {};
             const status = proto.statusModule || {};
@@ -196,13 +219,12 @@ async function searchClinicalTrials(
             // Drug/Intervention 추출
             const interventions = arms.interventions || [];
             const drugInterventions = interventions.filter(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (i: any) => i.type === 'DRUG' || i.type === 'BIOLOGICAL'
+                (i: Intervention) => i.type === 'DRUG' || i.type === 'BIOLOGICAL'
             );
             const drugName = drugInterventions[0]?.name || ident.briefTitle?.split(' ')[0] || 'Unknown';
 
             // 간단한 구성요소 추출 (Step 2에서 정밀 추출)
-            const interventionText = drugInterventions.map((i: any) => i.name).join(' ').toLowerCase();
+            const interventionText = drugInterventions.map((i: Intervention) => i.name || '').join(' ').toLowerCase();
 
             return {
                 nct_ids: [ident.nctId],
@@ -273,7 +295,7 @@ function extractPayload(text: string): string | null {
     return null;
 }
 
-function calculateMatchScore(interventions: any[]): number {
+function calculateMatchScore(interventions: Intervention[]): number {
     if (!interventions.length) return 0.3;
 
     const text = interventions.map(i => (i.name || '').toLowerCase()).join(' ');

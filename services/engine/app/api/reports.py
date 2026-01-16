@@ -2,8 +2,9 @@
 Reports API Endpoints
 설계 결과 리포트 생성 및 관리
 """
+
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
 import structlog
 from datetime import datetime
@@ -14,11 +15,13 @@ logger = structlog.get_logger()
 
 # === Schemas ===
 
+
 class ReportGenerateRequest(BaseModel):
     run_id: str
     scope: str = "top_10"  # top_10, top_20, selected
-    format: str = "pdf"    # pdf, html
+    format: str = "pdf"  # pdf, html
     sections: List[str] = ["evidence", "protocol", "score"]
+
 
 class ReportResponse(BaseModel):
     id: str
@@ -29,7 +32,9 @@ class ReportResponse(BaseModel):
     created_at: str
     download_url: Optional[str] = None
 
+
 # === Endpoints ===
+
 
 @router.post("/generate", response_model=ReportResponse)
 async def generate_report(request: ReportGenerateRequest):
@@ -38,10 +43,10 @@ async def generate_report(request: ReportGenerateRequest):
     """
     # TODO: 실제 리포트 생성 로직 (PDF/HTML) 구현 필요
     # 현재는 Mock 응답
-    
+
     report_id = str(uuid.uuid4())
     filename = f"report_{request.run_id}_{request.scope}.{request.format}"
-    
+
     return {
         "id": report_id,
         "run_id": request.run_id,
@@ -49,8 +54,9 @@ async def generate_report(request: ReportGenerateRequest):
         "format": request.format,
         "status": "generating",
         "created_at": datetime.utcnow().isoformat(),
-        "download_url": None
+        "download_url": None,
     }
+
 
 @router.get("", response_model=List[ReportResponse])
 async def list_reports(
@@ -68,6 +74,6 @@ async def list_reports(
             "format": "pdf",
             "status": "ready",
             "created_at": datetime.utcnow().isoformat(),
-            "download_url": "/downloads/rep_001"
+            "download_url": "/downloads/rep_001",
         }
     ]

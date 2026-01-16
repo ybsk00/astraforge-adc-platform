@@ -1,9 +1,10 @@
-import asyncio
 import structlog
 from typing import Dict, Any, List
 from supabase import Client
+from datetime import datetime
 
 logger = structlog.get_logger()
+
 
 async def resolve_entities(ctx: Dict[str, Any], seed_set_id: str):
     """
@@ -14,11 +15,16 @@ async def resolve_entities(ctx: Dict[str, Any], seed_set_id: str):
     """
     db: Client = ctx["db"]
     log = logger.bind(seed_set_id=seed_set_id)
-    
+
     log.info("entity_resolution_started")
-    
+
     # 1. Targets Resolution
-    target_results = db.table("seed_set_targets").select("target_id, entity_targets(*)").eq("seed_set_id", seed_set_id).execute()
+    target_results = (
+        db.table("seed_set_targets")
+        .select("target_id, entity_targets(*)")
+        .eq("seed_set_id", seed_set_id)
+        .execute()
+    )
     for row in target_results.data:
         target = row["entity_targets"]
         if not target["ensembl_gene_id"] or not target["uniprot_accession"]:
@@ -29,7 +35,12 @@ async def resolve_entities(ctx: Dict[str, Any], seed_set_id: str):
             # db.table("entity_targets").update({"ensembl_gene_id": "ENSG...", "uniprot_accession": "P..."}).eq("id", target["id"]).execute()
 
     # 2. Diseases Resolution
-    disease_results = db.table("seed_set_diseases").select("disease_id, entity_diseases(*)").eq("seed_set_id", seed_set_id).execute()
+    disease_results = (
+        db.table("seed_set_diseases")
+        .select("disease_id, entity_diseases(*)")
+        .eq("seed_set_id", seed_set_id)
+        .execute()
+    )
     for row in disease_results.data:
         disease = row["entity_diseases"]
         if not disease["ontology_id"]:
@@ -38,17 +49,32 @@ async def resolve_entities(ctx: Dict[str, Any], seed_set_id: str):
 
     log.info("entity_resolution_completed")
 
-async def generate_queries(ctx: Dict[str, Any], seed_set_id: str, connector_name: str) -> List[Dict[str, Any]]:
+
+async def generate_queries(
+    ctx: Dict[str, Any], seed_set_id: str, connector_name: str
+) -> List[Dict[str, Any]]:
     """
     시드 세트와 커넥터 타입에 따라 실제 실행할 쿼리 목록을 생성합니다.
     """
     db: Client = ctx["db"]
     queries = []
-    
+
     # 시드 데이터 로드
-    targets = db.table("seed_set_targets").select("entity_targets(gene_symbol, ensembl_gene_id)").eq("seed_set_id", seed_set_id).execute().data
-    diseases = db.table("seed_set_diseases").select("entity_diseases(disease_name, search_term, ontology_id)").eq("seed_set_id", seed_set_id).execute().data
-    
+    targets = (
+        db.table("seed_set_targets")
+        .select("entity_targets(gene_symbol, ensembl_gene_id)")
+        .eq("seed_set_id", seed_set_id)
+        .execute()
+        .data
+    )
+    diseases = (
+        db.table("seed_set_diseases")
+        .select("entity_diseases(disease_name, search_term, ontology_id)")
+        .eq("seed_set_id", seed_set_id)
+        .execute()
+        .data
+    )
+
     if connector_name == "pubmed":
         # PubMed용 쿼리: (Target) AND (Disease)
         for t in targets:
@@ -56,8 +82,10 @@ async def generate_queries(ctx: Dict[str, Any], seed_set_id: str, connector_name
             for d in diseases:
                 d_name = d["entity_diseases"]["disease_name"]
                 query_str = f'("{symbol}"[Title/Abstract]) AND ("{d_name}"[Title/Abstract]) AND (cancer OR tumor OR oncology)'
-                queries.append({"query": query_str, "target": symbol, "disease": d_name})
-                
+                queries.append(
+                    {"query": query_str, "target": symbol, "disease": d_name}
+                )
+
     elif connector_name == "opentargets":
         # Open Targets용 쿼리: Ensembl ID + EFO ID 조합
         for t in targets:
@@ -66,28 +94,46 @@ async def generate_queries(ctx: Dict[str, Any], seed_set_id: str, connector_name
                 efo = d["entity_diseases"]["ontology_id"]
                 if ensg and efo:
                     queries.append({"target_id": ensg, "disease_id": efo})
-                    
+
     return queries
 
-async def ingest_to_staging(ctx: Dict[str, Any], component_type: str, name: str, data: Dict[str, Any], source: str):
+
+async def ingest_to_staging(
+    ctx: Dict[str, Any],
+    component_type: str,
+    name: str,
+    data: Dict[str, Any],
+    source: str,
+):
     """
     수집된 데이터를 스테이징 테이블(staging_components)에 저장합니다.
     관리자의 승인을 거쳐 카탈로그에 반영됩니다.
     """
     db: Client = ctx["db"]
-    
+
     # 중복 확인 (이름 기준)
-    existing = db.table("staging_components").select("id").eq("name", name).eq("type", component_type).execute()
+    existing = (
+        db.table("staging_components")
+        .select("id")
+        .eq("name", name)
+        .eq("type", component_type)
+        .execute()
+    )
     if existing.data:
         logger.info("staging_item_exists", name=name, type=component_type)
         return
-    
-    db.table("staging_components").insert({
-        "type": component_type,
-        "name": name,
-        "normalized": data,
-        "source_info": {"source": source, "fetched_at": datetime.utcnow().isoformat()},
-        "status": "pending_review"
-    }).execute()
-    
+
+    db.table("staging_components").insert(
+        {
+            "type": component_type,
+            "name": name,
+            "normalized": data,
+            "source_info": {
+                "source": source,
+                "fetched_at": datetime.utcnow().isoformat(),
+            },
+            "status": "pending_review",
+        }
+    ).execute()
+
     logger.info("ingested_to_staging", name=name, type=component_type)

@@ -6,29 +6,24 @@ from .literature import (
     ChunkingService,
     EmbeddingService,
     LiteraturePipeline,
-    get_literature_pipeline
+    get_literature_pipeline,
 )
 
 # Evidence Service
-from .evidence import (
-    EvidenceRAGService,
-    EvidenceResult,
-    Citation,
-    get_evidence_service
-)
+from .evidence import EvidenceRAGService, EvidenceResult, Citation, get_evidence_service
 
 # Protocol Service
 from .protocol import (
     ProtocolGeneratorService,
     Protocol,
     ProtocolStep,
-    get_protocol_service
+    get_protocol_service,
 )
 
 __all__ = [
     # Fingerprint
     "FingerprintService",
-    "SimilarityResult", 
+    "SimilarityResult",
     "get_fingerprint_service",
     # Literature
     "ChunkingService",
@@ -44,5 +39,5 @@ __all__ = [
     "ProtocolGeneratorService",
     "Protocol",
     "ProtocolStep",
-    "get_protocol_service"
+    "get_protocol_service",
 ]

@@ -438,31 +438,32 @@ def load_seeds():
         return
 
     supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
-    
+
     print(f"Loading {len(GOLDEN_SEEDS)} seeds to golden_seed_items...")
-    
+
     success_count = 0
     error_count = 0
-    
+
     for seed in GOLDEN_SEEDS:
         try:
             # Upsert by drug_name_canonical
-            result = supabase.table("golden_seed_items").upsert(
-                seed,
-                on_conflict="drug_name_canonical"
-            ).execute()
-            
+            result = (
+                supabase.table("golden_seed_items")
+                .upsert(seed, on_conflict="drug_name_canonical")
+                .execute()
+            )
+
             if result.data:
                 success_count += 1
                 print(f"  ✓ {seed['drug_name_canonical']}")
             else:
                 error_count += 1
                 print(f"  ✗ {seed['drug_name_canonical']} - No data returned")
-                
+
         except Exception as e:
             error_count += 1
             print(f"  ✗ {seed['drug_name_canonical']} - Error: {e}")
-    
+
     print(f"\nComplete: {success_count} success, {error_count} errors")
 
 

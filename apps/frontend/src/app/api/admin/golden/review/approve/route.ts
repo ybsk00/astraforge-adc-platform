@@ -47,12 +47,15 @@ export async function POST(request: Request) {
 
         // 2. Verified 체크 (필드별)
         const fieldVerified = seedItem?.field_verified || {};
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const updateData: Record<string, any> = {};
+        const updateData: Record<string, unknown> = {};
         const skippedFields: string[] = [];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        for (const [field, patchInfo] of Object.entries(proposedPatch) as [string, any][]) {
+        interface PatchInfo {
+            new: unknown;
+            old?: unknown;
+        }
+
+        for (const [field, patchInfo] of Object.entries(proposedPatch) as [string, PatchInfo][]) {
             if (field.startsWith('_')) continue; // 메타 필드 스킵
 
             // 필드별 Verified 체크
@@ -68,11 +71,16 @@ export async function POST(request: Request) {
 
         // 3. Seed Item 업데이트 (스킵된 필드 제외)
         if (Object.keys(updateData).length > 0 && seedItem) {
-            updateData.updated_at = new Date().toISOString();
+            // updateData.updated_at = new Date().toISOString(); // Type issue with Record<string, unknown> if we just assign. 
+            // Better to cast or include it in definition.
+            const finalUpdateData = {
+                ...updateData,
+                updated_at: new Date().toISOString()
+            };
 
             await supabase
                 .from('golden_seed_items')
-                .update(updateData)
+                .update(finalUpdateData)
                 .eq('id', seedItem.id);
         }
 
@@ -95,11 +103,11 @@ export async function POST(request: Request) {
             skipped_verified_fields: skippedFields
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Review approve error:', error);
+        const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json(
-            { status: 'error', detail: error.message },
+            { status: 'error', detail: message },
             { status: 500 }
         );
     }

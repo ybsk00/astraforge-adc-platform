@@ -2,11 +2,12 @@
 Fingerprint API Endpoints
 구조 유사도 검색 및 분자 descriptor API
 """
+
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional, List
 from pydantic import BaseModel
 
-from app.services.fingerprint import FingerprintService, SimilarityResult
+from app.services.fingerprint import FingerprintService
 from app.core.database import get_db
 
 router = APIRouter()
@@ -16,14 +17,17 @@ router = APIRouter()
 # Schemas
 # ============================================================
 
+
 class FingerprintRequest(BaseModel):
     """Fingerprint 계산 요청"""
+
     smiles: str
     fp_type: str = "morgan"  # morgan, maccs, topological
 
 
 class FingerprintResponse(BaseModel):
     """Fingerprint 응답"""
+
     smiles: str
     fingerprint_type: str
     on_bit_count: int
@@ -32,6 +36,7 @@ class FingerprintResponse(BaseModel):
 
 class SimilarityRequest(BaseModel):
     """유사도 계산 요청"""
+
     smiles1: str
     smiles2: str
     fp_type: str = "morgan"
@@ -40,6 +45,7 @@ class SimilarityRequest(BaseModel):
 
 class SimilaritySearchRequest(BaseModel):
     """유사 화합물 검색 요청"""
+
     smiles: str
     top_k: int = 10
     threshold: float = 0.5
@@ -49,6 +55,7 @@ class SimilaritySearchRequest(BaseModel):
 
 class SimilarCompound(BaseModel):
     """유사 화합물 결과"""
+
     compound_id: str
     name: str
     smiles: str
@@ -57,11 +64,13 @@ class SimilarCompound(BaseModel):
 
 class DescriptorRequest(BaseModel):
     """Descriptor 계산 요청"""
+
     smiles: str
 
 
 class DescriptorResponse(BaseModel):
     """Descriptor 응답"""
+
     smiles: str
     molecular_weight: float
     exact_mass: float
@@ -80,34 +89,32 @@ class DescriptorResponse(BaseModel):
 # Endpoints
 # ============================================================
 
+
 @router.post("/fingerprint", response_model=FingerprintResponse)
 async def compute_fingerprint(request: FingerprintRequest):
     """
     SMILES에서 fingerprint 계산
-    
+
     지원 타입:
     - morgan: Morgan/ECFP fingerprints
     - maccs: MACCS keys (166 bits)
     - topological: Daylight-type fingerprints
     """
     service = FingerprintService()
-    
-    result = service.compute_fingerprint(
-        smiles=request.smiles,
-        fp_type=request.fp_type
-    )
-    
+
+    result = service.compute_fingerprint(smiles=request.smiles, fp_type=request.fp_type)
+
     if not result:
         raise HTTPException(
             status_code=400,
-            detail="Failed to compute fingerprint. Check SMILES validity."
+            detail="Failed to compute fingerprint. Check SMILES validity.",
         )
-    
+
     return FingerprintResponse(
         smiles=request.smiles,
         fingerprint_type=result["type"],
         on_bit_count=result["on_bit_count"],
-        total_bits=result["total_bits"]
+        total_bits=result["total_bits"],
     )
 
 
@@ -115,33 +122,33 @@ async def compute_fingerprint(request: FingerprintRequest):
 async def calculate_similarity(request: SimilarityRequest):
     """
     두 화합물 간 구조 유사도 계산
-    
+
     메트릭:
     - tanimoto: Tanimoto coefficient (기본)
     - dice: Dice similarity
     - cosine: Cosine similarity
     """
     service = FingerprintService()
-    
+
     similarity = service.calculate_similarity(
         smiles1=request.smiles1,
         smiles2=request.smiles2,
         fp_type=request.fp_type,
-        metric=request.metric
+        metric=request.metric,
     )
-    
+
     if similarity is None:
         raise HTTPException(
             status_code=400,
-            detail="Failed to calculate similarity. Check SMILES validity."
+            detail="Failed to calculate similarity. Check SMILES validity.",
         )
-    
+
     return {
         "smiles1": request.smiles1,
         "smiles2": request.smiles2,
         "similarity": similarity,
         "metric": request.metric,
-        "fingerprint_type": request.fp_type
+        "fingerprint_type": request.fp_type,
     }
 
 
@@ -149,7 +156,7 @@ async def calculate_similarity(request: SimilarityRequest):
 async def search_similar_compounds(request: SimilaritySearchRequest):
     """
     카탈로그에서 유사 화합물 검색
-    
+
     Parameters:
     - smiles: 검색할 화합물 SMILES
     - top_k: 반환할 최대 개수 (기본 10)
@@ -158,21 +165,21 @@ async def search_similar_compounds(request: SimilaritySearchRequest):
     """
     db = get_db()
     service = FingerprintService(db)
-    
+
     results = await service.search_similar(
         query_smiles=request.smiles,
         top_k=request.top_k,
         threshold=request.threshold,
         fp_type=request.fp_type,
-        component_type=request.component_type
+        component_type=request.component_type,
     )
-    
+
     return [
         SimilarCompound(
             compound_id=r.compound_id,
             name=r.name,
             smiles=r.smiles,
-            similarity=r.similarity
+            similarity=r.similarity,
         )
         for r in results
     ]
@@ -182,7 +189,7 @@ async def search_similar_compounds(request: SimilaritySearchRequest):
 async def compute_descriptors(request: DescriptorRequest):
     """
     SMILES에서 분자 descriptor 계산
-    
+
     반환 값:
     - molecular_weight: 분자량
     - logp: LogP (지용성)
@@ -193,19 +200,16 @@ async def compute_descriptors(request: DescriptorRequest):
     - aromatic_rings: 방향족 고리 수
     """
     service = FingerprintService()
-    
+
     result = service.compute_descriptors(request.smiles)
-    
+
     if not result:
         raise HTTPException(
             status_code=400,
-            detail="Failed to compute descriptors. Check SMILES validity."
+            detail="Failed to compute descriptors. Check SMILES validity.",
         )
-    
-    return DescriptorResponse(
-        smiles=request.smiles,
-        **result
-    )
+
+    return DescriptorResponse(smiles=request.smiles, **result)
 
 
 @router.get("/validate")
@@ -214,20 +218,18 @@ async def validate_smiles(smiles: str = Query(..., description="SMILES 문자열
     SMILES 유효성 검증
     """
     service = FingerprintService()
-    
+
     # Fingerprint 계산 시도로 유효성 확인
     result = service.compute_fingerprint(smiles, "morgan")
-    
+
     if result:
         descriptors = service.compute_descriptors(smiles)
         return {
             "valid": True,
             "smiles": smiles,
-            "molecular_weight": descriptors.get("molecular_weight") if descriptors else None
+            "molecular_weight": descriptors.get("molecular_weight")
+            if descriptors
+            else None,
         }
     else:
-        return {
-            "valid": False,
-            "smiles": smiles,
-            "error": "Invalid SMILES string"
-        }
+        return {"valid": False, "smiles": smiles, "error": "Invalid SMILES string"}

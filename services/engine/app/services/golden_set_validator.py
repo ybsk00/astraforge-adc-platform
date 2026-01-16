@@ -8,14 +8,15 @@ Golden Set Validator Service
 - 다차원 지표 산출 (MAE, RMSE, Spearman, Top-K Overlap)
 - 검증 결과 DB 적재 (golden_validation_runs, golden_validation_metrics)
 """
-import math
-from typing import List, Dict, Any, Optional, Tuple
+
+from typing import List, Dict, Any
 from dataclasses import dataclass, field
 import structlog
 import numpy as np
 from scipy.stats import spearmanr, kendalltau
 
 logger = structlog.get_logger()
+
 
 @dataclass
 class ValidationMetric:
@@ -26,21 +27,17 @@ class ValidationMetric:
     passed: bool
     details: Dict[str, Any] = field(default_factory=dict)
 
+
 class GoldenSetValidator:
     """Golden Set 검증 엔진"""
-    
+
     def __init__(self, db_client):
         self.db = db_client
         self.logger = logger.bind(service="golden_set_validator")
-        
+
         # 단위 변환 계수 (기준: nM, %, hr)
-        self.unit_converters = {
-            "nM": 1.0,
-            "pM": 0.001,
-            "uM": 1000.0,
-            "mM": 1000000.0
-        }
-        
+        self.unit_converters = {"nM": 1.0, "pM": 0.001, "uM": 1000.0, "mM": 1000000.0}
+
         # Assay 우선순위 (높을수록 신뢰도 높음)
         self.assay_priority = {
             "in_vivo": 100,
@@ -48,44 +45,56 @@ class GoldenSetValidator:
             "spr": 60,
             "sec": 50,
             "dls": 40,
-            "estimated": 20
+            "estimated": 20,
         }
 
-    async def run_validation(self, scoring_version: str, dataset_version: str = "v1.0") -> Dict[str, Any]:
+    async def run_validation(
+        self, scoring_version: str, dataset_version: str = "v1.0"
+    ) -> Dict[str, Any]:
         """전체 Golden Set 검증 실행"""
-        self.logger.info("golden_validation_started", scoring_version=scoring_version, dataset_version=dataset_version)
-        
+        self.logger.info(
+            "golden_validation_started",
+            scoring_version=scoring_version,
+            dataset_version=dataset_version,
+        )
+
         try:
             # 1. 데이터 로드
-            candidates = await self._load_golden_candidates()
+            await self._load_golden_candidates()
             measurements = await self._load_golden_measurements()
-            
+
             # 2. 정규화 및 정답셋(y_true) 구축
             y_true_map = self._normalize_and_aggregate(measurements)
-            
+
             # 3. 시스템 점수(y_pred) 로드
-            y_pred_map = await self._fetch_system_scores(scoring_version, list(y_true_map.keys()))
-            
+            y_pred_map = await self._fetch_system_scores(
+                scoring_version, list(y_true_map.keys())
+            )
+
             # 4. 지표 산출
             all_metrics = []
             axes = ["Bio", "Safety", "Eng", "Clin"]
-            
+
             for axis in axes:
-                axis_metrics = self._calculate_axis_metrics(axis, y_true_map, y_pred_map)
+                axis_metrics = self._calculate_axis_metrics(
+                    axis, y_true_map, y_pred_map
+                )
                 all_metrics.extend(axis_metrics)
-                
+
             # 5. 랭킹 안정성 (Overall)
             overall_metrics = self._calculate_ranking_metrics(y_true_map, y_pred_map)
             all_metrics.extend(overall_metrics)
-            
+
             # 6. 결과 저장 및 반환
             is_pass = all(m.passed for m in all_metrics)
-            run_id = await self._save_results(scoring_version, dataset_version, is_pass, all_metrics)
-            
+            run_id = await self._save_results(
+                scoring_version, dataset_version, is_pass, all_metrics
+            )
+
             return {
                 "run_id": run_id,
                 "pass": is_pass,
-                "metrics": [vars(m) for m in all_metrics]
+                "metrics": [vars(m) for m in all_metrics],
             }
 
         except Exception as e:
@@ -100,11 +109,13 @@ class GoldenSetValidator:
         res = await self.db.table("golden_measurements").select("*").execute()
         return res.data
 
-    def _normalize_and_aggregate(self, measurements: List[Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
+    def _normalize_and_aggregate(
+        self, measurements: List[Dict[str, Any]]
+    ) -> Dict[str, Dict[str, float]]:
         """측정치 정규화 및 후보별/축별 집계"""
         # candidate_id -> axis -> [values]
         raw_map = {}
-        
+
         # Metric mapping to Axis
         metric_to_axis = {
             "IC50": "Bio",
@@ -113,25 +124,28 @@ class GoldenSetValidator:
             "SerumStability_hr": "Eng",
             "Toxicity_LD50": "Safety",
             "OffTarget_Binding": "Safety",
-            "Clinical_Phase": "Clin"
+            "Clinical_Phase": "Clin",
         }
 
         for m in measurements:
             cid = m["candidate_id"]
             axis = metric_to_axis.get(m["metric_name"])
-            if not axis: continue
-            
+            if not axis:
+                continue
+
             # 단위 변환
             val = float(m["value"])
             unit = m.get("unit")
             if unit in self.unit_converters:
                 val *= self.unit_converters[unit]
-                
+
             # 품질 가중치 (Assay 우선순위)
             priority = self.assay_priority.get(m.get("assay_type", "").lower(), 50)
-            
-            if cid not in raw_map: raw_map[cid] = {}
-            if axis not in raw_map[cid]: raw_map[cid][axis] = []
+
+            if cid not in raw_map:
+                raw_map[cid] = {}
+            if axis not in raw_map[cid]:
+                raw_map[cid][axis] = []
             raw_map[cid][axis].append((val, priority))
 
         # 집계 (가중 평균 또는 중앙값)
@@ -143,29 +157,35 @@ class GoldenSetValidator:
                 total_val = sum(v * p for v, p in vals)
                 total_p = sum(p for v, p in vals)
                 agg_map[cid][axis] = total_val / total_p if total_p > 0 else 0.0
-                
+
         return agg_map
 
-    async def _fetch_system_scores(self, scoring_version: str, candidate_ids: List[str]) -> Dict[str, Dict[str, float]]:
+    async def _fetch_system_scores(
+        self, scoring_version: str, candidate_ids: List[str]
+    ) -> Dict[str, Dict[str, float]]:
         """시스템이 계산한 점수 조회 (디자인 런 결과 등에서 추출)"""
         # MVP: 실제 운영 환경에서는 특정 런의 결과를 가져오거나 즉시 계산
         # 여기서는 candidate_id -> axis -> score 맵을 반환한다고 가정
-        res = await self.db.table("design_candidates")\
-            .select("id, bio_fit, safety_fit, eng_fit, clin_fit")\
-            .in_("id", candidate_ids)\
+        res = (
+            await self.db.table("design_candidates")
+            .select("id, bio_fit, safety_fit, eng_fit, clin_fit")
+            .in_("id", candidate_ids)
             .execute()
-            
+        )
+
         score_map = {}
         for r in res.data:
             score_map[r["id"]] = {
                 "Bio": r["bio_fit"],
                 "Safety": r["safety_fit"],
                 "Eng": r["eng_fit"],
-                "Clin": r["clin_fit"]
+                "Clin": r["clin_fit"],
             }
         return score_map
 
-    def _calculate_axis_metrics(self, axis: str, y_true_map: Dict, y_pred_map: Dict) -> List[ValidationMetric]:
+    def _calculate_axis_metrics(
+        self, axis: str, y_true_map: Dict, y_pred_map: Dict
+    ) -> List[ValidationMetric]:
         """축별 오차 및 상관계수 산출 (Outliers 포함)"""
         y_true, y_pred, ids = [], [], []
         for cid in y_true_map:
@@ -173,99 +193,146 @@ class GoldenSetValidator:
                 y_true.append(y_true_map[cid][axis])
                 y_pred.append(y_pred_map[cid][axis])
                 ids.append(cid)
-        
-        if not y_true: return []
-        
+
+        if not y_true:
+            return []
+
         y_true = np.array(y_true)
         y_pred = np.array(y_pred)
-        
+
         mae = np.mean(np.abs(y_true - y_pred))
-        rmse = np.sqrt(np.mean((y_true - y_pred)**2))
-        
+        np.sqrt(np.mean((y_true - y_pred) ** 2))
+
         # Identify Outliers (Top 3 errors)
         errors = np.abs(y_true - y_pred)
         top_error_indices = np.argsort(errors)[-3:][::-1]
         outliers = []
         for idx in top_error_indices:
-            outliers.append({
-                "id": ids[idx],
-                "true": float(y_true[idx]),
-                "pred": float(y_pred[idx]),
-                "error": float(errors[idx])
-            })
+            outliers.append(
+                {
+                    "id": ids[idx],
+                    "true": float(y_true[idx]),
+                    "pred": float(y_pred[idx]),
+                    "error": float(errors[idx]),
+                }
+            )
 
         # Spearman Rank Correlation
         corr, _ = spearmanr(y_true, y_pred)
-        
+
         metrics = [
-            ValidationMetric(axis, "MAE", mae, 15.0, mae <= 15.0, details={"outliers": outliers}),
-            ValidationMetric(axis, "Spearman", corr, 0.7, corr >= 0.7 if not np.isnan(corr) else False)
+            ValidationMetric(
+                axis, "MAE", mae, 15.0, mae <= 15.0, details={"outliers": outliers}
+            ),
+            ValidationMetric(
+                axis,
+                "Spearman",
+                corr,
+                0.7,
+                corr >= 0.7 if not np.isnan(corr) else False,
+            ),
         ]
         return metrics
 
-    def _calculate_ranking_metrics(self, y_true_map: Dict, y_pred_map: Dict) -> List[ValidationMetric]:
+    def _calculate_ranking_metrics(
+        self, y_true_map: Dict, y_pred_map: Dict
+    ) -> List[ValidationMetric]:
         """전체 랭킹 안정성 및 Top-K Overlap 산출 (Details 포함)"""
         # 총점 기반 랭킹 비교
         true_totals = {cid: sum(axes.values()) for cid, axes in y_true_map.items()}
-        pred_totals = {cid: sum(axes.values()) for cid, axes in y_pred_map.items() if cid in y_true_map}
-        
-        if len(true_totals) < 2: return []
-        
-        sorted_true = sorted(true_totals.keys(), key=lambda k: true_totals[k], reverse=True)
-        sorted_pred = sorted(pred_totals.keys(), key=lambda k: pred_totals[k], reverse=True)
-        
+        pred_totals = {
+            cid: sum(axes.values())
+            for cid, axes in y_pred_map.items()
+            if cid in y_true_map
+        }
+
+        if len(true_totals) < 2:
+            return []
+
+        sorted_true = sorted(
+            true_totals.keys(), key=lambda k: true_totals[k], reverse=True
+        )
+        sorted_pred = sorted(
+            pred_totals.keys(), key=lambda k: pred_totals[k], reverse=True
+        )
+
         # Top-K Overlap (K=5 or len/2)
         k = min(5, len(sorted_true))
         top_true = set(sorted_true[:k])
         top_pred = set(sorted_pred[:k])
         intersection = top_true.intersection(top_pred)
         overlap = len(intersection) / k
-        
+
         details = {
             "k": k,
             "top_true": list(top_true),
             "top_pred": list(top_pred),
-            "intersection": list(intersection)
+            "intersection": list(intersection),
         }
-        
+
         # Kendall Tau
         tau, _ = kendalltau(
             [true_totals[cid] for cid in sorted_true],
-            [pred_totals[cid] for cid in sorted_true]
+            [pred_totals[cid] for cid in sorted_true],
         )
-        
+
         return [
-            ValidationMetric("overall", "TopKOverlap", overlap, 0.6, overlap >= 0.6, details=details),
-            ValidationMetric("overall", "KendallTau", tau, 0.5, tau >= 0.5 if not np.isnan(tau) else False)
+            ValidationMetric(
+                "overall", "TopKOverlap", overlap, 0.6, overlap >= 0.6, details=details
+            ),
+            ValidationMetric(
+                "overall",
+                "KendallTau",
+                tau,
+                0.5,
+                tau >= 0.5 if not np.isnan(tau) else False,
+            ),
         ]
 
-    async def _save_results(self, scoring_version: str, dataset_version: str, is_pass: bool, metrics: List[ValidationMetric]) -> str:
+    async def _save_results(
+        self,
+        scoring_version: str,
+        dataset_version: str,
+        is_pass: bool,
+        metrics: List[ValidationMetric],
+    ) -> str:
         """검증 결과를 DB에 저장"""
         # 1. Run 저장
-        run_res = await self.db.table("golden_validation_runs").insert({
-            "scoring_version": scoring_version,
-            "dataset_version": dataset_version,
-            "pass": is_pass,
-            "summary": {m.metric: m.value for m in metrics if m.axis == "overall"}
-        }).execute()
-        
+        run_res = (
+            await self.db.table("golden_validation_runs")
+            .insert(
+                {
+                    "scoring_version": scoring_version,
+                    "dataset_version": dataset_version,
+                    "pass": is_pass,
+                    "summary": {
+                        m.metric: m.value for m in metrics if m.axis == "overall"
+                    },
+                }
+            )
+            .execute()
+        )
+
         run_id = run_res.data[0]["id"]
-        
+
         # 2. Metrics 저장
         metric_data = []
         for m in metrics:
-            metric_data.append({
-                "run_id": run_id,
-                "axis": m.axis,
-                "metric": m.metric,
-                "value": m.value,
-                "threshold": m.threshold,
-                "pass": m.passed,
-                "details": m.details
-            })
-            
+            metric_data.append(
+                {
+                    "run_id": run_id,
+                    "axis": m.axis,
+                    "metric": m.metric,
+                    "value": m.value,
+                    "threshold": m.threshold,
+                    "pass": m.passed,
+                    "details": m.details,
+                }
+            )
+
         await self.db.table("golden_validation_metrics").insert(metric_data).execute()
         return run_id
+
 
 def get_golden_validator(db_client) -> GoldenSetValidator:
     return GoldenSetValidator(db_client)

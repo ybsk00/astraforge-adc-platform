@@ -4,6 +4,7 @@ Run 생성/조회/관리 + 후보 조회
 
 Phase 1 핵심 API
 """
+
 import os
 from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel, Field
@@ -20,20 +21,22 @@ logger = structlog.get_logger()
 def get_db():
     """Supabase 클라이언트 의존성"""
     from supabase import create_client
-    
+
     supabase_url = os.getenv("SUPABASE_URL")
     supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-    
+
     if not supabase_url or not supabase_key:
         raise HTTPException(status_code=500, detail="Database not configured")
-    
+
     return create_client(supabase_url, supabase_key)
 
 
 # === Schemas ===
 
+
 class RunConstraints(BaseModel):
     """런 제약조건"""
+
     dar_min: float = 2.0
     dar_max: float = 8.0
     conjugation_mode: Literal["random", "site_specific", "both"] = "both"
@@ -48,6 +51,7 @@ class RunConstraints(BaseModel):
 
 class RunCreate(BaseModel):
     """런 생성 요청"""
+
     target_ids: List[str] = Field(..., min_length=1, description="선택된 타겟 ID 목록")
     indication: str = Field(..., description="적응증")
     strategy: Literal["balanced", "penetration", "stability", "cmc"] = "balanced"
@@ -57,6 +61,7 @@ class RunCreate(BaseModel):
 
 class RunResponse(BaseModel):
     """런 응답"""
+
     id: str
     status: str
     created_at: str
@@ -68,6 +73,7 @@ class RunResponse(BaseModel):
 
 class CandidateListItem(BaseModel):
     """후보 목록 아이템"""
+
     id: str
     candidate_hash: str
     target_name: Optional[str]
@@ -81,6 +87,7 @@ class CandidateListItem(BaseModel):
 
 class RunProgress(BaseModel):
     """런 진행률"""
+
     phase: str
     processed_candidates: int
     accepted_candidates: int
@@ -89,16 +96,17 @@ class RunProgress(BaseModel):
 
 # === Endpoints ===
 
+
 @router.post("/runs", response_model=RunResponse)
 async def create_run(run_data: RunCreate, db=Depends(get_db)):
     """
     새 Design Run 생성
-    
+
     Run을 DB에 저장하고 Worker Job을 enqueue합니다.
     """
     run_id = str(uuid.uuid4())
     log = logger.bind(run_id=run_id)
-    
+
     try:
         # 1. Run 저장
         run_record = {
@@ -107,54 +115,58 @@ async def create_run(run_data: RunCreate, db=Depends(get_db)):
             "target_ids": run_data.target_ids,
             "indication": run_data.indication,
             "strategy": run_data.strategy,
-            "constraints": run_data.constraints.model_dump() if run_data.constraints else {},
+            "constraints": run_data.constraints.model_dump()
+            if run_data.constraints
+            else {},
             "status": "pending",
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
         }
-        
+
         result = db.table("design_runs").insert(run_record).execute()
-        
+
         if not result.data:
             raise HTTPException(status_code=500, detail="Failed to create run")
-        
+
         log.info("run_created", target_count=len(run_data.target_ids))
-        
+
         # 2. Worker Job Enqueue (Redis)
         try:
             import redis
-            from arq import create_pool
             from arq.connections import RedisSettings
-            
+
             redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
             # Parse redis URL
-            settings = RedisSettings.from_dsn(redis_url)
-            
+            RedisSettings.from_dsn(redis_url)
+
             # Enqueue job (sync for now, can be async)
             r = redis.from_url(redis_url)
             # Simple job enqueue via Redis list
             import json
-            job_data = json.dumps({
-                "job": "design_run_execute",
-                "run_id": run_id,
-                "enqueue_time": datetime.utcnow().isoformat()
-            })
+
+            job_data = json.dumps(
+                {
+                    "job": "design_run_execute",
+                    "run_id": run_id,
+                    "enqueue_time": datetime.utcnow().isoformat(),
+                }
+            )
             r.lpush("arq:queue:design_run_queue", job_data)
-            
+
             log.info("job_enqueued", queue="design_run_queue")
-            
+
         except Exception as e:
             log.warning("job_enqueue_failed", error=str(e))
             # Job enqueue 실패해도 run은 생성됨 (수동 실행 가능)
-        
+
         return RunResponse(
             id=run_id,
             status="pending",
             created_at=run_record["created_at"],
             target_ids=run_data.target_ids,
             indication=run_data.indication,
-            strategy=run_data.strategy
+            strategy=run_data.strategy,
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -168,31 +180,31 @@ async def list_runs(
     workspace_id: Optional[str] = None,
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    db=Depends(get_db)
+    db=Depends(get_db),
 ):
     """런 목록 조회"""
     try:
         query = db.table("design_runs").select("*").order("created_at", desc=True)
-        
+
         if status:
             query = query.eq("status", status)
         if workspace_id:
             query = query.eq("workspace_id", workspace_id)
-        
+
         # Count query
         count_result = db.table("design_runs").select("id", count="exact").execute()
         total = count_result.count if count_result.count else 0
-        
+
         # Paginated query
         result = query.range(offset, offset + limit - 1).execute()
-        
+
         return {
             "items": result.data or [],
             "total": total,
             "limit": limit,
-            "offset": offset
+            "offset": offset,
         }
-        
+
     except Exception as e:
         logger.error("list_runs_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
@@ -203,12 +215,12 @@ async def get_run(run_id: str, db=Depends(get_db)):
     """런 상세 조회"""
     try:
         result = db.table("design_runs").select("*").eq("id", run_id).execute()
-        
+
         if not result.data:
             raise HTTPException(status_code=404, detail="Run not found")
-        
+
         run = result.data[0]
-        
+
         return RunResponse(
             id=run["id"],
             status=run["status"],
@@ -216,9 +228,9 @@ async def get_run(run_id: str, db=Depends(get_db)):
             target_ids=run.get("target_ids", []),
             indication=run.get("indication", ""),
             strategy=run.get("strategy", "balanced"),
-            result_summary=run.get("result_summary")
+            result_summary=run.get("result_summary"),
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -231,24 +243,24 @@ async def get_run_progress(run_id: str, db=Depends(get_db)):
     """런 진행률 조회"""
     try:
         result = db.table("run_progress").select("*").eq("run_id", run_id).execute()
-        
+
         if not result.data:
             return RunProgress(
                 phase="unknown",
                 processed_candidates=0,
                 accepted_candidates=0,
-                rejected_candidates=0
+                rejected_candidates=0,
             )
-        
+
         progress = result.data[0]
-        
+
         return RunProgress(
             phase=progress.get("phase", "unknown"),
             processed_candidates=progress.get("processed_candidates", 0),
             accepted_candidates=progress.get("accepted_candidates", 0),
-            rejected_candidates=progress.get("rejected_candidates", 0)
+            rejected_candidates=progress.get("rejected_candidates", 0),
         )
-        
+
     except Exception as e:
         logger.error("get_progress_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
@@ -257,62 +269,72 @@ async def get_run_progress(run_id: str, db=Depends(get_db)):
 @router.get("/runs/{run_id}/candidates")
 async def list_candidates(
     run_id: str,
-    sort_by: str = Query("eng_fit", regex="^(eng_fit|bio_fit|safety_fit|evidence_fit)$"),
+    sort_by: str = Query(
+        "eng_fit", regex="^(eng_fit|bio_fit|safety_fit|evidence_fit)$"
+    ),
     sort_order: str = Query("desc", regex="^(asc|desc)$"),
     pareto_rank: Optional[int] = None,
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-    db=Depends(get_db)
+    db=Depends(get_db),
 ):
     """
     런의 후보 목록 조회
-    
+
     파레토 랭크, 스코어 기준 정렬/필터링
     """
     try:
         # Join candidates with scores
-        query = db.table("candidates").select(
-            """
+        query = (
+            db.table("candidates")
+            .select(
+                """
             id, candidate_hash, snapshot,
             candidate_scores(eng_fit, bio_fit, safety_fit, evidence_fit),
             run_pareto_members(rank)
             """
-        ).eq("run_id", run_id)
-        
+            )
+            .eq("run_id", run_id)
+        )
+
         if pareto_rank is not None:
             query = query.eq("run_pareto_members.rank", pareto_rank)
-        
+
         result = query.range(offset, offset + limit - 1).execute()
-        
+
         # Transform results
         items = []
-        for c in (result.data or []):
-            scores = c.get("candidate_scores", [{}])[0] if c.get("candidate_scores") else {}
-            pareto = c.get("run_pareto_members", [{}])[0] if c.get("run_pareto_members") else {}
+        for c in result.data or []:
+            scores = (
+                c.get("candidate_scores", [{}])[0] if c.get("candidate_scores") else {}
+            )
+            pareto = (
+                c.get("run_pareto_members", [{}])[0]
+                if c.get("run_pareto_members")
+                else {}
+            )
             snapshot = c.get("snapshot", {})
-            
-            items.append({
-                "id": c["id"],
-                "candidate_hash": c.get("candidate_hash", ""),
-                "target_name": snapshot.get("target", {}).get("name"),
-                "payload_name": snapshot.get("payload", {}).get("name"),
-                "eng_fit": scores.get("eng_fit", 0),
-                "bio_fit": scores.get("bio_fit", 0),
-                "safety_fit": scores.get("safety_fit", 0),
-                "evidence_fit": scores.get("evidence_fit", 0),
-                "pareto_rank": pareto.get("rank")
-            })
-        
+
+            items.append(
+                {
+                    "id": c["id"],
+                    "candidate_hash": c.get("candidate_hash", ""),
+                    "target_name": snapshot.get("target", {}).get("name"),
+                    "payload_name": snapshot.get("payload", {}).get("name"),
+                    "eng_fit": scores.get("eng_fit", 0),
+                    "bio_fit": scores.get("bio_fit", 0),
+                    "safety_fit": scores.get("safety_fit", 0),
+                    "evidence_fit": scores.get("evidence_fit", 0),
+                    "pareto_rank": pareto.get("rank"),
+                }
+            )
+
         # Sort
         reverse = sort_order == "desc"
         items.sort(key=lambda x: x.get(sort_by, 0), reverse=reverse)
-        
-        return {
-            "items": items,
-            "limit": limit,
-            "offset": offset
-        }
-        
+
+        return {"items": items, "limit": limit, "offset": offset}
+
     except Exception as e:
         logger.error("list_candidates_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
@@ -322,20 +344,26 @@ async def list_candidates(
 async def get_candidate(run_id: str, candidate_id: str, db=Depends(get_db)):
     """후보 상세 조회 (스코어 컴포넌트 포함)"""
     try:
-        result = db.table("candidates").select(
-            """
+        result = (
+            db.table("candidates")
+            .select(
+                """
             *,
             candidate_scores(*),
             candidate_evidence(id, evidence_text, citations, conflict_alert),
             candidate_protocols(id, protocol_type, status)
             """
-        ).eq("id", candidate_id).eq("run_id", run_id).execute()
-        
+            )
+            .eq("id", candidate_id)
+            .eq("run_id", run_id)
+            .execute()
+        )
+
         if not result.data:
             raise HTTPException(status_code=404, detail="Candidate not found")
-        
+
         return result.data[0]
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -349,23 +377,25 @@ async def cancel_run(run_id: str, db=Depends(get_db)):
     try:
         # 상태 확인
         result = db.table("design_runs").select("status").eq("id", run_id).execute()
-        
+
         if not result.data:
             raise HTTPException(status_code=404, detail="Run not found")
-        
+
         current_status = result.data[0]["status"]
-        
+
         if current_status not in ["pending", "running"]:
-            raise HTTPException(status_code=400, detail=f"Cannot cancel run with status: {current_status}")
-        
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot cancel run with status: {current_status}",
+            )
+
         # 취소
-        db.table("design_runs").update({
-            "status": "cancelled",
-            "completed_at": datetime.utcnow().isoformat()
-        }).eq("id", run_id).execute()
-        
+        db.table("design_runs").update(
+            {"status": "cancelled", "completed_at": datetime.utcnow().isoformat()}
+        ).eq("id", run_id).execute()
+
         return {"status": "cancelled", "run_id": run_id}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -379,12 +409,12 @@ async def rerun(run_id: str, db=Depends(get_db)):
     try:
         # 기존 런 조회
         result = db.table("design_runs").select("*").eq("id", run_id).execute()
-        
+
         if not result.data:
             raise HTTPException(status_code=404, detail="Run not found")
-        
+
         original = result.data[0]
-        
+
         # 새 런 생성
         new_run_id = str(uuid.uuid4())
         new_run = {
@@ -395,32 +425,31 @@ async def rerun(run_id: str, db=Depends(get_db)):
             "strategy": original.get("strategy", "balanced"),
             "constraints": original.get("constraints", {}),
             "status": "pending",
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
         }
-        
+
         db.table("design_runs").insert(new_run).execute()
-        
+
         # Job enqueue
         try:
             import redis
             import json
+
             redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
             r = redis.from_url(redis_url)
-            job_data = json.dumps({
-                "job": "design_run_execute",
-                "run_id": new_run_id,
-                "enqueue_time": datetime.utcnow().isoformat()
-            })
+            job_data = json.dumps(
+                {
+                    "job": "design_run_execute",
+                    "run_id": new_run_id,
+                    "enqueue_time": datetime.utcnow().isoformat(),
+                }
+            )
             r.lpush("arq:queue:design_run_queue", job_data)
-        except:
+        except Exception:
             pass
-        
-        return {
-            "status": "pending",
-            "run_id": new_run_id,
-            "original_run_id": run_id
-        }
-        
+
+        return {"status": "pending", "run_id": new_run_id, "original_run_id": run_id}
+
     except HTTPException:
         raise
     except Exception as e:
@@ -432,33 +461,33 @@ async def rerun(run_id: str, db=Depends(get_db)):
 async def get_pareto_fronts(run_id: str, db=Depends(get_db)):
     """런의 파레토 프론트 조회"""
     try:
-        result = db.table("run_pareto_fronts").select(
-            """
+        result = (
+            db.table("run_pareto_fronts")
+            .select(
+                """
             *,
             run_pareto_members(candidate_id, rank, crowding_distance)
             """
-        ).eq("run_id", run_id).order("front_index").execute()
-        
-        return {
-            "run_id": run_id,
-            "fronts": result.data or []
-        }
-        
+            )
+            .eq("run_id", run_id)
+            .order("front_index")
+            .execute()
+        )
+
+        return {"run_id": run_id, "fronts": result.data or []}
+
     except Exception as e:
         logger.error("get_pareto_failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-    except Exception as e:
-        logger.error("compare_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/runs/{run_id}/compare")
 async def compare_candidates(
     run_id: str,
-    candidate_ids: List[str] = Query(..., description="List of candidate IDs to compare"),
-    db=Depends(get_db)
+    candidate_ids: List[str] = Query(
+        ..., description="List of candidate IDs to compare"
+    ),
+    db=Depends(get_db),
 ):
     """
     여러 후보 물질 비교 데이터 조회 (Scores + Assay Results)
@@ -466,22 +495,33 @@ async def compare_candidates(
     try:
         if not candidate_ids:
             return {"items": []}
-            
+
         # 1. Fetch Candidates with Scores
-        result = db.table("candidates").select(
-            """
+        result = (
+            db.table("candidates")
+            .select(
+                """
             *,
             candidate_scores(*),
             candidate_evidence(count)
             """
-        ).in_("id", candidate_ids).eq("run_id", run_id).execute()
-        
+            )
+            .in_("id", candidate_ids)
+            .eq("run_id", run_id)
+            .execute()
+        )
+
         candidates = result.data or []
-        
+
         # 2. Fetch Assay Results
-        assay_result = db.table("assay_results").select("*").in_("candidate_id", candidate_ids).execute()
+        assay_result = (
+            db.table("assay_results")
+            .select("*")
+            .in_("candidate_id", candidate_ids)
+            .execute()
+        )
         assays = assay_result.data or []
-        
+
         # Group assays by candidate_id
         assays_by_id = {}
         for a in assays:
@@ -489,28 +529,22 @@ async def compare_candidates(
             if cid not in assays_by_id:
                 assays_by_id[cid] = []
             assays_by_id[cid].append(a)
-            
+
         # 3. Merge
         items = []
         for c in candidates:
             c["assay_results"] = assays_by_id.get(c["id"], [])
             items.append(c)
-        
-        return {
-            "run_id": run_id,
-            "items": items
-        }
-        
+
+        return {"run_id": run_id, "items": items}
+
     except Exception as e:
         logger.error("compare_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/runs/{run_id}/report")
-async def generate_run_report(
-    run_id: str,
-    db=Depends(get_db)
-):
+async def generate_run_report(run_id: str, db=Depends(get_db)):
     """
     특정 Run에 대한 분석 리포트 생성 (캐시 지원)
     """
