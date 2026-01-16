@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition, use } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import {
     ArrowLeft, Save, Loader2, CheckCircle2, AlertCircle,
@@ -33,7 +32,7 @@ interface ManualSeed {
     key_risk_signal?: string;
     primary_source_type?: string;
     primary_source_id?: string;
-    evidence_refs: any[];
+    evidence_refs: Record<string, unknown>[];
     gate_status: string;
     is_final: boolean;
     is_manually_verified: boolean;
@@ -42,7 +41,6 @@ interface ManualSeed {
 
 export default function ManualSeedDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params);
-    const router = useRouter();
     const [seed, setSeed] = useState<ManualSeed | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -52,6 +50,7 @@ export default function ManualSeedDetailPage({ params }: { params: Promise<{ id:
 
     useEffect(() => {
         fetchSeed();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [resolvedParams.id]);
 
     const fetchSeed = async () => {
@@ -78,8 +77,9 @@ export default function ManualSeedDetailPage({ params }: { params: Promise<{ id:
             await updateManualSeed(seed.id, formData);
             setMessage({ type: "success", text: "저장되었습니다" });
             await fetchSeed(); // Refresh
-        } catch (error: any) {
-            setMessage({ type: "error", text: error.message || "저장 실패" });
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "저장 실패";
+            setMessage({ type: "error", text: errorMessage });
         } finally {
             setSaving(false);
         }
@@ -94,14 +94,15 @@ export default function ManualSeedDetailPage({ params }: { params: Promise<{ id:
             await promoteToFinal(seed.id);
             setMessage({ type: "success", text: "✓ Final로 승격되었습니다!" });
             await fetchSeed(); // Refresh
-        } catch (error: any) {
-            setMessage({ type: "error", text: error.message || "승격 실패" });
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "승격 실패";
+            setMessage({ type: "error", text: errorMessage });
         } finally {
             setPromoting(false);
         }
     };
 
-    const updateField = (field: keyof ManualSeed, value: any) => {
+    const updateField = (field: keyof ManualSeed, value: string | boolean | number | Record<string, unknown>[]) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 

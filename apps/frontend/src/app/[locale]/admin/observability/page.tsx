@@ -33,13 +33,14 @@ export default function ObservabilityPage() {
 
     useEffect(() => {
         fetchData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [days]);
 
     const fetchData = async () => {
         try {
             setLoading(true);
             const data = await getObservabilityMetrics(days);
-            setMetrics(data as any);
+            setMetrics(data as MetricsData);
         } catch (err) {
             console.error('Failed to fetch observability data:', err);
         } finally {

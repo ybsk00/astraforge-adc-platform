@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { Database, Calendar, CheckCircle2, ArrowRight, Trash2, Puzzle, Loader2, AlertCircle, Filter, RefreshCw, Trophy, ClipboardList } from "lucide-react";
+import { Database, CheckCircle2, ArrowRight, Trash2, Puzzle, Loader2, AlertCircle, RefreshCw, Trophy, ClipboardList } from "lucide-react";
 import { getAutoCandidates, getManualSeeds, getPromotedGoldenSets, getReviewQueue, ReviewQueueItem, deleteCandidate, enrichCandidateSingle } from "@/lib/actions/golden-set";
 import PipelinePanel from "./components/PipelinePanel";
 import ReviewQueueTab from "./components/ReviewQueueTab";
@@ -78,6 +78,7 @@ export default function GoldenSetsPage() {
     // Fetch data on tab change
     useEffect(() => {
         fetchData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab]);
 
 

@@ -33,15 +33,13 @@ export default function ReportsPage() {
     const t = useTranslations('Admin.reports');
     const [reports, setReports] = useState<Report[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
     const fetchReports = async () => {
         try {
             const data = await getReports();
-            setReports(data as any);
-            setError(null);
+            setReports(data as Report[]);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to fetch reports');
+            console.error('Failed to fetch reports:', err);
         } finally {
             setLoading(false);
         }

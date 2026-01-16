@@ -24,7 +24,9 @@ interface LogEntry {
     created_at: string;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; icon: any; class: string }> = {
+type LucideIcon = React.ComponentType<{ className?: string }>;
+
+const STATUS_CONFIG: Record<string, { label: string; icon: LucideIcon; class: string }> = {
     started: { label: 'Started', icon: Clock, class: 'bg-yellow-500/20 text-yellow-400' },
     completed: { label: 'Completed', icon: CheckCircle, class: 'bg-green-500/20 text-green-400' },
     failed: { label: 'Failed', icon: XCircle, class: 'bg-red-500/20 text-red-400' },
@@ -73,6 +75,7 @@ export default function IngestionLogsPage() {
 
     useEffect(() => {
         fetchLogs();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filterSource, filterStatus, offset]);
 
     const formatDate = (dateStr: string) => {

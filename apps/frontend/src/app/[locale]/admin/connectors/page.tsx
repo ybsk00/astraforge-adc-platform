@@ -319,12 +319,17 @@ export default function ConnectorsPage() {
 }
 
 
+interface GoldenSeedResult {
+    run_id: string;
+    message: string;
+}
+
 function GoldenSeedTrigger() {
     const [targets, setTargets] = useState<string[]>([]);
     const [currentTarget, setCurrentTarget] = useState('');
     const [limit, setLimit] = useState(30);
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState<any>(null);
+    const [result, setResult] = useState<GoldenSeedResult | null>(null);
     const [error, setError] = useState('');
 
     // Target List Modal State
@@ -389,8 +394,9 @@ function GoldenSeedTrigger() {
             const data = await response.json();
             setResult(data);
             setTargets([]); // Clear after success
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

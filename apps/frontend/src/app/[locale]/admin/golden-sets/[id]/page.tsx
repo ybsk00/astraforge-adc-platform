@@ -28,11 +28,45 @@ import {
 import { clsx } from 'clsx';
 import { createClient } from '@/lib/supabase/client';
 
+interface GoldenSetInfo {
+    name: string;
+    version: string;
+    status: string;
+    created_at: string;
+    candidates?: GoldenCandidate[];
+}
+
+interface GoldenCandidate {
+    id: string;
+    drug_name: string;
+    target?: string;
+    antibody?: string;
+    linker?: string;
+    payload?: string;
+    score: number;
+    review_status: string;
+}
+
+interface CatalogItem {
+    id: string;
+    name: string;
+    type: string;
+    synonyms?: string[];
+}
+
+interface Evidence {
+    id: string;
+    source: string;
+    ref_id?: string;
+    snippet?: string;
+    url?: string;
+}
+
 export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params);
     const router = useRouter();
-    const [setInfo, setSetInfo] = useState<any>(null);
-    const [candidates, setCandidates] = useState<any[]>([]);
+    const [setInfo, setSetInfo] = useState<GoldenSetInfo | null>(null);
+    const [candidates, setCandidates] = useState<GoldenCandidate[]>([]);
     const [loading, setLoading] = useState(true);
     const [promoting, setPromoting] = useState(false);
 
@@ -50,21 +84,21 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
     // Search State
     const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [searchResults, setSearchResults] = useState<CatalogItem[]>([]);
     const [searching, setSearching] = useState(false);
 
     // Edit Candidate State
-    const [editingCandidate, setEditingCandidate] = useState<any>(null);
+    const [editingCandidate, setEditingCandidate] = useState<GoldenCandidate | null>(null);
     const [editForm, setEditForm] = useState({ drug_name: '', target: '', antibody: '', linker: '', payload: '' });
     const [saving, setSaving] = useState(false);
     const [fieldSearchType, setFieldSearchType] = useState<'target' | 'antibody' | 'linker' | 'payload' | null>(null);
     const [fieldSearchQuery, setFieldSearchQuery] = useState('');
-    const [fieldSearchResults, setFieldSearchResults] = useState<any[]>([]);
+    const [fieldSearchResults, setFieldSearchResults] = useState<CatalogItem[]>([]);
     const [fieldSearching, setFieldSearching] = useState(false);
 
     // Evidence State
-    const [evidenceCandidate, setEvidenceCandidate] = useState<any>(null);
-    const [evidenceList, setEvidenceList] = useState<any[]>([]);
+    const [evidenceCandidate, setEvidenceCandidate] = useState<GoldenCandidate | null>(null);
+    const [evidenceList, setEvidenceList] = useState<Evidence[]>([]);
     const [loadingEvidence, setLoadingEvidence] = useState(false);
 
     const fetchData = async () => {
@@ -87,6 +121,7 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
 
     useEffect(() => {
         fetchData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [resolvedParams.id]);
 
     const handlePromote = async () => {
@@ -155,7 +190,7 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
         }
     };
 
-    const handleAddFromSearch = async (item: any) => {
+    const handleAddFromSearch = async (item: CatalogItem) => {
         const supabase = createClient();
 
         try {
