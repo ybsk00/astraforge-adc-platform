@@ -9,8 +9,6 @@ from typing import Dict, Any
 from app.services.audit_service import (
     AuditService,
     get_audit_service,
-    mask_sensitive,
-    MASKED_FIELDS,
 )
 
 

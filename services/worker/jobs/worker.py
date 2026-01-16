@@ -3,6 +3,7 @@ Arq Worker Settings and Job Definitions
 """
 from datetime import datetime
 from arq.connections import RedisSettings
+from arq.cron import cron
 import os
 from dotenv import load_dotenv
 import structlog
