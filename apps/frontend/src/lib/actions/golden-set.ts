@@ -343,6 +343,8 @@ export async function getManualSeeds(
     let query = supabase
         .from('golden_seed_items')
         .select('*', { count: 'exact' })
+        .eq('is_final', false) // Manual 탭은 미승격 항목만
+        .or('is_failed_adc.is.null,is_failed_adc.eq.false') // 실패 사례 제외
         .order('created_at', { ascending: false })
         .range(from, to);
 
@@ -352,9 +354,7 @@ export async function getManualSeeds(
     if (filters?.target) {
         query = query.ilike('target', `%${filters.target}%`);
     }
-    if (filters?.isFinal !== undefined) {
-        query = query.eq('is_final', filters.isFinal);
-    }
+    // Note: isFinal filter is now handled above, ignore if passed
 
     const { data, error, count } = await query;
 
