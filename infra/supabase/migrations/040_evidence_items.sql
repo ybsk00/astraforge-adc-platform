@@ -1,13 +1,11 @@
 -- ================================================
 -- Migration 040: Evidence Items Table
 -- Description: 근거 다건 저장 테이블 (1:N)
--- NOTE: golden_seed_items 테이블이 먼저 존재해야 합니다.
 -- ================================================
 
--- 테이블 생성 (FK 제약 조건 없이)
+-- 테이블 생성 (기본)
 CREATE TABLE IF NOT EXISTS public.evidence_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    golden_seed_item_id UUID,
     type TEXT NOT NULL,
     id_or_url TEXT,
     title TEXT,
@@ -18,9 +16,14 @@ CREATE TABLE IF NOT EXISTS public.evidence_items (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- FK 제약 조건 추가 (golden_seed_items 테이블이 있을 경우)
+-- golden_seed_item_id 컬럼 추가 (없으면)
+ALTER TABLE public.evidence_items 
+ADD COLUMN IF NOT EXISTS golden_seed_item_id UUID;
+
+-- FK 제약 조건 추가 (golden_seed_items 테이블이 있고, FK가 없을 경우)
 DO $$
 BEGIN
+    -- golden_seed_items 테이블이 있는지 확인
     IF EXISTS (
         SELECT 1 FROM information_schema.tables 
         WHERE table_schema = 'public' 
@@ -37,10 +40,8 @@ BEGIN
             FOREIGN KEY (golden_seed_item_id) 
             REFERENCES public.golden_seed_items(id) 
             ON DELETE CASCADE;
-            RAISE NOTICE 'Added FK constraint to evidence_items';
+            RAISE NOTICE 'Added FK constraint';
         END IF;
-    ELSE
-        RAISE NOTICE 'golden_seed_items table not found - FK constraint not added';
     END IF;
 END $$;
 
@@ -62,8 +63,7 @@ BEGIN
         FOR SELECT 
         TO authenticated 
         USING (true);
-EXCEPTION WHEN duplicate_object THEN
-    RAISE NOTICE 'Read policy already exists';
+EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$
@@ -74,8 +74,7 @@ BEGIN
         TO authenticated 
         USING (true)
         WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN
-    RAISE NOTICE 'Manage policy already exists';
+EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 -- 트리거 함수
@@ -95,9 +94,7 @@ CREATE TRIGGER trigger_update_evidence_items_updated_at
     EXECUTE FUNCTION public.update_evidence_items_updated_at();
 
 -- 코멘트
-COMMENT ON TABLE public.evidence_items IS '근거 다건 저장: 각 Golden Seed Item에 대해 여러 근거를 연결';
+COMMENT ON TABLE public.evidence_items IS '근거 다건 저장';
 COMMENT ON COLUMN public.evidence_items.type IS 'clinicaltrials, paper, patent, label, press, other';
-COMMENT ON COLUMN public.evidence_items.id_or_url IS 'NCT ID, PMID, Patent number, or URL';
-COMMENT ON COLUMN public.evidence_items.snippet IS '관련 문단 발췌 (하이라이트용)';
 
 NOTIFY pgrst, 'reload config';
