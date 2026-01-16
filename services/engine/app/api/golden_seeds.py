@@ -436,3 +436,294 @@ async def approve_high_confidence(
     except Exception as e:
         logger.error("approve_high_confidence_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# === LLM Enrich API ===
+
+
+class LLMJobStatus(str, Enum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class LLMJobType(str, Enum):
+    ENRICH = "enrich"
+    EXTRACT = "extract"
+    VALIDATE = "validate"
+
+
+class EnrichRequest(BaseModel):
+    fields: Optional[List[str]] = None  # 특정 필드만 enrich, null이면 전체
+    force: bool = False  # 이미 값이 있어도 재생성
+    model: str = "gpt-4o"
+
+
+class EnrichJobResponse(BaseModel):
+    job_id: str
+    status: str
+    seed_id: str
+    created_at: str
+
+
+class DiffItem(BaseModel):
+    field_name: str
+    old_value: Optional[str]
+    new_value: Optional[str]
+    confidence: float
+    source: Optional[str] = None
+
+
+class ApplyDiffRequest(BaseModel):
+    fields: List[str]  # 적용할 필드 목록
+
+
+@router.post("/{seed_id}/enrich")
+async def queue_enrich_job(
+    seed_id: str,
+    request: EnrichRequest = Body(default=EnrichRequest()),
+    db=Depends(get_db),
+):
+    """
+    LLM Enrich 작업 대기열에 추가
+    Worker가 처리하면 llm_jobs.output_json에 diff 저장
+    """
+    try:
+        # Check seed exists
+        seed_result = (
+            db.table("golden_seed_items").select("id").eq("id", seed_id).execute()
+        )
+        if not seed_result.data:
+            raise HTTPException(status_code=404, detail="Seed not found")
+
+        # Create LLM job
+        job_data = {
+            "golden_seed_item_id": seed_id,
+            "job_type": LLMJobType.ENRICH.value,
+            "status": LLMJobStatus.PENDING.value,
+            "input_json": {
+                "fields": request.fields,
+                "force": request.force,
+                "model": request.model,
+            },
+        }
+        result = db.table("llm_jobs").insert(job_data).execute()
+
+        return EnrichJobResponse(
+            job_id=result.data[0]["id"],
+            status=LLMJobStatus.PENDING.value,
+            seed_id=seed_id,
+            created_at=result.data[0]["created_at"],
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("queue_enrich_job_failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{seed_id}/enrich/{job_id}")
+async def get_enrich_job_status(
+    seed_id: str,
+    job_id: str,
+    db=Depends(get_db),
+):
+    """
+    LLM Enrich 작업 상태 조회
+    완료 시 output_json에 diff 포함
+    """
+    try:
+        result = (
+            db.table("llm_jobs")
+            .select("*")
+            .eq("id", job_id)
+            .eq("golden_seed_item_id", seed_id)
+            .execute()
+        )
+
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        job = result.data[0]
+        return {
+            "job_id": job["id"],
+            "status": job["status"],
+            "job_type": job["job_type"],
+            "input": job.get("input_json"),
+            "output": job.get("output_json"),
+            "error": job.get("error_message"),
+            "created_at": job["created_at"],
+            "completed_at": job.get("completed_at"),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("get_enrich_job_status_failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{seed_id}/enrich-jobs")
+async def list_enrich_jobs(
+    seed_id: str,
+    status: Optional[str] = Query(None),
+    limit: int = Query(10, ge=1, le=50),
+    db=Depends(get_db),
+):
+    """
+    해당 Seed의 LLM 작업 목록 조회
+    """
+    try:
+        query = (
+            db.table("llm_jobs")
+            .select("id, job_type, status, created_at, completed_at, error_message")
+            .eq("golden_seed_item_id", seed_id)
+        )
+
+        if status:
+            query = query.eq("status", status)
+
+        result = query.order("created_at", desc=True).limit(limit).execute()
+
+        return {"jobs": result.data or [], "total": len(result.data or [])}
+
+    except Exception as e:
+        logger.error("list_enrich_jobs_failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{seed_id}/apply-diff")
+async def apply_enrich_diff(
+    seed_id: str,
+    request: ApplyDiffRequest,
+    job_id: str = Query(..., description="LLM Job ID to apply from"),
+    db=Depends(get_db),
+):
+    """
+    LLM이 생성한 diff 중 선택된 필드만 적용
+    """
+    try:
+        # 1. Get job
+        job_result = (
+            db.table("llm_jobs")
+            .select("*")
+            .eq("id", job_id)
+            .eq("golden_seed_item_id", seed_id)
+            .eq("status", LLMJobStatus.COMPLETED.value)
+            .execute()
+        )
+
+        if not job_result.data:
+            raise HTTPException(status_code=404, detail="Completed job not found")
+
+        job = job_result.data[0]
+        output = job.get("output_json") or {}
+        diff_items = output.get("diff", [])
+
+        if not diff_items:
+            return {"status": "no_diff", "applied_count": 0}
+
+        # 2. Filter by requested fields
+        update_data = {}
+        applied_fields = []
+        for diff in diff_items:
+            field_name = diff.get("field_name")
+            if field_name in request.fields:
+                new_value = diff.get("new_value")
+                if new_value is not None:
+                    update_data[field_name] = new_value
+                    applied_fields.append(field_name)
+
+                    # Also create provenance record
+                    prov_data = {
+                        "golden_seed_item_id": seed_id,
+                        "field_name": field_name,
+                        "field_value": new_value,
+                        "confidence": diff.get("confidence", 0.8),
+                        "quote_span": diff.get("source"),
+                        "note": f"LLM Enriched (job: {job_id})",
+                    }
+                    db.table("field_provenance").insert(prov_data).execute()
+
+        if not update_data:
+            return {"status": "no_changes", "applied_count": 0}
+
+        # 3. Update seed
+        update_data["updated_at"] = datetime.utcnow().isoformat()
+        update_data["curation_level"] = CurationLevel.REVIEW.value  # LLM 수정은 Review 상태로
+        db.table("golden_seed_items").update(update_data).eq("id", seed_id).execute()
+
+        return {
+            "status": "applied",
+            "applied_count": len(applied_fields),
+            "applied_fields": applied_fields,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("apply_enrich_diff_failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{seed_id}/diff-preview")
+async def get_diff_preview(
+    seed_id: str,
+    job_id: str = Query(..., description="LLM Job ID"),
+    db=Depends(get_db),
+):
+    """
+    LLM이 생성한 diff 미리보기 (현재 값과 비교)
+    """
+    try:
+        # 1. Get current seed
+        seed_result = (
+            db.table("golden_seed_items").select("*").eq("id", seed_id).execute()
+        )
+        if not seed_result.data:
+            raise HTTPException(status_code=404, detail="Seed not found")
+
+        seed = seed_result.data[0]
+
+        # 2. Get job output
+        job_result = (
+            db.table("llm_jobs")
+            .select("output_json, status")
+            .eq("id", job_id)
+            .eq("golden_seed_item_id", seed_id)
+            .execute()
+        )
+
+        if not job_result.data:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        job = job_result.data[0]
+        if job["status"] != LLMJobStatus.COMPLETED.value:
+            return {"status": "pending", "diff": []}
+
+        output = job.get("output_json") or {}
+        diff_items = output.get("diff", [])
+
+        # 3. Enhance with current values
+        enhanced_diff = []
+        for diff in diff_items:
+            field_name = diff.get("field_name")
+            enhanced_diff.append({
+                "field_name": field_name,
+                "old_value": seed.get(field_name),
+                "new_value": diff.get("new_value"),
+                "confidence": diff.get("confidence", 0.8),
+                "source": diff.get("source"),
+                "changed": seed.get(field_name) != diff.get("new_value"),
+            })
+
+        return {"status": "ready", "diff": enhanced_diff}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("get_diff_preview_failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
