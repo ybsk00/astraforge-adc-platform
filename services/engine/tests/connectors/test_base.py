@@ -3,9 +3,8 @@ Tests for Base Connector Framework
 BaseConnector, RateLimiter, common utilities 테스트
 """
 import pytest
-import asyncio
 from datetime import datetime
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import MagicMock, AsyncMock
 import sys
 import os
 
@@ -15,7 +14,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 from app.connectors.base import (
     BaseConnector,
     QuerySpec,
-    CursorState,
     FetchResult,
     NormalizedRecord,
     UpsertResult,
