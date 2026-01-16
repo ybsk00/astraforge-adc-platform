@@ -90,7 +90,6 @@ export async function POST(request: Request) {
             failed_reasons: failedReasons
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: unknown) {
         console.error('Promote API error:', error);
         const message = error instanceof Error ? error.message : 'Unknown error';

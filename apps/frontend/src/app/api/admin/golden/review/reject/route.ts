@@ -58,7 +58,6 @@ export async function POST(request: Request) {
             review_id: reviewId
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: unknown) {
         console.error('Review reject error:', error);
         const message = error instanceof Error ? error.message : 'Unknown error';

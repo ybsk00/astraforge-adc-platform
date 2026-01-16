@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import {
     getGoldenSetById,
     promoteGoldenSet,
-    getGoldenCandidateEvidence,
     deleteGoldenSet,
     updateGoldenCandidate,
     searchComponentCatalog
@@ -20,7 +19,6 @@ import {
     Upload,
     Save,
     Trash2,
-    ExternalLink,
     ShieldCheck,
     Edit3,
     BookOpen
@@ -55,13 +53,6 @@ interface CatalogItem {
     synonyms?: string[];
 }
 
-interface Evidence {
-    id: string;
-    source: string;
-    ref_id?: string;
-    snippet?: string;
-    url?: string;
-}
 
 export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params);
@@ -99,8 +90,6 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
 
     // Evidence State
     const [evidenceCandidate, setEvidenceCandidate] = useState<GoldenCandidate | null>(null);
-    const [evidenceList, setEvidenceList] = useState<Evidence[]>([]);
-    const [loadingEvidence, setLoadingEvidence] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -287,18 +276,8 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
     };
 
     // Evidence Handlers
-    const handleShowEvidence = async (candidate: GoldenCandidate) => {
+    const handleShowEvidence = (candidate: GoldenCandidate) => {
         setEvidenceCandidate(candidate);
-        setLoadingEvidence(true);
-        try {
-            const evidence = await getGoldenCandidateEvidence(candidate.id);
-            setEvidenceList(evidence || []);
-        } catch (error) {
-            console.error('Failed to fetch evidence:', error);
-            setEvidenceList([]);
-        } finally {
-            setLoadingEvidence(false);
-        }
     };
 
     if (loading) {

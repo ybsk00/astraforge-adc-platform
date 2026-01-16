@@ -35,7 +35,14 @@ async function resolveFromPubChem(name: string): Promise<ResolvedCandidate[]> {
         const propData = await propRes.json();
         const properties = propData.PropertyTable?.Properties || [];
 
-        return properties.map((p: any) => {
+        interface PubChemProperty {
+            CID: number;
+            IsomericSMILES?: string;
+            CanonicalSMILES?: string;
+            InChIKey?: string;
+        }
+
+        return properties.map((p: PubChemProperty) => {
             let confidence = 40; // Exact name match 기본 점수
             if (cids.length === 1) confidence += 30; // 단일 후보 보너스
             if (p.InChIKey) confidence += 20; // InChIKey 존재 보너스

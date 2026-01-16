@@ -22,7 +22,7 @@ export interface GoldenCandidate {
     score: number;
     review_status: 'pending' | 'approved' | 'rejected';
     review_notes?: string;
-    evidence_json?: any;
+    evidence_json?: Record<string, unknown>;
 }
 
 /**
@@ -47,8 +47,13 @@ export async function getGoldenSets(page: number = 1, limit: number = 20) {
         throw new Error("Failed to fetch golden sets");
     }
 
+    interface GoldenSetWithCandidates {
+        candidates?: { count: number }[];
+        [key: string]: unknown;
+    }
+
     return {
-        data: data.map((item: any) => ({
+        data: data.map((item: GoldenSetWithCandidates) => ({
             ...item,
             candidate_count: item.candidates?.[0]?.count || 0
         })),
@@ -104,7 +109,7 @@ export async function updateCandidateReviewStatus(
 ) {
     const supabase = await createClient();
 
-    const updateData: any = { review_status: status };
+    const updateData: { review_status: string; review_notes?: string } = { review_status: status };
     if (notes !== undefined) updateData.review_notes = notes;
 
     const { error } = await supabase
@@ -395,7 +400,8 @@ export async function updateManualSeed(
     const supabase = await createClient();
 
     // Remove read-only fields
-    const { id: _, created_at, updated_at, ...updateData } = data as any;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id: _id, created_at: _createdAt, updated_at: _updatedAt, ...updateData } = data as Partial<ManualSeed>;
 
     const { error } = await supabase
         .from('golden_seed_items')
@@ -598,7 +604,7 @@ export interface ReviewQueueItem {
     field_name: string;
     old_value: string | null;
     new_value: string | null;
-    proposed_patch: Record<string, any> | null;
+    proposed_patch: Record<string, unknown> | null;
     status: 'pending' | 'approved' | 'rejected';
     reviewer_comment?: string;
     source_job?: string;

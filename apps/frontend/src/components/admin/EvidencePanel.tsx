@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     BookOpen,
     ExternalLink,
@@ -186,11 +186,7 @@ export default function EvidencePanel({ seedId, onClose, drugName }: EvidencePan
 
     const ENGINE_URL = process.env.NEXT_PUBLIC_ENGINE_URL || 'http://localhost:8000';
 
-    useEffect(() => {
-        fetchData();
-    }, [seedId]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
             const [evidenceRes, provenanceRes, gateRes] = await Promise.all([
@@ -218,7 +214,11 @@ export default function EvidencePanel({ seedId, onClose, drugName }: EvidencePan
         } finally {
             setLoading(false);
         }
-    };
+    }, [seedId, ENGINE_URL]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const handleApproveHighConfidence = async () => {
         setApproving(true);

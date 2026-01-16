@@ -163,7 +163,7 @@ export function checkPromotionGate(seed: {
     proxy_smiles_flag?: boolean;
     adc_classification?: string;
     is_adc_confirmed?: boolean;
-    evidence_refs?: any[];
+    evidence_refs?: unknown[];
 }): GateCheckResult {
     const missing: string[] = [];
 

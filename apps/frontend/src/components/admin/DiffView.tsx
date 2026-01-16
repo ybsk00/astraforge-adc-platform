@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     Sparkles,
     X,
@@ -8,7 +8,6 @@ import {
     AlertCircle,
     Loader2,
     RefreshCw,
-    ChevronRight,
     ArrowRight
 } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -54,11 +53,7 @@ export default function DiffView({ seedId, jobId, drugName, onClose, onApplied }
 
     const ENGINE_URL = process.env.NEXT_PUBLIC_ENGINE_URL || 'http://localhost:8000';
 
-    useEffect(() => {
-        fetchDiffPreview();
-    }, [seedId, jobId]);
-
-    const fetchDiffPreview = async () => {
+    const fetchDiffPreview = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -79,7 +74,13 @@ export default function DiffView({ seedId, jobId, drugName, onClose, onApplied }
         } finally {
             setLoading(false);
         }
-    };
+    }, [seedId, jobId, ENGINE_URL]);
+
+    useEffect(() => {
+        fetchDiffPreview();
+    }, [fetchDiffPreview]);
+
+
 
     const toggleField = (fieldName: string) => {
         setSelectedFields(prev => {
@@ -311,7 +312,7 @@ export default function DiffView({ seedId, jobId, drugName, onClose, onApplied }
 
                                                     {item.source && (
                                                         <div className="mt-2 text-xs text-slate-500 italic truncate">
-                                                            Source: "{item.source}"
+                                                            Source: &quot;{item.source}&quot;
                                                         </div>
                                                     )}
                                                 </div>

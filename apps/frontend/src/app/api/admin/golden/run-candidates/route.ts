@@ -96,11 +96,13 @@ export async function POST(request: Request) {
                             adc_score: adcResult.score,
                             adc_classification: adcResult.classification,
                             adc_reason: adcResult.reason,
-                            evidence_refs: nctIds.map((nct: string) => ({
-                                type: 'NCT',
-                                id: nct,
-                                url: `https://clinicaltrials.gov/study/${nct}`
-                            }))
+                            evidence_refs: nctIds
+                                .filter((nct): nct is string => nct !== undefined)
+                                .map((nct) => ({
+                                    type: 'NCT',
+                                    id: nct,
+                                    url: `https://clinicaltrials.gov/study/${nct}`
+                                }))
                         });
                     insertedCount++;
                 }
@@ -115,7 +117,6 @@ export async function POST(request: Request) {
             total_found: results.length
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: unknown) {
         console.error('Step 1 API error:', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
@@ -153,11 +154,28 @@ interface Intervention {
 /**
  * ClinicalTrials.gov API v2 검색
  */
+interface ClinicalTrialCandidate {
+    nct_ids: (string | undefined)[];
+    drug_name: string;
+    target: string;
+    antibody: string | null;
+    linker: string | null;
+    payload: string | null;
+    phase: string;
+    conditions: string[];
+    interventions_raw: Intervention[];
+    summary_raw: string | undefined;
+    match_score: number;
+    extracted_target: null;
+    extracted_payload: null;
+    extracted_linker: null;
+}
+
 async function searchClinicalTrials(
     cancerType: string,
     targetList: string[],
     limit: number
-): Promise<any[]> {
+): Promise<ClinicalTrialCandidate[]> {
     const CT_API_BASE = 'https://clinicaltrials.gov/api/v2/studies';
 
     // ADC 키워드 세트
