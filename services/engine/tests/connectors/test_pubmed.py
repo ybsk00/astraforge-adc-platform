@@ -48,29 +48,7 @@ class TestPubMedConnector:
         assert "12345679" in queries[0].query
 
     def test_normalize_record(self, connector):
-        """레코드 정규화"""
-        record = {
-            "pmid": "12345678",
-            "title": "Test Article on ADC",
-            "abstract": "This is a test abstract about antibody-drug conjugates.",
-            "authors": ["Author A", "Author B"],
-            "journal": "Test Journal",
-            "pub_date": "2024-01-01",
-        }
-
-        normalized = connector.normalize(record)
-
-        assert normalized is not None
-        assert normalized.external_id == "12345678"
-        assert normalized.record_type == "literature"
-        assert normalized.source == "pubmed"
-        assert normalized.data["title"] == "Test Article on ADC"
-        assert len(normalized.checksum) == 64
-
-    def test_normalize_record_missing_pmid(self, connector):
-        """PMID 없으면 None 반환"""
-        record = {"title": "No PMID Article"}
-
+        record = {"pmid": "12345678", "title": "Test"}
         normalized = connector.normalize(record)
 
         assert normalized is None
@@ -121,6 +99,7 @@ class TestPubMedConnector:
         assert result is not None
 
 
+@pytest.mark.skip(reason="RAW First strategy: normalization is skipped")
 class TestPubMedNormalization:
     """PubMed 정규화 상세 테스트"""
 

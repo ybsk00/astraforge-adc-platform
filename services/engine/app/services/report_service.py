@@ -17,7 +17,7 @@ from uuid import UUID
 from datetime import datetime
 import structlog
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML
+
 
 logger = structlog.get_logger()
 
@@ -97,6 +97,8 @@ class ReportService:
         pdf_dir = "reports"
         os.makedirs(pdf_dir, exist_ok=True)
         pdf_path = os.path.join(pdf_dir, f"report_{cache_key}.pdf")
+        pdf_path = os.path.join(pdf_dir, f"report_{cache_key}.pdf")
+        from weasyprint import HTML
         HTML(string=html_content).write_pdf(pdf_path)
 
         # 5. Storage 업로드

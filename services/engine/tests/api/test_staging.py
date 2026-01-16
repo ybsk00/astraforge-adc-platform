@@ -138,11 +138,10 @@ class TestDuplicateCheck:
 
             yield TestClient(app)
 
-    def test_check_duplicate_smiles(self, client):
-        """SMILES로 중복 체크"""
-        response = client.post(
-            "/api/v1/staging/components/check-duplicate",
-            json={"smiles": "CC(=O)OC1=CC=CC=C1C(=O)O"},
-        )
+    def test_get_duplicate_groups(self, client):
+        """중복 그룹 조회"""
+        response = client.get("/api/v1/staging/duplicates?field=smiles")
 
-        assert response.status_code in [200, 422, 500]
+        assert response.status_code == 200
+        data = response.json()
+        assert "groups" in data

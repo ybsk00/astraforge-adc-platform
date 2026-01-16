@@ -5,7 +5,7 @@ Automation API
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from typing import Dict, Any
-from app.core.supabase import get_supabase_client
+from app.core.database import get_supabase_client
 from app.services.automation_service import get_automation_service
 from app.services.dataset_sync_service import get_dataset_sync_service
 

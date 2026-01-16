@@ -43,7 +43,7 @@ class TestConnectorsAPI:
         assert response.status_code == 200
         data = response.json()
         assert "connectors" in data
-        assert len(data["connectors"]) == 8  # 8개 커넥터 등록됨
+        assert len(data["connectors"]) == 10  # 10개 커넥터 등록됨
 
     def test_connector_registry(self, client):
         """커넥터 레지스트리 확인"""
@@ -152,7 +152,7 @@ class TestIngestionAPI:
 
     @pytest.fixture
     def client(self):
-        with patch("app.api.ingestion.get_client") as mock_get_client:
+        with patch("app.core.database.get_db") as mock_get_db:
             mock_db = MagicMock()
             mock_table = MagicMock()
 
@@ -164,9 +164,9 @@ class TestIngestionAPI:
             mock_table.execute.return_value = MagicMock(data=[], count=0)
 
             mock_db.table.return_value = mock_table
-            mock_get_client.return_value = mock_db
+            mock_get_db.return_value = mock_db
 
-            # Also mock in db.supabase path
+            # Also mock in db.supabase path if needed, but we switched to core.database
             with patch.dict(
                 "sys.modules", {"app.db": MagicMock(), "app.db.supabase": MagicMock()}
             ):

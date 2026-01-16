@@ -7,7 +7,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import structlog
 from app.services.dataset_sync_service import get_dataset_sync_service
-from app.core.supabase import get_supabase_client
+from app.core.database import get_supabase_client
 
 logger = structlog.get_logger()
 

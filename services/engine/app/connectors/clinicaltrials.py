@@ -57,7 +57,20 @@ class ClinicalTrialsConnector(BaseConnector):
         # 1. Query Profile 확인
         profile_name = seed.get("profile_name")
         if not profile_name:
-            # Fallback to legacy mode (if needed) or raise error
+            # Fallback for legacy keys (conditions, nct_ids)
+            conditions = seed.get("conditions", [])
+            nct_ids = seed.get("nct_ids", [])
+            
+            if conditions:
+                for cond in conditions:
+                    queries.append(QuerySpec(query=cond, params={"type": "condition", "target": cond}))
+                return queries
+            
+            if nct_ids:
+                for nct in nct_ids:
+                    queries.append(QuerySpec(query=nct, params={"type": "nct_ids", "target": nct}))
+                return queries
+
             self.logger.warning("no_profile_name_provided", seed=seed)
             return []
 

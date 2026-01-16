@@ -46,7 +46,7 @@ async def get_ingestion_logs(
     offset: int = Query(0, ge=0),
 ):
     """Ingestion 로그 조회"""
-    from app.db.supabase import get_client
+    from app.core.database import get_db as get_client
 
     db = get_client()
 
@@ -106,7 +106,7 @@ class OverallStats(BaseModel):
 @router.get("/stats", response_model=OverallStats)
 async def get_overall_stats():
     """전체 Ingestion 통계"""
-    from app.db.supabase import get_client
+    from app.core.database import get_db as get_client
 
     db = get_client()
 
@@ -162,7 +162,7 @@ class SourceStats(BaseModel):
 @router.get("/stats/{source}", response_model=SourceStats)
 async def get_source_stats(source: str):
     """특정 소스 통계"""
-    from app.db.supabase import get_client
+    from app.core.database import get_db as get_client
 
     db = get_client()
 
@@ -225,7 +225,7 @@ async def get_ingestion_history(
     source: Optional[str] = None,
 ):
     """일별 Ingestion 히스토리"""
-    from app.db.supabase import get_client
+    from app.core.database import get_db as get_client
 
     db = get_client()
 

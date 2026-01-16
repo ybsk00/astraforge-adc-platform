@@ -76,6 +76,20 @@ class PubMedConnector(BaseConnector):
                 return [
                     QuerySpec(query=query, params={"retmax": seed.get("retmax", 100)})
                 ]
+            
+            # Fallback for pmids
+            pmids = seed.get("pmids", [])
+            if pmids:
+                # PMIDs are handled in fetch_page via query construction or specialized logic
+                # For now, we return a dummy query that fetch_page might interpret, 
+                # OR we just construct a query string "PMID OR PMID ..."
+                # But fetch_page uses ESearch. 
+                # Let's construct a query string.
+                query_str = " OR ".join(pmids) + " [uid]"
+                return [
+                    QuerySpec(query=query_str, params={"retmax": len(pmids), "pmids": pmids})
+                ]
+
             return []
 
         # 2. Profile 로드
