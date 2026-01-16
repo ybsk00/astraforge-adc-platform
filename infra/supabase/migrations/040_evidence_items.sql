@@ -4,10 +4,10 @@
 -- NOTE: golden_seed_items 테이블이 먼저 존재해야 합니다.
 -- ================================================
 
--- 테이블 생성
+-- 테이블 생성 (FK 제약 조건 없이)
 CREATE TABLE IF NOT EXISTS public.evidence_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    golden_seed_item_id UUID REFERENCES public.golden_seed_items(id) ON DELETE CASCADE,
+    golden_seed_item_id UUID,
     type TEXT NOT NULL,
     id_or_url TEXT,
     title TEXT,
@@ -17,6 +17,32 @@ CREATE TABLE IF NOT EXISTS public.evidence_items (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- FK 제약 조건 추가 (golden_seed_items 테이블이 있을 경우)
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'golden_seed_items'
+    ) THEN
+        -- FK 제약 조건이 없으면 추가
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.table_constraints 
+            WHERE constraint_name = 'evidence_items_golden_seed_item_id_fkey'
+            AND table_name = 'evidence_items'
+        ) THEN
+            ALTER TABLE public.evidence_items 
+            ADD CONSTRAINT evidence_items_golden_seed_item_id_fkey 
+            FOREIGN KEY (golden_seed_item_id) 
+            REFERENCES public.golden_seed_items(id) 
+            ON DELETE CASCADE;
+            RAISE NOTICE 'Added FK constraint to evidence_items';
+        END IF;
+    ELSE
+        RAISE NOTICE 'golden_seed_items table not found - FK constraint not added';
+    END IF;
+END $$;
 
 -- 인덱스
 CREATE INDEX IF NOT EXISTS idx_evidence_items_seed 
@@ -28,7 +54,7 @@ CREATE INDEX IF NOT EXISTS idx_evidence_items_type
 -- RLS 설정
 ALTER TABLE public.evidence_items ENABLE ROW LEVEL SECURITY;
 
--- 정책 (이미 존재하면 에러 발생 가능 - 무시)
+-- 정책
 DO $$
 BEGIN
     CREATE POLICY "Authenticated users can read evidence_items" 
@@ -37,7 +63,7 @@ BEGIN
         TO authenticated 
         USING (true);
 EXCEPTION WHEN duplicate_object THEN
-    RAISE NOTICE 'Policy already exists';
+    RAISE NOTICE 'Read policy already exists';
 END $$;
 
 DO $$
@@ -49,7 +75,7 @@ BEGIN
         USING (true)
         WITH CHECK (true);
 EXCEPTION WHEN duplicate_object THEN
-    RAISE NOTICE 'Policy already exists';
+    RAISE NOTICE 'Manage policy already exists';
 END $$;
 
 -- 트리거 함수
