@@ -49,11 +49,11 @@ export default function ParetoFrontView({ runId }: ParetoFrontViewProps) {
                 (data.fronts || []).forEach((front: ParetoFront) => {
                     const rank = front.front_index;
                     grouped[rank] = (front.run_pareto_members || []).map((m: ParetoMember) => ({
-                        id: m.candidate_id,
-                        pareto_rank: rank,
                         // 스코어 데이터는 m.candidates 또는 별도 조인이 필요할 수 있으나 
                         // 현재는 m 내에 포함되어 있다고 가정하거나 m.candidate_id로 매핑
-                        ...m.candidates_snapshot as Candidate // 스코어 포함된 스냅샷 가정
+                        ...m.candidates_snapshot as Candidate, // 스코어 포함된 스냅샷 가정 (Spread first)
+                        id: m.candidate_id, // Explicit override second
+                        pareto_rank: rank,
                     }));
                 });
                 setFronts(grouped);
