@@ -254,8 +254,15 @@ export async function getObservabilityMetrics(days: number = 7) {
     if (error) throw error;
 
     // 데이터 가공 (Source별, 일별 통계)
-    const by_source: Record<string, any> = {};
-    runs.forEach((run: any) => {
+    interface MetricStats {
+        total_runs: number;
+        completed: number;
+        failed: number;
+        success_rate: number;
+    }
+    const by_source: Record<string, MetricStats> = {};
+
+    runs.forEach((run) => {
         const source = run.source || 'unknown';
         if (!by_source[source]) {
             by_source[source] = { total_runs: 0, completed: 0, failed: 0, success_rate: 0 };

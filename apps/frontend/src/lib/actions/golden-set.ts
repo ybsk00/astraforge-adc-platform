@@ -237,7 +237,7 @@ export async function updateGoldenCandidate(
 ) {
     const supabase = await createClient();
 
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, unknown> = {};
     if (data.target !== undefined) updateData.target = data.target;
     if (data.antibody !== undefined) updateData.antibody = data.antibody;
     if (data.linker !== undefined) updateData.linker = data.linker;
@@ -316,7 +316,7 @@ export interface ManualSeed {
     key_risk_signal?: string;
     primary_source_type?: string;
     primary_source_id?: string;
-    evidence_refs: any[];
+    evidence_refs: Record<string, unknown>[];
     gate_status: string;
     is_final: boolean;
     is_manually_verified: boolean;
@@ -354,7 +354,6 @@ export async function getManualSeeds(
     if (filters?.target) {
         query = query.ilike('target', `%${filters.target}%`);
     }
-    // Note: isFinal filter is now handled above, ignore if passed
 
     const { data, error, count } = await query;
 

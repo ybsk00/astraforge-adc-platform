@@ -21,6 +21,16 @@ interface ParetoFrontViewProps {
     runId: string;
 }
 
+interface ParetoMember {
+    candidate_id: string;
+    candidates_snapshot: Partial<Candidate>;
+}
+
+interface ParetoFront {
+    front_index: number;
+    run_pareto_members: ParetoMember[];
+}
+
 export default function ParetoFrontView({ runId }: ParetoFrontViewProps) {
     const [fronts, setFronts] = useState<Record<number, Candidate[]>>({});
     const [loading, setLoading] = useState(true);
@@ -36,14 +46,14 @@ export default function ParetoFrontView({ runId }: ParetoFrontViewProps) {
                 const data = await res.json();
                 // 백엔드 응답(data.fronts)을 랭크별로 그룹화된 객체로 변환
                 const grouped: Record<number, Candidate[]> = {};
-                (data.fronts || []).forEach((front: any) => {
+                (data.fronts || []).forEach((front: ParetoFront) => {
                     const rank = front.front_index;
-                    grouped[rank] = (front.run_pareto_members || []).map((m: any) => ({
+                    grouped[rank] = (front.run_pareto_members || []).map((m: ParetoMember) => ({
                         id: m.candidate_id,
                         pareto_rank: rank,
                         // 스코어 데이터는 m.candidates 또는 별도 조인이 필요할 수 있으나 
                         // 현재는 m 내에 포함되어 있다고 가정하거나 m.candidate_id로 매핑
-                        ...m.candidates_snapshot // 스코어 포함된 스냅샷 가정
+                        ...m.candidates_snapshot as Candidate // 스코어 포함된 스냅샷 가정
                     }));
                 });
                 setFronts(grouped);
