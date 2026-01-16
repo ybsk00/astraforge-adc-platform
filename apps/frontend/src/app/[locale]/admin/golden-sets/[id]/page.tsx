@@ -214,11 +214,24 @@ export default function GoldenSetDetailPage({ params }: { params: Promise<{ id: 
             alert('추가되었습니다.');
             fetchData();
         } catch (error) {
+            console.error('Add failed:', error);
+            alert('추가 실패');
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!confirm('정말로 이 골든 셋을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+
+        try {
+            await deleteGoldenSet(resolvedParams.id);
+            alert('삭제되었습니다.');
+            router.push('/admin/golden-sets');
         } catch (error) {
             console.error('Delete failed:', error);
             alert('삭제 실패');
         }
     };
+
 
     // Edit Candidate Handlers
     const handleEditCandidate = (candidate: GoldenCandidate) => {

@@ -33,8 +33,9 @@ export default function GlobalBackground() {
         const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
         const handleChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
         // Initial value set via callback to avoid synchronous setState
+        // Initial value set via callback to avoid synchronous setState
         if (mediaQuery.matches) {
-            setPrefersReducedMotion(true);
+            setTimeout(() => setPrefersReducedMotion(true), 0);
         }
         mediaQuery.addEventListener('change', handleChange);
 
