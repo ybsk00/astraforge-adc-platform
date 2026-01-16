@@ -170,14 +170,15 @@ BEGIN
         AND table_name = 'evidence_items'
     ) THEN
         -- evidence_refs가 있고 evidence_items가 없는 레코드 처리
-        INSERT INTO public.evidence_items (golden_seed_item_id, type, id_or_url, title, snippet, source_type)
+        INSERT INTO public.evidence_items (golden_seed_item_id, type, id_or_url, title, snippet, source_type, external_id)
         SELECT 
             gsi.id as golden_seed_item_id,
             COALESCE(ref->>'type', 'other') as type,
             COALESCE(ref->>'id', ref->>'url', ref->>'id_or_url') as id_or_url,
             ref->>'title' as title,
             ref->>'snippet' as snippet,
-            COALESCE(ref->>'source_type', ref->>'type', 'other') as source_type
+            COALESCE(ref->>'source_type', ref->>'type', 'other') as source_type,
+            COALESCE(ref->>'external_id', ref->>'id', ref->>'url', ref->>'id_or_url', 'unknown') as external_id
         FROM public.golden_seed_items gsi,
              jsonb_array_elements(gsi.evidence_refs) as ref
         WHERE gsi.evidence_refs IS NOT NULL
