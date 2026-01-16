@@ -44,8 +44,9 @@ class SafeExpressionEvaluator:
 
     # 표현식 파싱 정규식
     # 예: "DAR > 8", "LogP >= 4.0", "payload_class == 'withdrawn'"
+    # 긴 연산자를 먼저 매칭해야 함 (>=가 >보다 먼저)
     EXPRESSION_PATTERN = re.compile(
-        r"^\s*(\w+)\s*(>|<|>=|<=|==|!=|in|not_in|contains|is_null|is_not_null)\s*(.*)$",
+        r"^\s*(\w+)\s*(>=|<=|==|!=|>|<|in|not_in|contains|is_null|is_not_null)\s*(.*)$",
         re.IGNORECASE,
     )
 
