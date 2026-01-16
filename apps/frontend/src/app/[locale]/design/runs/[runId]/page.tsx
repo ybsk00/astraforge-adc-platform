@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, FileText, BarChart2, Activity, MoreHorizontal, Download, Share2 } from 'lucide-react';
+import { ArrowLeft, BarChart2, Download } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import CandidatesList from '@/components/design/CandidatesList';
 import ParetoFrontView from '@/components/design/ParetoFrontView';

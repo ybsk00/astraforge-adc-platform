@@ -290,7 +290,7 @@ export default function ReviewQueuePage() {
                                                     <FileText className="w-5 h-5 text-slate-500 mt-1" />
                                                     <div>
                                                         <p className="text-xs text-slate-300 leading-relaxed mb-2">
-                                                            "The linker-payload combination of {selectedItem.name || selectedItem.drug_name} showed significant stability in human plasma..."
+                                                            The linker-payload combination of {selectedItem.name || selectedItem.drug_name} showed significant stability in human plasma...
                                                         </p>
                                                         <div className="flex items-center gap-2 text-[10px] text-slate-500">
                                                             <span className="bg-slate-800 px-1.5 py-0.5 rounded">PubMed</span>

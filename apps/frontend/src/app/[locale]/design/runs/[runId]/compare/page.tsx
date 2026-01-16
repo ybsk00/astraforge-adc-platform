@@ -53,6 +53,7 @@ export default function ComparePage({ params }: { params: { runId: string } }) {
         };
 
         fetchCompareData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params.runId, searchParams]);
 
     if (loading) {

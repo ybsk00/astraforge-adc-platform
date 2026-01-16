@@ -1,9 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-    ArrowLeft,
     Edit,
     Trash2,
     RefreshCw,
@@ -25,11 +23,13 @@ import {
     Tooltip
 } from 'recharts';
 
+type LucideIcon = React.ComponentType<{ className?: string }>;
+
 interface ComponentDetailPageProps {
     params: { id: string };
 }
 
-const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string; label: string }> = {
+const TYPE_CONFIG: Record<string, { icon: LucideIcon; color: string; bg: string; label: string }> = {
     target: { icon: Target, color: 'text-red-400', bg: 'bg-red-500/20', label: 'Target' },
     antibody: { icon: Syringe, color: 'text-blue-400', bg: 'bg-blue-500/20', label: 'Antibody' },
     linker: { icon: LinkIcon, color: 'text-yellow-400', bg: 'bg-yellow-500/20', label: 'Linker' },

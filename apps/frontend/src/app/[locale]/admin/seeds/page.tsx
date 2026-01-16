@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import {
-    Database,
     Plus,
     RefreshCw,
     Search,
@@ -17,8 +16,6 @@ import {
     Loader2,
     Cable,
     Play,
-    ChevronRight,
-    Trash2,
     Syringe // Icon for Antibodies
 } from 'lucide-react';
 import {
@@ -32,6 +29,23 @@ import {
 } from '@/lib/actions/admin';
 import { clsx } from 'clsx';
 
+interface SeedItem {
+    id: string;
+    gene_symbol?: string;
+    disease_name?: string;
+    name?: string;
+    seed_set_name?: string;
+    full_name?: string;
+    ensembl_gene_id?: string;
+    efo_id?: string;
+    linker_type?: string;
+    chembl_id?: string;
+    seed_set_targets?: unknown[];
+    seed_set_diseases?: unknown[];
+    seed_set_linkers?: unknown[];
+    seed_set_payloads?: unknown[];
+}
+
 type TabType = 'diseases' | 'targets' | 'antibodies' | 'linkers' | 'payloads' | 'sets';
 
 export default function SeedManagementPage() {
@@ -39,23 +53,23 @@ export default function SeedManagementPage() {
     const tConnectors = useTranslations('Admin.connectors');
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<TabType>('diseases'); // Default to diseases
-    const [targets, setTargets] = useState<any[]>([]);
-    const [diseases, setDiseases] = useState<any[]>([]);
-    const [linkers, setLinkers] = useState<any[]>([]);
-    const [payloads, setPayloads] = useState<any[]>([]);
-    const [antibodies, setAntibodies] = useState<any[]>([]); // New state
-    const [seedSets, setSeedSets] = useState<any[]>([]);
+    const [targets, setTargets] = useState<SeedItem[]>([]);
+    const [diseases, setDiseases] = useState<SeedItem[]>([]);
+    const [linkers, setLinkers] = useState<SeedItem[]>([]);
+    const [payloads, setPayloads] = useState<SeedItem[]>([]);
+    const [antibodies, setAntibodies] = useState<SeedItem[]>([]); // New state
+    const [seedSets, setSeedSets] = useState<SeedItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newSetName, setNewSetName] = useState('');
-    const [selectedTargets, setSelectedTargets] = useState<any[]>([]);
-    const [selectedDiseases, setSelectedDiseases] = useState<any[]>([]);
-    const [selectedLinkers, setSelectedLinkers] = useState<any[]>([]);
-    const [selectedPayloads, setSelectedPayloads] = useState<any[]>([]);
-    const [selectedAntibodies, setSelectedAntibodies] = useState<any[]>([]); // New selection state
+    const [selectedTargets, setSelectedTargets] = useState<SeedItem[]>([]);
+    const [selectedDiseases, setSelectedDiseases] = useState<SeedItem[]>([]);
+    const [selectedLinkers, setSelectedLinkers] = useState<SeedItem[]>([]);
+    const [selectedPayloads, setSelectedPayloads] = useState<SeedItem[]>([]);
+    const [selectedAntibodies, setSelectedAntibodies] = useState<SeedItem[]>([]); // New selection state
     const [modalSearch, setModalSearch] = useState({ targets: '', diseases: '', linkers: '', payloads: '', antibodies: '' });
     const [submitting, setSubmitting] = useState(false);
 
@@ -227,7 +241,7 @@ export default function SeedManagementPage() {
                                         </td>
                                     </tr>
                                 ) : data.length > 0 ? (
-                                    data.map((item: any) => (
+                                    data.map((item: SeedItem) => (
                                         <tr key={item.id} className="hover:bg-slate-800/30 transition-colors group">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
@@ -443,15 +457,26 @@ export default function SeedManagementPage() {
     );
 }
 
-function SelectionSection({ title, items, selectedItems, setSelectedItems, searchQuery, setSearchQuery, displayKey, t }: any) {
+interface SelectionSectionProps {
+    title: string;
+    items: SeedItem[];
+    selectedItems: SeedItem[];
+    setSelectedItems: (items: SeedItem[]) => void;
+    searchQuery: string;
+    setSearchQuery: (q: string) => void;
+    displayKey: keyof SeedItem;
+    t: ReturnType<typeof useTranslations>;
+}
+
+function SelectionSection({ title, items, selectedItems, setSelectedItems, searchQuery, setSearchQuery, displayKey, t }: SelectionSectionProps) {
     const filteredItems = useMemo(() =>
-        items.filter((item: any) => (item[displayKey] || '').toLowerCase().includes(searchQuery.toLowerCase())),
+        items.filter((item: SeedItem) => (String(item[displayKey] || '')).toLowerCase().includes(searchQuery.toLowerCase())),
         [items, searchQuery, displayKey]
     );
 
-    const toggleItem = (item: any) => {
-        if (selectedItems.some((si: any) => si.id === item.id)) {
-            setSelectedItems(selectedItems.filter((si: any) => si.id !== item.id));
+    const toggleItem = (item: SeedItem) => {
+        if (selectedItems.some((si: SeedItem) => si.id === item.id)) {
+            setSelectedItems(selectedItems.filter((si: SeedItem) => si.id !== item.id));
         } else {
             setSelectedItems([...selectedItems, item]);
         }
@@ -492,9 +517,9 @@ function SelectionSection({ title, items, selectedItems, setSelectedItems, searc
             {/* Selected Items Badges */}
             {selectedItems.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-3 max-h-20 overflow-y-auto custom-scrollbar p-1">
-                    {selectedItems.map((item: any) => (
+                    {selectedItems.map((item: SeedItem) => (
                         <span key={item.id} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-600/20 text-blue-400 text-[10px] font-medium rounded-md border border-blue-600/30">
-                            {item[displayKey]}
+                            {String(item[displayKey])}
                             <button onClick={() => toggleItem(item)} className="hover:text-white">
                                 <X className="w-3 h-3" />
                             </button>
@@ -506,8 +531,8 @@ function SelectionSection({ title, items, selectedItems, setSelectedItems, searc
             {/* Items List */}
             <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl overflow-y-auto p-2 space-y-1 custom-scrollbar">
                 {filteredItems.length > 0 ? (
-                    filteredItems.map((item: any) => {
-                        const isSelected = selectedItems.some((si: any) => si.id === item.id);
+                    filteredItems.map((item: SeedItem) => {
+                        const isSelected = selectedItems.some((si: SeedItem) => si.id === item.id);
                         return (
                             <label
                                 key={item.id}
@@ -522,7 +547,7 @@ function SelectionSection({ title, items, selectedItems, setSelectedItems, searc
                                     onChange={() => toggleItem(item)}
                                     className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900"
                                 />
-                                <span className="text-sm">{item[displayKey]}</span>
+                                <span className="text-sm">{String(item[displayKey])}</span>
                                 {isSelected && <CheckCircle2 className="w-3.5 h-3.5 ml-auto" />}
                             </label>
                         );

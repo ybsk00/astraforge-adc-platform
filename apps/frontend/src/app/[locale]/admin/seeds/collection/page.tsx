@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import {
     Play,
     Loader2,
@@ -13,13 +12,18 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
+interface CollectionResult {
+    run_id: string;
+    job_id: string;
+    message: string;
+}
+
 export default function GoldenSeedCollectionPage() {
-    const t = useTranslations('Admin.seeds');
     const [targets, setTargets] = useState<string[]>([]);
     const [currentTarget, setCurrentTarget] = useState('');
     const [limit, setLimit] = useState(30);
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState<any>(null);
+    const [result, setResult] = useState<CollectionResult | null>(null);
     const [error, setError] = useState('');
 
     const handleAddTarget = () => {
@@ -67,8 +71,9 @@ export default function GoldenSeedCollectionPage() {
             const data = await response.json();
             setResult(data);
             setTargets([]); // Clear after success
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'Collection failed';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

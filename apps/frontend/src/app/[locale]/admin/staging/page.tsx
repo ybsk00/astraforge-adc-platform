@@ -17,7 +17,7 @@ interface StagingComponent {
     id: string;
     type: string;
     name: string;
-    properties: Record<string, any>;
+    properties: Record<string, unknown>;
     quality_grade: string;
     source: {
         source?: string;
@@ -29,7 +29,9 @@ interface StagingComponent {
     created_at: string;
 }
 
-const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
+type LucideIcon = React.ComponentType<{ className?: string }>;
+
+const TYPE_CONFIG: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
     target: { icon: Target, color: 'text-red-400', bg: 'bg-red-500/20' },
     antibody: { icon: Syringe, color: 'text-blue-400', bg: 'bg-blue-500/20' },
     linker: { icon: LinkIcon, color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
@@ -55,7 +57,7 @@ export default function StagingPage() {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [filterType, setFilterType] = useState<string>('');
     const [filterStatus, setFilterStatus] = useState<string>('pending');
-    const [stats, setStats] = useState<any>(null);
+    const [stats, setStats] = useState<Record<string, unknown> | null>(null);
 
     const fetchComponents = async () => {
         try {
@@ -89,6 +91,7 @@ export default function StagingPage() {
     useEffect(() => {
         fetchComponents();
         fetchStats();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filterType, filterStatus]);
 
     const handleApprove = async (id: string) => {

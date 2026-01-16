@@ -19,7 +19,7 @@ import { useTranslations } from 'next-intl';
 interface Report {
     id: string;
     run_id: string;
-    report_json: any;
+    report_json: Record<string, unknown>;
     claim_evidence_rate: number;
     assumption_count: number;
     created_at: string;
