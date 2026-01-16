@@ -10,7 +10,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from app.connectors.pubmed import PubMedConnector
-from app.connectors.base import QuerySpec, CursorState, NormalizedRecord
+from app.connectors.base import QuerySpec, NormalizedRecord
 
 
 class TestPubMedConnector:
@@ -77,15 +77,15 @@ class TestPubMedConnector:
     @pytest.mark.asyncio
     async def test_fetch_page_esearch(self, connector, mock_pubmed_response):
         """ESearch/EFetch 호출 테스트"""
-        query = QuerySpec(query="cancer ADC", params={"type": "search"})
-        cursor = CursorState(cursor_id="test", source="pubmed", position={"retstart": 0})
+        # 변수들은 통합 테스트에서 사용됨 (현재 stub)
+        _ = QuerySpec(query="cancer ADC", params={"type": "search"})
         
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.text = mock_pubmed_response["esearch"]
+        _mock_response = MagicMock()
+        _mock_response.status_code = 200
+        _mock_response.text = mock_pubmed_response["esearch"]
         
         with patch('app.connectors.pubmed.fetch_with_retry', new_callable=AsyncMock) as mock_fetch:
-            mock_fetch.return_value = mock_response
+            mock_fetch.return_value = _mock_response
             
             # 실제 API 호출 없이 테스트
             # 이 테스트는 통합 테스트로 분리해야 함

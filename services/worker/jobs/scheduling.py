@@ -8,8 +8,7 @@ Arq Worker Scheduling Configuration
 - ChEMBL/PubChem: 매주 수요일 02:00
 - ClinicalTrials/openFDA: 매주 토요일 02:00
 """
-from datetime import datetime, timedelta
-from typing import Dict, Any
+from typing import Dict
 
 from arq import cron
 
